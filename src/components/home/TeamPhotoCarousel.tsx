@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
@@ -25,8 +25,8 @@ const TEAM_PHOTOS = [
   { id: 7, src: "/Fotos_Equipo/7.jpg", title: "Trabajo en Equipo", category: "Categorías Menores" },
   { id: 8, src: "/Fotos_Equipo/8.jpg", title: "Enfoque & Rendimiento", category: "Formación de Atletas" },
   { id: 9, src: "/Fotos_Equipo/9.jpg", title: "Talento Santacruceño", category: "Baloncesto Guanacaste" },
-  { id: 10, src: "/Fotos_Equipo/10.jpg", title: "Fuerza & Velocidad", category: "Destreza en Cancha" },
-  { id: 11, src: "/Fotos_Equipo/11.jpg", title: "Unión & Compromiso", category: "Cancha Santa Bárbara" },
+  { id: 10, src: "/Fotos_Equipo/10.jpg", title: "Fuerza & Velocidad", category: "Destreza & Agilidad" },
+  { id: 11, src: "/Fotos_Equipo/11.jpg", title: "Unión & Compromiso", category: "Santa Bárbara" },
   { id: 12, src: "/Fotos_Equipo/12.jpg", title: "Tiro & Precisión", category: "Clínicas Formativas" },
   { id: 13, src: "/Fotos_Equipo/13.jpg", title: "Entrega Total", category: "Semillero Golden" },
   { id: 14, src: "/Fotos_Equipo/14.jpg", title: "Valores & Deporte", category: "Formación Humana" },

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef } from "react";
 import { 
@@ -149,7 +149,7 @@ export default function AdminAudioNotesTab() {
           Notas de Audio & Registro de la Entrenadora (Coach Lenny Monge & Directiva)
         </h2>
         <p className="text-xs text-gray-400">
-          Graba ideas de patrocinio comercial, acuerdos de reuniones, minutas y temas pendientes para trabajar en la cancha de Santa Bárbara.
+          Graba ideas de patrocinio comercial, acuerdos de reuniones, minutas y temas pendientes para trabajar en la academia.
         </p>
       </div>
 

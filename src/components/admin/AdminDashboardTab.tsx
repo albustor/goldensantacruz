@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import { 
@@ -24,9 +24,9 @@ interface Props {
 
 export default function AdminDashboardTab({ players, payments, matches, onSelectTab }: Props) {
   const activePlayers = players.filter((p) => p.isActive);
-  const paidPayments = payments.filter((p) => p.status === "paid");
-  const pendingPayments = payments.filter((p) => p.status === "pending");
-  const overduePayments = payments.filter((p) => p.status === "overdue");
+  const paidPayments = payments.filter((p) => p.status === "pagado");
+  const pendingPayments = payments.filter((p) => p.status === "pendiente");
+  const overduePayments = payments.filter((p) => p.status === "atrasado");
 
   const totalCollected = paidPayments.reduce((acc, curr) => acc + curr.amount, 0);
   const totalPending = pendingPayments.reduce((acc, curr) => acc + curr.amount, 0);
@@ -171,7 +171,7 @@ export default function AdminDashboardTab({ players, payments, matches, onSelect
                     </p>
                   </div>
                   <span className="text-[10px] uppercase font-bold bg-golden-500/20 text-golden-400 px-2.5 py-1 rounded-md border border-golden-500/30">
-                    {m.homeAway}
+                    {m.isHome ? "Local" : "Visita"}
                   </span>
                 </div>
               ))}

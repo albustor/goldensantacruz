@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -48,40 +48,31 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-gray-300 text-xs leading-relaxed">
-              Escuela formativa oficial de baloncesto para niños y jóvenes desde menores de U8 hasta juvenil en la cancha de Santa Bárbara. Con el respaldo deportivo de Golden Sport Academy Liberia.
+              Escuela formativa oficial de baloncesto para niños y jóvenes desde menores de U8 hasta juvenil en Santa Bárbara de Santa Cruz. Con el respaldo deportivo de Golden Sport Academy Liberia.
             </p>
           </div>
 
-          {/* Col 2: Sede de Cancha */}
+          {/* Col 2: Ubicación & Entrenamientos */}
           <div className="space-y-3">
             <h4 className="font-black text-white uppercase text-xs tracking-wider flex items-center gap-1.5">
               <MapPin className="w-3.5 h-3.5 text-golden-500" />
-              <span>Sede de Entrenamiento</span>
+              <span>Ubicación & Sesiones</span>
             </h4>
             <p className="text-gray-200 font-bold">
-              Cancha de Básquetbol de Santa Bárbara
+              Santa Bárbara de Santa Cruz
             </p>
-            <p className="text-gray-400 text-[11px]">
-              Santa Bárbara de Santa Cruz, Guanacaste, Costa Rica.
+            <p className="text-gray-400 text-[11px] leading-relaxed">
+              Guanacaste, Costa Rica. La programación de días y horarios se coordina directamente con la dirección técnica.
             </p>
-            <div className="flex gap-2 pt-1">
+            <div className="pt-1">
               <a
-                href="https://waze.com/ul?q=Santa+Barbara+Santa+Cruz+Guanacaste"
+                href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20consultar%20sobre%20los%20entrenamientos%20en%20Santa%20Bárbara"
                 target="_blank"
                 rel="noreferrer"
-                className="px-2.5 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-golden-400 font-bold text-[11px] border border-golden-500/30 flex items-center gap-1 transition-colors"
+                className="px-3 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-golden-400 font-bold text-[11px] border border-golden-500/30 inline-flex items-center gap-1.5 transition-colors"
               >
-                <Navigation className="w-3 h-3" />
-                <span>Waze</span>
-              </a>
-              <a
-                href="https://maps.google.com/?q=Santa+Barbara+Santa+Cruz+Guanacaste"
-                target="_blank"
-                rel="noreferrer"
-                className="px-2.5 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold text-[11px] border border-gray-700 flex items-center gap-1 transition-colors"
-              >
-                <MapPin className="w-3 h-3" />
-                <span>Google Maps</span>
+                <Phone className="w-3 h-3" />
+                <span>Consultar con Lenny Monge</span>
               </a>
             </div>
           </div>

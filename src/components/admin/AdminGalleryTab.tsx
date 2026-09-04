@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { 
@@ -61,7 +61,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     onRefresh();
   };
 
-  const handleToggleUploads = async (albumId: string, currentStatus: boolean) => {
+  const handleToggleUploads = async (albumId: string, currentStatus?: boolean) => {
     await Store.toggleAlbumUploads(albumId, !currentStatus);
     loadAlbums();
   };

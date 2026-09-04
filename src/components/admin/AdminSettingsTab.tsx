@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { Settings, Save, CheckCircle2, Database, Phone, MapPin, TreeDeciduous, Lock, ExternalLink } from "lucide-react";
@@ -162,7 +162,7 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
               <input
                 type="number"
                 value={formData.monthlyFeeDefault}
-                onChange={(e) => setFormData({ ...formData, monthlyFeeDefault: parseInt(e.target.value) || 15000 })}
+                onChange={(e) => setFormData({ ...formData, monthlyFeeDefault: parseInt(e.target.value) || 10000 })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white focus:border-golden-500"
               />
             </div>

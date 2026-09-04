@@ -1,4 +1,4 @@
-﻿export type PlayerCategory =
+export type PlayerCategory =
   | "Iniciación / Menores de U8 (U6-U8)"
   | "Mini-Básquet (U8-U10)"
   | "Infantil (U12-U14)"
@@ -23,6 +23,8 @@ export interface Player {
   monthlyFee: number;
   paymentStatus: PaymentStatus;
   isActive: boolean;
+  createdAt?: string;
+  dueDay?: number;
 }
 
 export interface PaymentRecord {
@@ -32,10 +34,14 @@ export interface PaymentRecord {
   guardianName: string;
   guardianPhone: string;
   month: string;
+  monthIndex?: number;
   year: number;
   amount: number;
   status: "pagado" | "pendiente" | "atrasado";
   paymentDate?: string;
+  paidDate?: string;
+  paymentMethod?: string;
+  notes?: string;
   sinpeReference?: string;
   receiptUrl?: string;
   dueDate: string;
@@ -45,13 +51,17 @@ export interface Match {
   id: string;
   category: PlayerCategory;
   opponent: string;
+  opponentLogo?: string;
   matchDate: string;
   matchTime: string;
   location: string;
   locationUrl?: string;
   isHome: boolean;
+  homeAway?: "local" | "visita";
   ourScore?: number;
   opponentScore?: number;
+  scoreGolden?: number;
+  scoreOpponent?: number;
   status: "upcoming" | "finished" | "live";
   summary?: string;
   mvp?: string;
@@ -65,13 +75,14 @@ export interface GalleryPhoto {
   category: PlayerCategory;
   uploaderName: string;
   uploaderPhone?: string;
-  uploaderRole: "padre" | "madre" | "entrenador" | "aficionado" | "staff";
+  uploaderRole?: "padre" | "madre" | "entrenador" | "aficionado" | "staff" | "familia";
   photoType: "community" | "pro_studio";
   albumId?: string;
   eventDate?: string;
   likesCount: number;
   isApproved: boolean;
-  uploadedAt: string;
+  uploadedAt?: string;
+  createdAt?: string;
   watermarkTag?: string; // "Curiol Studio Santa Cruz"
   priceDigital?: number; // Precios para fotos de estudio
   pricePrint?: number;
@@ -80,11 +91,13 @@ export interface GalleryPhoto {
 export interface GalleryAlbum {
   id: string;
   title: string;
-  coverPhotoUrl: string;
+  coverPhotoUrl?: string;
   eventDate: string;
   category: string;
+  description?: string;
   createdBy: string;
   isLocked?: boolean;
+  isOpenForUploads?: boolean;
 }
 
 export interface Sponsor {
@@ -92,10 +105,13 @@ export interface Sponsor {
   name: string;
   logoUrl: string;
   tier: "oro" | "plata" | "bronce";
+  tagline?: string;
   websiteUrl?: string;
   phone?: string;
+  whatsappPhone?: string;
   contactName?: string;
   isActive: boolean;
+  orderIndex?: number;
 }
 
 export interface AudioNote {
@@ -123,3 +139,6 @@ export interface SystemSettings {
   arbolGuanacasteUrl: string; // "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
   address: string;
 }
+
+export type AcademySettings = SystemSettings;
+

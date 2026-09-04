@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { 
@@ -8,20 +8,33 @@ import {
   Phone, 
   Mail, 
   Sparkles, 
-  Plus, 
   Search, 
-  Filter, 
   Send, 
-  DollarSign, 
   Calendar,
   X,
-  FileText,
   FileSpreadsheet,
-  Download
+  Copy,
+  Check,
+  ExternalLink,
+  Receipt,
+  HeartHandshake,
+  Clock,
+  MessageSquare
 } from "lucide-react";
 import { SystemSettings, PaymentRecord, Player } from "@/types";
 import { Store } from "@/lib/store";
-import { generatePaymentWhatsAppMessage } from "@/lib/whatsapp";
+import { 
+  ReminderLevel, 
+  REMINDER_LEVELS, 
+  getSuggestedReminderLevel, 
+  generatePaymentWhatsAppMessage, 
+  generatePaymentEmailContent,
+  createWhatsAppPaymentLink,
+  createEmailPaymentLink,
+  generatePaymentReceiptWhatsApp,
+  createPaymentReceiptWhatsAppLink,
+  formatWhatsAppNumber
+} from "@/lib/whatsapp";
 
 interface Props {
   payments: PaymentRecord[];
@@ -42,10 +55,21 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
   const [payNotes, setPayNotes] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
+  // Modal de notificación escalonada
+  const [activeNotifyPayment, setActiveNotifyPayment] = useState<PaymentRecord | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<ReminderLevel>("nivel1_preventivo");
+  const [copied, setCopied] = useState(false);
+
+  // Modal de comprobante / recibo enviado
+  const [receiptRecord, setReceiptRecord] = useState<PaymentRecord | null>(null);
+
   const months = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
+
+  // Map players for easy lookup (e.g. email)
+  const playersMap = new Map(players.map(p => [p.id, p]));
 
   // Filter payments by selected month/year and search
   const currentMonthPayments = payments.filter(
@@ -78,6 +102,8 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     for (const player of players.filter(p => p.isActive)) {
       const existing = payments.find(p => p.playerId === player.id && p.month === selectedMonth && p.year === selectedYear);
       if (!existing) {
+        // Fecha de corte oficial: Día 12 de cada mes
+        const monthNum = (months.indexOf(selectedMonth) + 1).toString().padStart(2, '0');
         await Store.addPayment({
           playerId: player.id,
           playerName: player.fullName,
@@ -85,9 +111,9 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
           guardianPhone: player.guardianPhone,
           month: selectedMonth,
           year: selectedYear,
-          amount: player.monthlyFee,
+          amount: player.monthlyFee || settings.monthlyFeeDefault || 10000,
           status: "pendiente",
-          dueDate: `${selectedYear}-${(months.indexOf(selectedMonth) + 1).toString().padStart(2, '0')}-05`
+          dueDate: `${selectedYear}-${monthNum}-12`
         });
       }
     }
@@ -95,13 +121,35 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     onRefresh();
   };
 
-  const handleConfirmPayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleConfirmPayment = async (e?: React.FormEvent, sendWhatsAppReceipt = false) => {
+    if (e) e.preventDefault();
     if (!payingRecord) return;
-    await Store.updatePaymentStatus(payingRecord.id, "pagado", payNotes || "SINPE-CONFIRMADO");
+    
+    const finalRef = payNotes.trim() || `SINPE-${Math.floor(100000 + Math.random() * 900000)}`;
+    await Store.updatePaymentStatus(payingRecord.id, "pagado", finalRef);
+
+    if (sendWhatsAppReceipt) {
+      const updatedRecord = { ...payingRecord, sinpeReference: finalRef, status: "pagado" as const };
+      const waLink = createPaymentReceiptWhatsAppLink(updatedRecord, settings, finalRef);
+      window.open(waLink, "_blank");
+    }
+
     setPayingRecord(null);
     setPayNotes("");
     onRefresh();
+  };
+
+  const handleOpenNotifyModal = (payment: PaymentRecord) => {
+    const suggested = getSuggestedReminderLevel(payment);
+    setSelectedLevel(suggested);
+    setActiveNotifyPayment(payment);
+    setCopied(false);
+  };
+
+  const handleCopyMessage = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
   };
 
   const handleExportCSV = () => {
@@ -135,11 +183,16 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
       {/* Top Controls */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-            Gestión de Cobranzas & Mensajería a Padres
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight">
+              Control de Cobranzas & Mensajería Escalonada
+            </h2>
+            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-golden-500 text-dark-900">
+              Corte: Día 12
+            </span>
+          </div>
           <p className="text-xs text-gray-400">
-            Control de mensualidades, generación de recibos y recordatorios automáticos por WhatsApp con Sinpe (6280-6989).
+            Recordatorios empáticos (Niveles 1 a 4), opción de becas y recibos digitales por WhatsApp y Correo.
           </p>
         </div>
 
@@ -189,6 +242,30 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
         </div>
       </div>
 
+      {/* Protocolo Visual de Notificaciones Escalonadas */}
+      <div className="p-4 rounded-3xl bg-dark-800/80 border border-golden-500/20 space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-black text-golden-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Clock className="w-4 h-4" />
+            Protocolo de Notificaciones Escalonadas y Empáticas (Corte: Día 12)
+          </span>
+          <span className="text-[11px] text-gray-400">Sinpe Oficial: <strong>{settings.sinpePhone}</strong></span>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+          {REMINDER_LEVELS.map((lvl) => (
+            <div key={lvl.id} className="p-3 rounded-2xl bg-dark-900/70 border border-gray-800 space-y-1">
+              <div className="flex items-center justify-between">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${lvl.badgeColor}`}>
+                  {lvl.title.split(":")[0]}
+                </span>
+                <span className="text-[10px] text-gray-400 font-semibold">{lvl.timing}</span>
+              </div>
+              <p className="text-[11px] text-gray-300 font-medium pt-1">{lvl.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Financial Overview Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-dark-800 border border-gray-800 space-y-1">
@@ -208,13 +285,13 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
         <div className="p-4 rounded-2xl bg-dark-800 border border-gray-800 space-y-1">
           <span className="text-[11px] font-bold text-amber-400 uppercase">Pendientes ({pendingList.length})</span>
           <p className="text-2xl font-black text-amber-400">₡{totalPending.toLocaleString("es-CR")}</p>
-          <p className="text-[10px] text-gray-400">Por vencer o en trámite de Sinpe</p>
+          <p className="text-[10px] text-gray-400">Fecha de corte: 12 de {selectedMonth}</p>
         </div>
 
         <div className="p-4 rounded-2xl bg-dark-800 border border-gray-800 space-y-1">
-          <span className="text-[11px] font-bold text-red-400 uppercase">Vencidos ({overdueList.length})</span>
+          <span className="text-[11px] font-bold text-red-400 uppercase">Atrasados ({overdueList.length})</span>
           <p className="text-2xl font-black text-red-400">₡{totalOverdue.toLocaleString("es-CR")}</p>
-          <p className="text-[10px] text-red-300">Requieren recordatorio urgente</p>
+          <p className="text-[10px] text-red-300">Ofrecer Beca / Comité de Padres</p>
         </div>
       </div>
 
@@ -274,11 +351,11 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             <thead className="bg-dark-900/90 text-gray-400 font-bold uppercase text-[10px] tracking-wider border-b border-gray-700/80">
               <tr>
                 <th className="py-3.5 px-4">Jugador / Atleta</th>
-                <th className="py-3.5 px-4">Tutor Legal & Celular</th>
+                <th className="py-3.5 px-4">Tutor Legal & Contacto</th>
                 <th className="py-3.5 px-4">Mes & Monto</th>
-                <th className="py-3.5 px-4">Fecha Límite</th>
-                <th className="py-3.5 px-4">Estado</th>
-                <th className="py-3.5 px-4 text-right">Notificación / Cobro</th>
+                <th className="py-3.5 px-4">Fecha Corte</th>
+                <th className="py-3.5 px-4">Estado & Nivel Sugerido</th>
+                <th className="py-3.5 px-4 text-right">Gestión de Cobranza & Recibos</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-800">
@@ -292,78 +369,114 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                 filtered.map((p) => {
                   const isPaid = p.status === "pagado";
                   const isOverdue = p.status === "atrasado";
-                  const waMessage = generatePaymentWhatsAppMessage(p, settings);
+                  const suggestedLevel = getSuggestedReminderLevel(p);
+                  const levelInfo = REMINDER_LEVELS.find(l => l.id === suggestedLevel);
+                  const playerObj = playersMap.get(p.playerId);
+                  const guardianEmail = playerObj?.guardianEmail;
 
                   return (
                     <tr key={p.id} className="hover:bg-dark-700/40 transition-colors">
                       <td className="py-3 px-4">
                         <p className="font-bold text-white text-sm">{p.playerName}</p>
-                        {p.sinpeReference && <p className="text-[10px] text-gray-400 italic">Ref: {p.sinpeReference}</p>}
+                        {p.sinpeReference && <p className="text-[10px] text-emerald-400 font-mono">Ref: {p.sinpeReference}</p>}
                       </td>
 
                       <td className="py-3 px-4">
                         <p className="font-medium text-gray-200">{p.guardianName}</p>
-                        <span className="text-[11px] text-gray-400">{p.guardianPhone}</span>
+                        <div className="flex items-center gap-2 text-[11px] text-gray-400">
+                          <span>📱 {p.guardianPhone}</span>
+                          {guardianEmail && <span className="text-gray-500">• ✉️ {guardianEmail}</span>}
+                        </div>
                       </td>
 
                       <td className="py-3 px-4">
                         <p className="font-black text-white text-sm">
                           ₡{p.amount.toLocaleString("es-CR")}
                         </p>
-                        <span className="text-[10px] text-golden-400 font-semibold">{p.month}</span>
+                        <span className="text-[10px] text-golden-400 font-semibold">{p.month} {p.year}</span>
                       </td>
 
                       <td className="py-3 px-4">
-                        <span className="font-medium text-gray-300">{p.dueDate}</span>
+                        <span className="font-medium text-gray-300">{p.dueDate || `12 de ${p.month}`}</span>
                         {p.paymentDate && (
                           <p className="text-[10px] text-emerald-400">Pagado el: {p.paymentDate}</p>
                         )}
                       </td>
 
-                      <td className="py-3 px-4">
-                        {isPaid ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3" />
-                            Al Día
-                          </span>
-                        ) : isOverdue ? (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center gap-1">
-                            <AlertCircle className="w-3 h-3" />
-                            Vencido
-                          </span>
-                        ) : (
-                          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center gap-1">
-                            Pendiente
-                          </span>
+                      <td className="py-3 px-4 space-y-1">
+                        <div>
+                          {isPaid ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Al Día
+                            </span>
+                          ) : isOverdue ? (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Vencido
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center gap-1">
+                              Pendiente
+                            </span>
+                          )}
+                        </div>
+                        {!isPaid && levelInfo && (
+                          <div>
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${levelInfo.badgeColor}`}>
+                              {levelInfo.shortLabel}
+                            </span>
+                          </div>
                         )}
                       </td>
 
                       <td className="py-3 px-4 text-right space-x-2">
-                        {!isPaid && (
-                          <a
-                            href={`https://wa.me/506${p.guardianPhone.replace(/\D/g, "")}?text=${encodeURIComponent(waMessage)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all"
-                            title="Enviar aviso estructurado de cobro por WhatsApp"
-                          >
-                            <Phone className="w-3.5 h-3.5" />
-                            <span>Cobrar WhatsApp</span>
-                          </a>
-                        )}
-
                         {!isPaid ? (
-                          <button
-                            onClick={() => setPayingRecord(p)}
-                            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-bold text-xs shadow-md transition-all"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            Registrar Pago
-                          </button>
+                          <>
+                            <button
+                              onClick={() => handleOpenNotifyModal(p)}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-golden-300 font-bold text-xs border border-golden-500/40 shadow-md transition-all"
+                              title="Seleccionar nivel de recordatorio y canal (WhatsApp / Correo)"
+                            >
+                              <MessageSquare className="w-3.5 h-3.5 text-golden-400" />
+                              <span>Recordatorio</span>
+                            </button>
+
+                            <a
+                              href={createWhatsAppPaymentLink(p, settings, suggestedLevel)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all"
+                              title="Enviar por WhatsApp directo con mensaje sugerido"
+                            >
+                              <Phone className="w-3.5 h-3.5" />
+                              <span>WhatsApp</span>
+                            </a>
+
+                            <button
+                              onClick={() => setPayingRecord(p)}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs shadow-md transition-all"
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              Registrar Pago
+                            </button>
+                          </>
                         ) : (
-                          <span className="text-[11px] text-gray-500 font-semibold italic">
-                            Comprobante listo
-                          </span>
+                          <div className="inline-flex items-center gap-2">
+                            <a
+                              href={createPaymentReceiptWhatsAppLink(p, settings, p.sinpeReference)}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-950/70 hover:bg-emerald-900/80 text-emerald-400 text-xs font-bold border border-emerald-500/40 transition-all"
+                              title="Reenviar comprobante oficial por WhatsApp"
+                            >
+                              <Receipt className="w-3.5 h-3.5" />
+                              <span>Reenviar Recibo WA</span>
+                            </a>
+                            <span className="text-[11px] text-gray-400 italic">
+                              Pagado
+                            </span>
+                          </div>
                         )}
                       </td>
                     </tr>
@@ -375,7 +488,124 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
         </div>
       </div>
 
-      {/* MODAL REGISTRAR PAGO */}
+      {/* MODAL DE NOTIFICACIÓN ESCALONADA (NIVELES 1 A 4, WHATSAPP & EMAIL) */}
+      {activeNotifyPayment && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-2xl bg-dark-900 border-2 border-golden-500/50 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setActiveNotifyPayment(null)}
+              className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-xs font-black text-golden-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" />
+                Gestión de Recordatorio Escalonado
+              </span>
+              <h3 className="text-xl font-black text-white uppercase">
+                Notificar a {activeNotifyPayment.guardianName} ({activeNotifyPayment.playerName})
+              </h3>
+              <p className="text-xs text-gray-400">
+                Periodo: {activeNotifyPayment.month} {activeNotifyPayment.year} • Monto: ₡{activeNotifyPayment.amount.toLocaleString("es-CR")} • Fecha de corte: 12 de {activeNotifyPayment.month}
+              </p>
+            </div>
+
+            {/* Selector de Nivel de Recordatorio */}
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-gray-300 uppercase">
+                Seleccione el Nivel del Mensaje (Empatía Escalonada):
+              </label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                {REMINDER_LEVELS.map((lvl) => {
+                  const isSelected = selectedLevel === lvl.id;
+                  return (
+                    <button
+                      key={lvl.id}
+                      type="button"
+                      onClick={() => setSelectedLevel(lvl.id)}
+                      className={`p-3 rounded-2xl text-left border transition-all ${
+                        isSelected
+                          ? "bg-golden-500/10 border-golden-500 text-white ring-1 ring-golden-500"
+                          : "bg-dark-800 border-gray-700/70 text-gray-400 hover:bg-dark-700/60"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase border ${lvl.badgeColor}`}>
+                          {lvl.title}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-300">{lvl.description}</p>
+                      <span className="text-[10px] text-golden-400 font-bold block mt-1">{lvl.timing}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Vista Previa del Mensaje WhatsApp */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                  <Phone className="w-3.5 h-3.5" />
+                  <span>Vista Previa del Mensaje para WhatsApp:</span>
+                </label>
+                <button
+                  type="button"
+                  onClick={() => handleCopyMessage(generatePaymentWhatsAppMessage(activeNotifyPayment, settings, selectedLevel))}
+                  className="inline-flex items-center gap-1 text-[11px] font-bold text-gray-300 hover:text-white px-2.5 py-1 rounded-lg bg-dark-800 border border-gray-700"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <span className="text-emerald-400">Copiado</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copiar Texto</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <div className="p-4 rounded-2xl bg-dark-950 border border-gray-800 text-xs text-gray-200 whitespace-pre-wrap font-sans leading-relaxed max-h-48 overflow-y-auto">
+                {generatePaymentWhatsAppMessage(activeNotifyPayment, settings, selectedLevel)}
+              </div>
+            </div>
+
+            {/* Acciones de Envío */}
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <a
+                href={createWhatsAppPaymentLink(activeNotifyPayment, settings, selectedLevel)}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                <Phone className="w-4 h-4" />
+                <span>Enviar por WhatsApp</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+
+              <a
+                href={createEmailPaymentLink(
+                  activeNotifyPayment,
+                  settings,
+                  playersMap.get(activeNotifyPayment.playerId)?.guardianEmail,
+                  selectedLevel
+                )}
+                className="flex-1 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-lg transition-all"
+              >
+                <Mail className="w-4 h-4" />
+                <span>Enviar por Correo (Email)</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL REGISTRAR PAGO CON ENVÍO INMEDIATO DE COMPROBANTE */}
       {payingRecord && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="w-full max-w-md bg-dark-900 border-2 border-golden-500/50 rounded-3xl p-6 space-y-6 shadow-2xl relative">
@@ -387,18 +617,19 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             </button>
 
             <div className="space-y-1">
-              <span className="text-xs font-bold text-emerald-400 uppercase">
-                Confirmación de Mensualidad
+              <span className="text-xs font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                <Receipt className="w-4 h-4" />
+                Registro Oficial de Pago
               </span>
               <h3 className="text-xl font-black text-white uppercase">
-                Registrar Pago de {payingRecord.playerName}
+                {payingRecord.playerName}
               </h3>
               <p className="text-xs text-gray-400">
-                Periodo: {payingRecord.month} • Monto: ₡{payingRecord.amount.toLocaleString("es-CR")}
+                Periodo: {payingRecord.month} {payingRecord.year} • Monto: ₡{payingRecord.amount.toLocaleString("es-CR")}
               </p>
             </div>
 
-            <form onSubmit={handleConfirmPayment} className="space-y-4">
+            <form onSubmit={(e) => handleConfirmPayment(e, false)} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase mb-1">
                   Método de Pago *
@@ -408,7 +639,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                   onChange={(e) => setPayMethod(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs focus:border-golden-500"
                 >
-                  <option value="Sinpe Móvil">Sinpe Móvil (6280-6989)</option>
+                  <option value="Sinpe Móvil">Sinpe Móvil ({settings.sinpePhone})</option>
                   <option value="Transferencia">Transferencia Bancaria (IBAN)</option>
                   <option value="Efectivo">Efectivo</option>
                 </select>
@@ -427,20 +658,31 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                 />
               </div>
 
-              <div className="flex gap-2 pt-2">
+              <div className="space-y-2 pt-2">
                 <button
                   type="button"
-                  onClick={() => setPayingRecord(null)}
-                  className="flex-1 py-2.5 rounded-xl bg-dark-800 text-gray-300 text-xs font-bold"
+                  onClick={() => handleConfirmPayment(undefined, true)}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
                 >
-                  Cancelar
+                  <Receipt className="w-4 h-4" />
+                  <span>Confirmar y Enviar Recibo WhatsApp</span>
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase shadow-lg"
-                >
-                  Confirmar Pago
-                </button>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setPayingRecord(null)}
+                    className="flex-1 py-2.5 rounded-xl bg-dark-800 text-gray-300 text-xs font-bold"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase shadow-lg"
+                  >
+                    Solo Guardar Pago
+                  </button>
+                </div>
               </div>
             </form>
           </div>
@@ -449,3 +691,4 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     </div>
   );
 }
+

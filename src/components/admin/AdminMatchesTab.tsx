@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { 
@@ -30,8 +30,8 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
     category: "Iniciación / Menores de U8 (U6-U8)" as PlayerCategory,
     matchDate: new Date().toISOString().split("T")[0],
     matchTime: "10:00 AM",
-    location: "Cancha de Santa Bárbara de Santa Cruz",
-    locationUrl: "https://waze.com/ul?q=Santa+Barbara+Santa+Cruz+Guanacaste",
+    location: "Santa Bárbara de Santa Cruz",
+    locationUrl: "https://maps.google.com/?q=Santa+Barbara+Santa+Cruz+Guanacaste",
     homeAway: "local" as "local" | "visita",
     status: "upcoming" as "upcoming" | "live" | "finished",
     scoreGolden: 0,
@@ -47,8 +47,8 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
       category: "Iniciación / Menores de U8 (U6-U8)",
       matchDate: new Date().toISOString().split("T")[0],
       matchTime: "10:00 AM",
-      location: "Cancha de Santa Bárbara de Santa Cruz",
-      locationUrl: "https://waze.com/ul?q=Santa+Barbara+Santa+Cruz+Guanacaste",
+      location: "Santa Bárbara de Santa Cruz",
+      locationUrl: "https://maps.google.com/?q=Santa+Barbara+Santa+Cruz+Guanacaste",
       homeAway: "local",
       status: "upcoming",
       scoreGolden: 0,
@@ -68,7 +68,7 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
       matchTime: m.matchTime,
       location: m.location,
       locationUrl: m.locationUrl || "",
-      homeAway: m.homeAway,
+      homeAway: m.homeAway || (m.isHome ? "local" : "visita"),
       status: m.status,
       scoreGolden: m.scoreGolden || 0,
       scoreOpponent: m.scoreOpponent || 0,
@@ -79,14 +79,17 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const isHome = formData.homeAway === "local";
     if (editingMatch) {
       await Store.updateMatch({
         ...editingMatch,
         ...formData,
+        isHome,
       });
     } else {
       await Store.addMatch({
         ...formData,
+        isHome,
       });
     }
     setIsModalOpen(false);

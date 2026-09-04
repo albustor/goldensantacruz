@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -37,11 +37,11 @@ export default function AboutSection() {
 
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-dark-900 border border-golden-500/30 text-xs sm:text-sm font-bold text-gray-200 shadow-md">
           <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
-          <span>Cancha de Básquetbol de Santa Bárbara de Santa Cruz, Guanacaste</span>
+          <span>Ubicación: Santa Bárbara de Santa Cruz, Guanacaste</span>
         </div>
 
         <p className="text-xs sm:text-base text-gray-300 max-w-3xl mx-auto leading-relaxed font-normal">
-          Formación deportiva y desarrollo humano integral en baloncesto para niños y jóvenes desde <strong>menores de U8 hasta juvenil</strong>. Un proyecto liderado por la entrenadora <strong>Yorleny (Lenny) Monge Soto</strong>, con el respaldo fotográfico de <strong>Curiol Studio</strong> y la alianza deportiva con <strong>Golden Sport Academy Liberia</strong>.
+          Formación deportiva y desarrollo humano integral en baloncesto para niños y jóvenes desde <strong>menores de U8 hasta juvenil</strong>. Un proyecto liderado por la entrenadora <strong>Yorleny (Lenny) Monge Soto</strong>, con el respaldo fotográfico de <strong>Curiol Studio</strong> en partidos oficiales y la hermandad deportiva con <strong>Golden Sport Academy Liberia</strong>.
         </p>
       </div>
 
@@ -80,10 +80,10 @@ export default function AboutSection() {
               Cobertura Visual
             </span>
             <h3 className="text-lg sm:text-xl font-black text-white uppercase">
-              Curiol Studio en las Clases & Partidos
+              Curiol Studio en Partidos Oficiales
             </h3>
             <p className="text-xs text-gray-300 leading-relaxed">
-              <strong>Curiol Studio</strong> realiza el acompañamiento fotográfico profesional en entrenamientos y fogueos. Captura momentos de acción en alta resolución para el archivo deportivo de los atletas y produce los recuerdos familiares oficiales (imanes para neveras y retablos).
+              <strong>Curiol Studio</strong> realiza el acompañamiento fotográfico profesional en partidos oficiales y encuentros programados. Captura momentos de acción en alta resolución y produce los recuerdos familiares oficiales (imanes para neveras y retablos).
             </p>
           </div>
           <div className="pt-3 border-t border-gray-800 text-[11px] text-golden-400 font-bold flex items-center gap-1">
@@ -116,40 +116,38 @@ export default function AboutSection() {
 
       </div>
 
-      {/* 3. SEDE CENTRAL: CANCHA DE BÁSQUETBOL DE SANTA BÁRBARA DE SANTA CRUZ (CON WAZE Y MAPS) */}
+      {/* 3. COORDINACIÓN DIRECTA DE ENTRENAMIENTOS */}
       <div className="p-6 sm:p-10 rounded-3xl bg-gradient-to-r from-dark-900 via-dark-800 to-dark-900 border-2 border-golden-500/40 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6">
         <div className="space-y-2 text-center lg:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500/20 text-golden-400 text-xs font-bold uppercase">
             <MapPin className="w-3.5 h-3.5" />
-            <span>Sede Oficial de Entrenamiento</span>
+            <span>Ubicación: Santa Bárbara de Santa Cruz, Guanacaste</span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-black text-white uppercase">
-            Cancha de Básquetbol de Santa Bárbara de Santa Cruz
+            Coordinación Directa de Entrenamientos
           </h3>
-          <p className="text-xs sm:text-sm text-gray-300 max-w-2xl">
-            Nuestra casa deportiva principal donde entrenamos todas las categorías (Menores U8 a Juvenil). Un espacio comunitario rescatado para la niñez y juventud de Santa Cruz, Guanacaste.
+          <p className="text-xs sm:text-sm text-gray-300 max-w-2xl leading-relaxed">
+            Para coordinar los días, horarios por categoría y la programación de las sesiones formativas de <strong>Golden Sport Academy Santa Cruz</strong>, comunícate directamente con la entrenadora <strong>Lenny Monge</strong>.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-3 shrink-0">
           <a
-            href="https://waze.com/ul?q=Santa+Barbara+Santa+Cruz+Guanacaste"
+            href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20consultar%20sobre%20los%20horarios%20y%20entrenamientos%20de%20Golden%20Sport%20Academy%20Santa%20Cruz"
             target="_blank"
             rel="noreferrer"
-            className="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
+            className="px-6 py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
           >
-            <Navigation className="w-4 h-4" />
-            <span>Cómo llegar en Waze</span>
+            <Phone className="w-4 h-4" />
+            <span>Consultar con la Entrenadora</span>
           </a>
-          <a
-            href="https://maps.google.com/?q=Santa+Barbara+Santa+Cruz+Guanacaste"
-            target="_blank"
-            rel="noreferrer"
-            className="px-5 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 font-bold text-xs uppercase flex items-center gap-2 border border-golden-500/30 transition-colors"
+          <Link
+            href="/informacion"
+            className="px-5 py-3.5 rounded-2xl bg-dark-800 hover:bg-dark-700 text-golden-400 font-bold text-xs uppercase flex items-center gap-2 border border-golden-500/30 transition-colors"
           >
-            <MapPin className="w-4 h-4" />
-            <span>Google Maps</span>
-          </a>
+            <span>Ver Cuotas & Proyecto</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
 

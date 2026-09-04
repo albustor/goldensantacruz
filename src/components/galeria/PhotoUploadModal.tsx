@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { X, Upload, Camera, Calendar, User, Sparkles, CheckCircle2, Image as ImageIcon } from "lucide-react";
@@ -207,7 +207,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
             </label>
             <input
               type="text"
-              placeholder="Ej. Gran Pase de Thiago / Celebración en la Cancha de Santa Bárbara"
+              placeholder="Ej. Gran Pase de Thiago / Celebración de la Victoria"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"

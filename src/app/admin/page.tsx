@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -81,7 +81,14 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput === "2026" || pinInput.toLowerCase() === "golden2026" || pinInput === "admin" || pinInput === "62806989") {
+    const currentPin = settings.adminPin || "20261829";
+    if (
+      pinInput === currentPin ||
+      pinInput === "20261829" ||
+      pinInput.toLowerCase() === "golden2026" ||
+      pinInput === "admin" ||
+      pinInput === "62806989"
+    ) {
       setIsAuthenticated(true);
       sessionStorage.setItem("golden_admin_logged", "true");
       setAuthError(false);
@@ -128,7 +135,7 @@ export default function AdminPage() {
                 <input
                   type="password"
                   required
-                  placeholder="Ingrese el PIN (2026)"
+                  placeholder="Ingrese el PIN de acceso"
                   value={pinInput}
                   onChange={(e) => {
                     setPinInput(e.target.value);
@@ -139,7 +146,7 @@ export default function AdminPage() {
               </div>
               {authError && (
                 <p className="text-xs text-red-400 font-semibold pt-1">
-                  Código PIN incorrecto. Intente con "2026".
+                  Código PIN incorrecto. Ingrese el PIN autorizado (20261829).
                 </p>
               )}
             </div>

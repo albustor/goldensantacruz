@@ -1,4 +1,4 @@
-﻿import {
+import {
   AcademySettings,
   GalleryAlbum,
   GalleryPhoto,
@@ -98,6 +98,42 @@ export const Store = {
     return getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
   },
 
+  async addPayment(payment: Omit<PaymentRecord, 'id'>): Promise<PaymentRecord> {
+    const newRecord: PaymentRecord = {
+      ...payment,
+      id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+    };
+    const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    saveToStorage(STORAGE_KEYS.PAYMENTS, [newRecord, ...current]);
+    return newRecord;
+  },
+
+  async updatePayment(payment: PaymentRecord): Promise<void> {
+    const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    saveToStorage(STORAGE_KEYS.PAYMENTS, current.map(p => (p.id === payment.id ? payment : p)));
+  },
+
+  async deletePayment(id: string): Promise<void> {
+    const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    saveToStorage(STORAGE_KEYS.PAYMENTS, current.filter(p => p.id !== id));
+  },
+
+  async updatePaymentStatus(id: string, status: "pagado" | "pendiente" | "atrasado", sinpeReference?: string): Promise<void> {
+    const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    const updated = current.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          status,
+          sinpeReference: sinpeReference || p.sinpeReference,
+          paymentDate: status === "pagado" ? (p.paymentDate || new Date().toISOString().split("T")[0]) : undefined,
+        };
+      }
+      return p;
+    });
+    saveToStorage(STORAGE_KEYS.PAYMENTS, updated);
+  },
+
   async markPaymentPaid(id: string, method: 'Sinpe Móvil' | 'Transferencia' | 'Efectivo', notes?: string): Promise<void> {
     const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
     const updated = current.map(p => {
@@ -134,14 +170,14 @@ export const Store = {
         const record: PaymentRecord = {
           id: `pay-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
           playerId: player.id,
-          playerName: `${player.firstName} ${player.lastName}`,
+          playerName: player.fullName,
           guardianName: player.guardianName,
           guardianPhone: player.guardianPhone,
           month: monthName,
           monthIndex,
           year,
           amount: player.monthlyFee,
-          status: 'pending',
+          status: 'pendiente',
           dueDate,
         };
         newRecords.push(record);

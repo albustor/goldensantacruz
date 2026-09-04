@@ -1,8 +1,9 @@
-﻿import React from "react";
+import React from "react";
 import HeroBackground from "@/components/home/HeroBackground";
 import HeroSection from "@/components/home/HeroSection";
 import ScheduleSection from "@/components/home/ScheduleSection";
 import RegistrationSection from "@/components/home/RegistrationSection";
+import QuickAccessBanners from "@/components/home/QuickAccessBanners";
 import SponsorsSection from "@/components/home/SponsorsSection";
 import { Store } from "@/lib/store";
 
@@ -26,10 +27,13 @@ export default async function HomePage() {
         <ScheduleSection />
       </div>
 
-      {/* 2. Pre-Inscripción de Atletas */}
+      {/* 2. Banners de Acceso Rápido & Pilares Institucionales (Cuotas, Becas, Pauta, Línea de Tiempo) */}
+      <QuickAccessBanners />
+
+      {/* 3. Pre-Inscripción de Atletas */}
       <RegistrationSection />
 
-      {/* 3. Pauta Publicitaria Oficial */}
+      {/* 4. Pauta Publicitaria Oficial & Curiol Studio */}
       <SponsorsSection sponsors={sponsors} />
     </div>
   );

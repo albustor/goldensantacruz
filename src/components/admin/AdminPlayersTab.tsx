@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { 
@@ -39,7 +39,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
     guardianName: "",
     guardianPhone: "62806989",
     guardianEmail: "",
-    monthlyFee: 15000,
+    monthlyFee: 10000,
     paymentStatus: "al_dia" as any,
     isActive: true,
     photoUrl: "",
@@ -58,7 +58,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
       guardianName: "",
       guardianPhone: "62806989",
       guardianEmail: "",
-      monthlyFee: 15000,
+      monthlyFee: 10000,
       paymentStatus: "al_dia",
       isActive: true,
       photoUrl: "",

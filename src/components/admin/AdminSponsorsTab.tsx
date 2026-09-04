@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { Award, Plus, Edit3, Trash2, X, Star } from "lucide-react";
@@ -46,11 +46,11 @@ export default function AdminSponsorsTab({ sponsors, onRefresh }: Props) {
       name: s.name,
       tier: s.tier,
       logoUrl: s.logoUrl,
-      tagline: s.tagline,
+      tagline: s.tagline || "",
       websiteUrl: s.websiteUrl || "",
       whatsappPhone: s.whatsappPhone || "",
       isActive: s.isActive,
-      orderIndex: s.orderIndex,
+      orderIndex: s.orderIndex || 0,
     });
     setIsModalOpen(true);
   };

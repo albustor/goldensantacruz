@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -72,7 +72,7 @@ export default function SponsorsSection({ sponsors: initialSponsors }: Props) {
                 ¿Deseas pautar y sumar la marca de tu empresa?
               </h3>
               <p className="text-xs text-gray-300">
-                Publicidad efectiva en uniformes, vallas de cancha y en los recuerdos de Curiol Studio para las familias de Santa Cruz.
+                Pauta por partido oficial, lonas en la zona de entrenamiento, difusión digital de Curiol Studio y presencia en uniformes.
               </p>
             </div>
 
@@ -81,11 +81,11 @@ export default function SponsorsSection({ sponsors: initialSponsors }: Props) {
                 href="/patrocinadores"
                 className="px-4 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase flex items-center gap-1.5 shadow-md"
               >
-                <span>Ver Paquetes & Retorno</span>
+                <span>Ver Modalidades de Pauta</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <a
-                href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20información%20sobre%20los%20paquetes%20de%20patrocinio%20para%20Golden%20Sport%20Academy"
+                href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20información%20sobre%20las%20opciones%20de%20patrocinio%20y%20pauta%20para%20Golden%20Sport%20Academy"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-emerald-400 font-bold text-xs uppercase flex items-center gap-1.5 border border-emerald-800/40"

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { Sparkles, CheckCircle2, Phone, Send } from "lucide-react";
@@ -201,7 +201,7 @@ export default function RegistrationSection() {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
               <div className="text-[11px] text-gray-400">
-                🔒 Sede oficial: Cancha de Santa Bárbara de Santa Cruz.
+                🔒 Ubicación: Santa Bárbara de Santa Cruz, Guanacaste.
               </div>
               <button
                 type="submit"
