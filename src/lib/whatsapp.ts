@@ -34,18 +34,18 @@ export const REMINDER_LEVELS: ReminderLevelInfo[] = [
   },
   {
     id: "nivel3_formativo",
-    title: "Nivel 3: Refuerzo Formativo & Continuidad",
+    title: "Nivel 3: Continuidad Formativa",
     shortLabel: "Nivel 3 (Día 17 - Formativo)",
     badgeColor: "bg-orange-500/20 text-orange-400 border-orange-500/30",
-    description: "Destaca la importancia de los recursos para entrenamientos, balones y partidos.",
+    description: "Recordatorio de cuota mensual para la continuidad activa del atleta en la academia.",
     timing: "5 días después / cada 3 días (Día 17)",
   },
   {
     id: "nivel4_beca_comite",
-    title: "Nivel 4: Instancia de Apoyo & Opción de Beca / Comité",
-    shortLabel: "Nivel 4 (Día 20+ - Opción Beca)",
+    title: "Nivel 4: Opciones de Apoyo & Cierre Cordial",
+    shortLabel: "Nivel 4 (Día 20+ - Opciones / Cierre)",
     badgeColor: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-    description: "Ofrecimiento solidario de Beca (100% o 60/40) con apoyo al Comité de Padres.",
+    description: "Opciones de Beca/Comité o cierre respetuoso y agradecimiento por haber sido parte del equipo.",
     timing: "8+ días de retraso (Día 20 en adelante)",
   },
 ];
@@ -132,23 +132,24 @@ export function generatePaymentWhatsAppMessage(
     case "nivel3_formativo":
       return `🌟 *Continuidad Deportiva y Formativa - Golden Sport Academy Santa Cruz*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
-        `Reciba un cordial saludo. Para Golden Sport Academy, el desarrollo integral, físico y en valores de *${payment.playerName}* en la cancha es nuestra mayor motivación. Su entusiasmo y progreso constante en cada entrenamiento nos llenan de satisfacción.\n\n` +
-        `Le recordamos respetuosamente la importancia de mantener al día la cuota de *${payment.month}* (*${formattedAmount}*), ya que estos aportes son el sustento vital que nos permite garantizar el alquiler del gimnasio, material deportivo de calidad, hidratación y la logística de los partidos de nuestros muchachos.\n\n` +
+        `Reciba un cordial saludo de parte de Golden Sport Academy Santa Cruz.\n\n` +
+        `Para nuestra academia, el desarrollo deportivo y formativo de *${payment.playerName}* en la cancha es fundamental. Su disciplina y entusiasmo en cada entrenamiento nos llenan de satisfacción.\n\n` +
+        `Le recordamos respetuosamente la importancia de mantener al día la cuota mensual de *${payment.month}* (*${formattedAmount}*) correspondiente a su formación en la academia, para garantizar la continuidad activa en su proceso deportivo.\n\n` +
         `📌 *Datos de Pago:*\n` +
         `• Atleta: *${payment.playerName}*\n` +
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos de corazón su esfuerzo para ponernos al día. Por favor remítanos el comprobante a este chat. ¡Juntos seguimos impulsando su gran futuro deportivo! 🏀🔥`;
+        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a este chat. ¡Seguimos adelante con su proceso formativo! 🏀🔥`;
 
     case "nivel4_beca_comite":
-      return `🤝 *Mensaje de Apoyo y Opciones para la Familia - Golden Sport Academy Santa Cruz*\n\n` +
+      return `🤝 *Mensaje de Apoyo, Opciones y Continuidad - Golden Sport Academy Santa Cruz*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
-        `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, cariño y empatía de parte de la directiva y cuerpo técnico de Golden Sport Academy.\n\n` +
-        `Observamos que la cuota de *${payment.month}* de *${payment.playerName}* presenta un atraso de varios días. Entendemos plenamente que como familias todos podemos atravesar momentos económicos complejos o imprevistos temporales. Queremos asegurarle con el corazón que *nuestro mayor anhelo es que ${payment.playerName} no tenga que interrumpir sus entrenamientos ni alejarse del equipo.*\n\n` +
-        `Por esta razón, ponemos a su disposición nuestro **Programa Solidario de Becas Deportivas** (con cobertura del 100% o esquema compartido 60/40), en el cual, a cambio del subsidio de padrinos, la familia formaliza un compromiso de integrarse activamente al **Comité de Padres de Familia** para colaborar en tareas de apoyo, organización de eventos y actividades de la academia.\n\n` +
-        `Si desea cancelar la cuota pendiente (*${formattedAmount}* al Sinpe *${settings.sinpePhone}*), o si prefiere coordinar la opción de Beca y Comité, por favor comuníquese en total confianza con nosotros al *${settings.coachPhone || settings.sinpePhone}* o responda a este mensaje.\n\n` +
-        `¡En Golden Sport Academy las puertas siempre estarán abiertas para su familia! 💛🖤`;
+        `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, respeto y consideración de parte de la directiva y cuerpo técnico de Golden Sport Academy.\n\n` +
+        `Observamos que la cuota de *${payment.month}* de *${payment.playerName}* presenta un atraso de varios días. Entendemos plenamente que como familias todos podemos atravesar momentos imprevistos o situaciones complejas. Queremos recordarle que ponemos a su disposición el **Programa de Becas Deportivas** (cobertura 100% o esquema compartido 60/40) con el compromiso de integrarse a apoyar las actividades del **Comité de Padres de Familia**.\n\n` +
+        `Si desea coordinar la regularización de la cuota (*${formattedAmount}* al Sinpe *${settings.sinpePhone}*) o evaluar la opción de beca, por favor comuníquese con nosotros al *${settings.coachPhone || settings.sinpePhone}*.\n\n` +
+        `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento a usted y a su familia por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto y cariño que en esta etapa no podrá continuar, deseándole siempre el mayor de los éxitos a *${payment.playerName}* y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
+        `¡Un cordial saludo y bendiciones! 💛🖤`;
   }
 }
 
@@ -202,9 +203,11 @@ export function generatePaymentEmailContent(
       subject = `Importancia de la Continuidad Formativa de ${payment.playerName} - Golden Sport Academy`;
       body = `Estimado(a) ${payment.guardianName},\n\n` +
         `Reciba un cordial y atento saludo de parte de Golden Sport Academy Santa Cruz.\n\n` +
-        `Para nuestra institución, el desarrollo integral, físico y en valores de ${payment.playerName} en la cancha es una prioridad absoluta. Su disciplina y entusiasmo en cada entrenamiento son motivo de orgullo para todo el equipo.\n\n` +
-        `Le recordamos respetuosamente la importancia de mantener al día la cuota de ${payment.month} (${formattedAmount}), ya que estos aportes son el motor que permite sostener el alquiler de las instalaciones deportivas, balones, hidratación y arbitrajes oficiales.\n\n` +
+        `Para nuestra academia, el desarrollo deportivo y formativo de ${payment.playerName} en la cancha es fundamental. Su disciplina y entusiasmo en cada entrenamiento nos llenan de orgullo.\n\n` +
+        `Le recordamos respetuosamente la importancia de mantener al día la cuota mensual de ${payment.month} (${formattedAmount}) correspondiente a su formación en la academia, para asegurar la continuidad activa en su proceso deportivo.\n\n` +
         `DATOS DE PAGO:\n` +
+        `• Atleta: ${payment.playerName}\n` +
+        `• Monto pendiente: ${formattedAmount}\n` +
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a nuestro número oficial ${settings.sinpePhone}.\n\n` +
@@ -212,12 +215,12 @@ export function generatePaymentEmailContent(
       break;
 
     case "nivel4_beca_comite":
-      subject = `Opciones de Apoyo Solidario y Beca Deportiva para ${payment.playerName} - Golden Sport Academy`;
+      subject = `Opciones de Apoyo y Continuidad para ${payment.playerName} - Golden Sport Academy`;
       body = `Estimado(a) ${payment.guardianName},\n\n` +
-        `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, empatía y respeto de parte de la directiva de Golden Sport Academy.\n\n` +
-        `Observamos que la cuota de ${payment.month} de ${payment.playerName} presenta un atraso considerable. Entendemos plenamente que todas las familias podemos experimentar momentos económicos difíciles o gastos imprevistos. Queremos asegurarle con toda franqueza que nuestro mayor interés es que ${payment.playerName} continúe entrenando y no pierda su desarrollo deportivo con sus compañeros.\n\n` +
-        `Por tal motivo, ponemos a su disposición el Programa de Becas Deportivas y Apadrinamiento (cobertura 100% o 60/40), en el cual la familia se integra formalmente al Comité de Padres de Familia para colaborar en actividades y eventos de la academia a cambio de la exoneración de cuota.\n\n` +
-        `Le invitamos a comunicarse con nosotros al teléfono ${settings.coachPhone || settings.sinpePhone} para evaluar juntos la alternativa más favorable para su hijo(a).\n\n` +
+        `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, respeto y consideración de parte de la directiva de Golden Sport Academy.\n\n` +
+        `Observamos que la cuota de ${payment.month} de ${payment.playerName} presenta un atraso de varios días. Entendemos plenamente que todas las familias podemos experimentar momentos difíciles o imprevistos. Queremos recordarle que ponemos a su disposición el Programa de Becas Deportivas (cobertura 100% o 60/40) con el compromiso de integrarse al Comité de Padres de Familia para apoyar las actividades del equipo.\n\n` +
+        `Si desea coordinar la regularización de la cuota o evaluar la opción de beca, por favor comuníquese con nosotros al teléfono ${settings.coachPhone || settings.sinpePhone}.\n\n` +
+        `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto que en esta etapa no podrá continuar, deseándole el mayor de los éxitos a ${payment.playerName} y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
         `Atentamente,\nDirección General\nGolden Sport Academy Santa Cruz`;
       break;
   }
