@@ -1,15 +1,27 @@
-﻿"use client";
+"use client";
 
 import React from "react";
+import Image from "next/image";
 import { ShoppingBag, Sparkles, Star } from "lucide-react";
 
 export default function SouvenirStoreBanner() {
   return (
     <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-golden-950/50 via-dark-800 to-dark-800 border-2 border-golden-500/40 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-xl">
-      <div className="space-y-2 text-center lg:text-left">
-        <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded bg-golden-500 text-dark-900 text-[10px] font-black uppercase">
-          <ShoppingBag className="w-3.5 h-3.5" />
-          <span>Curiol Studio • Tienda Oficial de Recuerdos</span>
+      <div className="space-y-3 text-center lg:text-left">
+        <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
+          <div className="h-9 w-28 bg-white rounded-lg p-1 border border-golden-500 flex items-center justify-center shadow-sm">
+            <Image
+              src="/curiol-studio-logo.png"
+              alt="Curiol Studio"
+              width={100}
+              height={28}
+              className="object-contain max-h-full max-w-full"
+            />
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-golden-500 text-dark-900 text-[10px] font-black uppercase">
+            <ShoppingBag className="w-3.5 h-3.5" />
+            <span>Tienda Oficial de Recuerdos</span>
+          </div>
         </div>
         <h2 className="text-xl sm:text-2xl font-black text-white uppercase">
           Fotografías Profesionales & Recuerdos Familiares

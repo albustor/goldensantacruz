@@ -29,14 +29,14 @@ export interface DirectivaAudioNote {
 }
 
 const STORAGE_KEYS = {
-  PLAYERS: 'golden_players_v4',
-  PAYMENTS: 'golden_payments_v4',
-  MATCHES: 'golden_matches_v4',
-  ALBUMS: 'golden_albums_v4',
-  GALLERY: 'golden_gallery_v4',
-  SPONSORS: 'golden_sponsors_v4',
-  SETTINGS: 'golden_settings_v4',
-  AUDIO_NOTES: 'golden_audio_notes_v4',
+  PLAYERS: 'golden_players_v5',
+  PAYMENTS: 'golden_payments_v5',
+  MATCHES: 'golden_matches_v5',
+  ALBUMS: 'golden_albums_v5',
+  GALLERY: 'golden_gallery_v5',
+  SPONSORS: 'golden_sponsors_v5',
+  SETTINGS: 'golden_settings_v5',
+  AUDIO_NOTES: 'golden_audio_notes_v5',
 };
 
 function getFromStorage<T>(key: string, fallback: T): T {

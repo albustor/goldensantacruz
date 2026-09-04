@@ -42,20 +42,20 @@ export default function SponsorsSection({ sponsors: initialSponsors }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           {/* Main Sponsor Card: Curiol Studio */}
           <div className="p-6 rounded-2xl bg-dark-900/90 border-2 border-golden-500/60 flex flex-col sm:flex-row items-center gap-5 shadow-xl">
-            <div className="w-20 h-20 rounded-2xl bg-dark-800 border-2 border-golden-500 flex items-center justify-center p-2 shrink-0">
+            <div className="w-36 h-20 rounded-2xl bg-white border-2 border-golden-500 flex items-center justify-center p-2.5 shrink-0 shadow-md">
               <Image
-                src="/logo.png"
+                src="/curiol-studio-logo.png"
                 alt="Curiol Studio"
-                width={64}
-                height={64}
-                className="object-contain"
+                width={130}
+                height={60}
+                className="object-contain max-h-full max-w-full"
               />
             </div>
             <div className="space-y-1.5 text-center sm:text-left">
               <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-golden-500 text-dark-900">
                 Patrocinador Oficial Oro
               </span>
-              <h3 className="text-lg font-black text-white">Curiol Studio Fotográfico</h3>
+              <h3 className="text-lg font-black text-white">Curiol Studio</h3>
               <p className="text-xs text-gray-300">
                 Cobertura fotográfica profesional de encuentros, clínicas de tiro y tienda oficial de recuerdos (imanes para neveras y retablos).
               </p>

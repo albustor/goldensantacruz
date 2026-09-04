@@ -315,8 +315,8 @@ export const INITIAL_GALLERY_PHOTOS = INITIAL_PHOTOS;
 export const INITIAL_SPONSORS: Sponsor[] = [
   {
     id: "spn-1",
-    name: "Curiol Studio Fotográfico & Recuerdos",
-    logoUrl: "/logo.png",
+    name: "Curiol Studio",
+    logoUrl: "/curiol-studio-logo.png",
     tier: "oro",
     websiteUrl: "https://www.curiol.studio",
     phone: "62806989",
