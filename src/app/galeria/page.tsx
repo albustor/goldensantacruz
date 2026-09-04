@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
@@ -36,6 +36,7 @@ import SouvenirStoreBanner from "@/components/galeria/SouvenirStoreBanner";
 export default function GaleriaPage() {
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community"); // Papás primero
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("all");
@@ -52,14 +53,16 @@ export default function GaleriaPage() {
   }, []);
 
   const loadData = async () => {
-    const [aData, pData, sData] = await Promise.all([
+    const [aData, pData, sData, cData] = await Promise.all([
       Store.getAlbums(),
       Store.getGalleryPhotos(),
       Store.getSettings(),
+      Store.getCategories(),
     ]);
     setAlbums(aData);
     setPhotos(pData.filter((p) => p.isApproved));
     setSettings(sData);
+    setCategories(cData);
   };
 
   const handleLike = async (photoId: string, e?: React.MouseEvent) => {
@@ -276,10 +279,11 @@ export default function GaleriaPage() {
               className="w-full md:w-auto px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs font-semibold focus:outline-none focus:border-golden-500"
             >
               <option value="all">Todas las Categorías</option>
-              <option value="Iniciación / Menores de U8 (U6-U8)">Menores de U8</option>
-              <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-              <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-              <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
+              {categories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
             </select>
           </div>
         </div>

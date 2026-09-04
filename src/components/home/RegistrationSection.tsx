@@ -1,23 +1,38 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sparkles, CheckCircle2, Phone, Send } from "lucide-react";
 import confetti from "canvas-confetti";
 import { PlayerCategory } from "@/types";
+import { Store } from "@/lib/store";
+import { INITIAL_CATEGORIES } from "@/lib/initialData";
 
 export default function RegistrationSection() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
 
   const [formData, setFormData] = useState({
     studentName: "",
     birthDate: "",
-    category: "Iniciación / Menores de U8 (U6-U8)" as PlayerCategory,
+    category: INITIAL_CATEGORIES[0] || "Iniciación / Menores de U8 (U6-U8)",
     guardianName: "",
     guardianPhone: "",
     guardianEmail: "",
     medicalNotes: "",
   });
+
+  useEffect(() => {
+    Store.getCategories().then((cats) => {
+      if (cats && cats.length > 0) {
+        setCategories(cats);
+        setFormData(prev => ({
+          ...prev,
+          category: cats.includes(prev.category) ? prev.category : cats[0]
+        }));
+      }
+    });
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,11 +149,11 @@ export default function RegistrationSection() {
                   onChange={(e) => setFormData({ ...formData, category: e.target.value as PlayerCategory })}
                   className="w-full px-4 py-3 rounded-xl bg-dark-900/90 border border-gray-700 text-white focus:outline-none focus:border-golden-500 text-sm"
                 >
-                  <option value="Iniciación / Menores de U8 (U6-U8)">Iniciación / Menores de U8 (U6-U8)</option>
-                  <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-                  <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-                  <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
-                  <option value="Clínicas de Tecnificación & Tiro">Clínicas de Tecnificación & Tiro</option>
+                  {categories.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
 

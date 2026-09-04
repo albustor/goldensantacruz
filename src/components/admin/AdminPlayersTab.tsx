@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { Player, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
+import CategorySelect from "@/components/common/CategorySelect";
+import CategoryManagerModal from "@/components/admin/CategoryManagerModal";
 
 interface Props {
   players: Player[];
@@ -26,13 +28,15 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("Todas");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCatManagerOpen, setIsCatManagerOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
 
   const [formData, setFormData] = useState({
     fullName: "",
     birthDate: "",
-    category: "Iniciación / Menores de U8 (U6-U8)" as PlayerCategory,
+    category: "Iniciación / Menores de U8 (U6-U8)",
     jerseyNumber: 0,
     position: "Iniciación",
     medicalNotes: "",
@@ -45,6 +49,15 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
     photoUrl: "",
     registrationDate: new Date().toISOString().split("T")[0],
   });
+
+  React.useEffect(() => {
+    loadCategories();
+  }, []);
+
+  const loadCategories = async () => {
+    const cats = await Store.getCategories();
+    setCategories(cats);
+  };
 
   const handleOpenCreate = () => {
     setEditingPlayer(null);
@@ -160,7 +173,15 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setIsCatManagerOpen(true)}
+            className="flex items-center gap-1.5 px-3.5 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-gray-200 font-bold text-xs uppercase border border-gray-700 shadow-md"
+            title="Administrar, crear, editar o eliminar categorías"
+          >
+            <span>Gestionar Categorías</span>
+          </button>
+
           <button
             onClick={handleExportCSV}
             className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-emerald-400 font-bold text-xs uppercase border border-emerald-500/30 transition-colors shadow-md"
@@ -201,11 +222,11 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
             className="w-full md:w-auto px-3.5 py-2 rounded-xl bg-dark-900 border border-gray-700 text-white text-xs font-semibold focus:outline-none focus:border-golden-500"
           >
             <option value="Todas">Todas las Categorías</option>
-            <option value="Iniciación / Menores de U8 (U6-U8)">Iniciación / Menores de U8</option>
-            <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-            <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-            <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
-            <option value="Clínicas de Tecnificación & Tiro">Clínicas de Tiro</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
           </select>
         </div>
       </div>
@@ -366,20 +387,13 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                     className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-gray-300 uppercase mb-1">Categoría *</label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as PlayerCategory })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                  >
-                    <option value="Iniciación / Menores de U8 (U6-U8)">Iniciación / Menores de U8</option>
-                    <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-                    <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-                    <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
-                    <option value="Clínicas de Tecnificación & Tiro">Clínicas de Tiro</option>
-                  </select>
-                </div>
+                {/* Selector Dinámico de Categorías */}
+                <CategorySelect
+                  value={formData.category}
+                  onChange={(cat) => setFormData({ ...formData, category: cat })}
+                  label="Categoría"
+                  required
+                />
                 <div>
                   <label className="block font-bold text-gray-300 uppercase mb-1">Posición</label>
                   <select
@@ -547,6 +561,17 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
           </div>
         </div>
       )}
+
+      {/* Modal General de Gestión de Categorías */}
+      <CategoryManagerModal
+        categories={categories}
+        isOpen={isCatManagerOpen}
+        onClose={() => setIsCatManagerOpen(false)}
+        onCategoriesChange={(updated) => {
+          setCategories(updated);
+          loadCategories();
+        }}
+      />
     </div>
   );
 }

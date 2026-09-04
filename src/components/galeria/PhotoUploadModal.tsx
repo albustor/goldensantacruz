@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Upload, Camera, Calendar, User, Sparkles, CheckCircle2, Image as ImageIcon } from "lucide-react";
 import { PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
+import { INITIAL_CATEGORIES } from "@/lib/initialData";
 
 interface Props {
   isOpen: boolean;
@@ -11,24 +12,28 @@ interface Props {
   onSuccess: () => void;
 }
 
-const CATEGORIES: PlayerCategory[] = [
-  "Iniciación / Menores de U8 (U6-U8)",
-  "Mini-Básquet (U8-U10)",
-  "Infantil (U12-U14)",
-  "Juvenil (U16-U18)",
-  "Clínicas de Tecnificación & Tiro"
-];
-
 export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) {
   const todayStr = new Date().toISOString().split("T")[0];
   const [eventDate, setEventDate] = useState(todayStr);
   const [title, setTitle] = useState("");
   const [uploaderName, setUploaderName] = useState("");
-  const [category, setCategory] = useState<PlayerCategory>("Mini-Básquet (U8-U10)");
+  const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
+  const [category, setCategory] = useState<PlayerCategory>(INITIAL_CATEGORIES[0] || "Mini-Básquet (U8-U10)");
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    Store.getCategories().then((cats) => {
+      if (cats && cats.length > 0) {
+        setCategories(cats);
+        if (!cats.includes(category)) {
+          setCategory(cats[0]);
+        }
+      }
+    });
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -175,7 +180,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
                 onChange={(e) => setCategory(e.target.value as PlayerCategory)}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
               >
-                {CATEGORIES.map((cat) => (
+                {categories.map((cat) => (
                   <option key={cat} value={cat}>
                     {cat}
                   </option>

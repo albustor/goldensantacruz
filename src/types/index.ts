@@ -1,9 +1,4 @@
-export type PlayerCategory =
-  | "Iniciación / Menores de U8 (U6-U8)"
-  | "Mini-Básquet (U8-U10)"
-  | "Infantil (U12-U14)"
-  | "Juvenil (U16-U18)"
-  | "Clínicas de Tecnificación & Tiro";
+export type PlayerCategory = string;
 
 export type PaymentStatus = "al_dia" | "pendiente" | "vencido";
 

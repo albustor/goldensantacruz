@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Trophy, 
   Plus, 
@@ -10,10 +10,13 @@ import {
   Clock, 
   MapPin, 
   X, 
-  Navigation
+  Navigation,
+  FolderKanban
 } from "lucide-react";
 import { Match, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
+import CategorySelect from "@/components/common/CategorySelect";
+import CategoryManagerModal from "@/components/admin/CategoryManagerModal";
 
 interface Props {
   matches: Match[];
@@ -22,7 +25,19 @@ interface Props {
 
 export default function AdminMatchesTab({ matches, onRefresh }: Props) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("all");
   const [editingMatch, setEditingMatch] = useState<Match | null>(null);
+
+  const loadCategories = async () => {
+    const cats = await Store.getCategories();
+    setCategories(cats);
+  };
+
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
   const [formData, setFormData] = useState({
     opponent: "",
@@ -44,7 +59,7 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
     setFormData({
       opponent: "",
       opponentLogo: "🏀",
-      category: "Iniciación / Menores de U8 (U6-U8)",
+      category: categories[0] || "Iniciación / Menores de U8 (U6-U8)",
       matchDate: new Date().toISOString().split("T")[0],
       matchTime: "10:00 AM",
       location: "Santa Bárbara de Santa Cruz",
@@ -103,6 +118,10 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
     }
   };
 
+  const filteredMatches = selectedCategoryFilter === "all"
+    ? matches
+    : matches.filter(m => m.category === selectedCategoryFilter);
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -115,17 +134,56 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
           </p>
         </div>
 
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => setIsCategoryModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 border border-golden-500/40 font-bold text-xs uppercase tracking-wider transition-all"
+          >
+            <FolderKanban className="w-4 h-4" />
+            Gestionar Categorías
+          </button>
+          <button
+            onClick={handleOpenCreate}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            Crear Partido
+          </button>
+        </div>
+      </div>
+
+      {/* Filtro por Categoría */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
         <button
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
+          onClick={() => setSelectedCategoryFilter("all")}
+          className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+            selectedCategoryFilter === "all"
+              ? "bg-golden-500 text-dark-900 shadow-md"
+              : "bg-dark-800 text-gray-400 hover:text-white border border-gray-800"
+          }`}
         >
-          <Plus className="w-4 h-4" />
-          Crear Partido
+          Todas ({matches.length})
         </button>
+        {categories.map((cat) => {
+          const count = matches.filter((m) => m.category === cat).length;
+          return (
+            <button
+              key={cat}
+              onClick={() => setSelectedCategoryFilter(cat)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                selectedCategoryFilter === cat
+                  ? "bg-golden-500 text-dark-900 shadow-md"
+                  : "bg-dark-800 text-gray-400 hover:text-white border border-gray-800"
+              }`}
+            >
+              {cat} ({count})
+            </button>
+          );
+        })}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {matches.map((m) => (
+        {filteredMatches.map((m) => (
           <div
             key={m.id}
             className="p-5 rounded-2xl bg-dark-800 border border-gray-800 hover:border-golden-500/40 transition-all space-y-3 flex flex-col justify-between"
@@ -211,23 +269,13 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-300 uppercase mb-1">
-                    Categoría *
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value as PlayerCategory })}
-                    className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                  >
-                    <option value="Iniciación / Menores de U8 (U6-U8)">Iniciación / Menores de U8</option>
-                    <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-                    <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-                    <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
-                    <option value="Clínicas de Tecnificación & Tiro">Clínicas de Tiro</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <CategorySelect
+                  value={formData.category}
+                  onChange={(cat) => setFormData({ ...formData, category: cat })}
+                  label="Categoría *"
+                  onManageCategories={() => setIsCategoryModalOpen(true)}
+                />
 
                 <div>
                   <label className="block font-bold text-gray-300 uppercase mb-1">
@@ -236,7 +284,7 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
                   <select
                     value={formData.homeAway}
                     onChange={(e) => setFormData({ ...formData, homeAway: e.target.value as any })}
-                    className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500 text-xs font-semibold"
                   >
                     <option value="local">Local (Santa Bárbara)</option>
                     <option value="visita">De Visita</option>
@@ -359,6 +407,18 @@ export default function AdminMatchesTab({ matches, onRefresh }: Props) {
           </div>
         </div>
       )}
+
+      {/* Modal de Gestión de Categorías */}
+      <CategoryManagerModal
+        categories={categories}
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+        onCategoriesChange={(updated) => {
+          setCategories(updated);
+          loadCategories();
+          onRefresh();
+        }}
+      />
     </div>
   );
 }

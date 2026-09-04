@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
+import CategorySelect from "@/components/common/CategorySelect";
+import CategoryManagerModal from "@/components/admin/CategoryManagerModal";
 
 interface Props {
   photos: GalleryPhoto[];
@@ -27,18 +29,30 @@ interface Props {
 
 export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [isCatManagerOpen, setIsCatManagerOpen] = useState(false);
+
+  // Edit album state
   const [editingAlbum, setEditingAlbum] = useState<GalleryAlbum | null>(null);
-  const [newTitleInput, setNewTitleInput] = useState("");
+  const [editAlbumForm, setEditAlbumForm] = useState({
+    title: "",
+    eventDate: "",
+    category: "Iniciación / Menores de U8 (U6-U8)",
+    description: "",
+  });
+
+  // Create album state
   const [isAddAlbumOpen, setIsAddAlbumOpen] = useState(false);
   const [newAlbumForm, setNewAlbumForm] = useState({
     title: "",
     eventDate: new Date().toISOString().split("T")[0],
-    category: "Iniciación / Menores de U8 (U6-U8)" as PlayerCategory,
+    category: "Iniciación / Menores de U8 (U6-U8)",
     description: "",
   });
 
   useEffect(() => {
     loadAlbums();
+    loadCategories();
   }, []);
 
   const loadAlbums = async () => {
@@ -46,19 +60,43 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     setAlbums(data);
   };
 
-  const handleOpenEditAlbum = (album: GalleryAlbum) => {
-    setEditingAlbum(album);
-    setNewTitleInput(album.title);
+  const loadCategories = async () => {
+    const cats = await Store.getCategories();
+    setCategories(cats);
   };
 
-  const handleSaveAlbumTitle = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingAlbum || !newTitleInput) return;
+  const handleOpenEditAlbum = (album: GalleryAlbum) => {
+    setEditingAlbum(album);
+    setEditAlbumForm({
+      title: album.title,
+      eventDate: album.eventDate,
+      category: album.category || "Iniciación / Menores de U8 (U6-U8)",
+      description: album.description || "",
+    });
+  };
 
-    await Store.updateAlbumTitle(editingAlbum.id, newTitleInput);
+  const handleSaveAlbum = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAlbum || !editAlbumForm.title) return;
+
+    await Store.updateAlbum({
+      ...editingAlbum,
+      title: editAlbumForm.title,
+      eventDate: editAlbumForm.eventDate,
+      category: editAlbumForm.category,
+      description: editAlbumForm.description,
+    });
     setEditingAlbum(null);
     loadAlbums();
     onRefresh();
+  };
+
+  const handleDeleteAlbum = async (albumId: string, title: string) => {
+    if (confirm(`¿Eliminar el álbum "${title}" y desvincular sus fotos?`)) {
+      await Store.deleteAlbum(albumId);
+      loadAlbums();
+      onRefresh();
+    }
   };
 
   const handleToggleUploads = async (albumId: string, currentStatus?: boolean) => {
@@ -87,6 +125,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
       description: "",
     });
     loadAlbums();
+    onRefresh();
   };
 
   const handleDeletePhoto = async (id: string, title: string) => {
@@ -142,13 +181,24 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
             </p>
           </div>
 
-          <button
-            onClick={() => setIsAddAlbumOpen(true)}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-md shrink-0"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Crear Nuevo Álbum</span>
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setIsCatManagerOpen(true)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-gray-200 font-bold text-xs uppercase border border-gray-600 shadow-md shrink-0"
+              title="Administrar, crear, editar o eliminar categorías"
+            >
+              <Tag className="w-3.5 h-3.5 text-golden-400" />
+              <span>Gestionar Categorías</span>
+            </button>
+
+            <button
+              onClick={() => setIsAddAlbumOpen(true)}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-md shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Crear Nuevo Álbum</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -160,23 +210,38 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                 key={album.id}
                 className="p-4 rounded-2xl bg-dark-900 border border-gray-700 space-y-3 flex flex-col justify-between"
               >
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between text-[10px]">
                     <span className="font-bold text-golden-400">{album.eventDate}</span>
-                    <span className="text-gray-400">{count} fotos</span>
+                    <span className="px-2 py-0.5 rounded bg-golden-500/20 text-golden-300 font-bold">
+                      {album.category || "General"}
+                    </span>
                   </div>
                   <h4 className="text-sm font-black text-white">{album.title}</h4>
-                  <p className="text-[10px] text-gray-400">Creado por: {album.createdBy || "Papá Golden"}</p>
+                  <p className="text-[10px] text-gray-400">
+                    {count} fotos • Creado por: {album.createdBy || "Papá Golden"}
+                  </p>
                 </div>
 
                 <div className="pt-2 border-t border-gray-800 flex items-center justify-between gap-2">
-                  <button
-                    onClick={() => handleOpenEditAlbum(album)}
-                    className="px-2.5 py-1.5 rounded-lg bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 font-bold text-xs flex items-center gap-1"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" />
-                    <span>Editar Nombre</span>
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => handleOpenEditAlbum(album)}
+                      className="px-2.5 py-1.5 rounded-lg bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 font-bold text-xs flex items-center gap-1"
+                      title="Editar título, fecha y categoría"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                      <span>Editar</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteAlbum(album.id, album.title)}
+                      className="p-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/30 text-red-400 text-xs"
+                      title="Eliminar Álbum"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
 
                   <button
                     onClick={() => handleToggleUploads(album.id, album.isOpenForUploads)}
@@ -196,7 +261,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
         </div>
       </div>
 
-      {/* 2. MODAL PARA EDITAR EL NOMBRE DEL ÁLBUM */}
+      {/* 2. MODAL PARA EDITAR ÁLBUM COMPLETO (TÍTULO, FECHA Y CATEGORÍA) */}
       {editingAlbum && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
           <div className="w-full max-w-md bg-dark-900 border-2 border-golden-500/50 rounded-3xl p-6 space-y-4 shadow-2xl relative">
@@ -204,27 +269,45 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
               onClick={() => setEditingAlbum(null)}
               className="absolute top-4 right-4 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </button>
 
             <h3 className="text-lg font-black text-white uppercase">
-              Editar Nombre del Álbum ({editingAlbum.eventDate})
+              Editar Álbum
             </h3>
             <p className="text-xs text-gray-400">
-              Al modificar este nombre, se actualizará en la galería de los papás y en todas las fotos asociadas a la fecha.
+              Modifica el título, fecha y categoría asignada para este evento de la academia.
             </p>
 
-            <form onSubmit={handleSaveAlbumTitle} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveAlbum} className="space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-gray-300 uppercase mb-1">Nombre Oficial del Álbum</label>
+                <label className="block font-bold text-gray-300 uppercase mb-1">Fecha del Evento *</label>
+                <input
+                  type="date"
+                  required
+                  value={editAlbumForm.eventDate}
+                  onChange={(e) => setEditAlbumForm({ ...editAlbumForm, eventDate: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-gray-300 uppercase mb-1">Título del Álbum *</label>
                 <input
                   type="text"
                   required
-                  value={newTitleInput}
-                  onChange={(e) => setNewTitleInput(e.target.value)}
-                  className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                  value={editAlbumForm.title}
+                  onChange={(e) => setEditAlbumForm({ ...editAlbumForm, title: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
                 />
               </div>
+
+              {/* Selector Dinámico de Categorías */}
+              <CategorySelect
+                value={editAlbumForm.category}
+                onChange={(cat) => setEditAlbumForm({ ...editAlbumForm, category: cat })}
+                label="Categoría del Álbum"
+              />
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -238,7 +321,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                   type="submit"
                   className="px-6 py-2 rounded-xl bg-golden-500 text-dark-900 font-black uppercase shadow-md"
                 >
-                  Guardar Nombre
+                  Guardar Cambios
                 </button>
               </div>
             </form>
@@ -261,7 +344,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
               Crear Álbum Oficial / Evento
             </h3>
 
-            <form onSubmit={handleCreateAlbum} className="space-y-3 text-xs">
+            <form onSubmit={handleCreateAlbum} className="space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-gray-300 uppercase mb-1">Fecha del Evento *</label>
                 <input
@@ -278,27 +361,19 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                 <input
                   type="text"
                   required
-                  placeholder="Ej. Torneo Fogueo Santa Bárbara vs Nicoya"
+                  placeholder="Ej. Presentación de uniforme, Clásico Guanacasteco..."
                   value={newAlbumForm.title}
                   onChange={(e) => setNewAlbumForm({ ...newAlbumForm, title: e.target.value })}
                   className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-gray-300 uppercase mb-1">Categoría</label>
-                <select
-                  value={newAlbumForm.category}
-                  onChange={(e) => setNewAlbumForm({ ...newAlbumForm, category: e.target.value as PlayerCategory })}
-                  className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                >
-                  <option value="Iniciación / Menores de U8 (U6-U8)">Iniciación / Menores de U8</option>
-                  <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
-                  <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
-                  <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
-                  <option value="Clínicas de Tecnificación & Tiro">Clínicas de Tiro</option>
-                </select>
-              </div>
+              {/* Selector Dinámico de Categorías con opción de crear/editar/eliminar */}
+              <CategorySelect
+                value={newAlbumForm.category}
+                onChange={(cat) => setNewAlbumForm({ ...newAlbumForm, category: cat })}
+                label="Categoría"
+              />
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
@@ -319,6 +394,17 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
           </div>
         </div>
       )}
+
+      {/* Modal General de Gestión de Categorías */}
+      <CategoryManagerModal
+        categories={categories}
+        isOpen={isCatManagerOpen}
+        onClose={() => setIsCatManagerOpen(false)}
+        onCategoriesChange={(updated) => {
+          setCategories(updated);
+          loadCategories();
+        }}
+      />
 
       {/* 4. MODERACIÓN DE FOTOGRAFÍAS */}
       <div className="space-y-4">

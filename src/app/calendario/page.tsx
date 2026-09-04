@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -25,27 +25,24 @@ import { generateMatchAnnouncementWhatsApp } from "@/lib/whatsapp";
 
 export default function CalendarioPage() {
   const [matches, setMatches] = useState<Match[]>([]);
+  const [categories, setCategories] = useState<string[]>(["Todas"]);
   const [selectedCategory, setSelectedCategory] = useState<string>("Todas");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchMatches() {
+    async function fetchData() {
       setLoading(true);
-      const data = await Store.getMatches();
-      setMatches(data);
+      const [mData, cData] = await Promise.all([
+        Store.getMatches(),
+        Store.getCategories(),
+      ]);
+      setMatches(mData);
+      setCategories(["Todas", ...cData]);
       setLoading(false);
     }
-    fetchMatches();
+    fetchData();
   }, []);
-
-  const categories = [
-    "Todas",
-    "Iniciación / Menores de U8 (U6-U8)",
-    "Mini-Básquet (U8-U10)",
-    "Infantil (U12-U14)",
-    "Juvenil (U16-U18)",
-  ];
 
   const filteredMatches = matches.filter((m) => {
     const matchCat = selectedCategory === "Todas" || m.category === selectedCategory;

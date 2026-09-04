@@ -15,6 +15,7 @@ import {
   INITIAL_PLAYERS,
   INITIAL_SETTINGS,
   INITIAL_SPONSORS,
+  INITIAL_CATEGORIES,
 } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
 
@@ -37,6 +38,7 @@ const STORAGE_KEYS = {
   SPONSORS: 'golden_sponsors_v5',
   SETTINGS: 'golden_settings_v5',
   AUDIO_NOTES: 'golden_audio_notes_v5',
+  CATEGORIES: 'golden_categories_v5',
 };
 
 function getFromStorage<T>(key: string, fallback: T): T {
@@ -241,6 +243,17 @@ export const Store = {
     return newAlbum;
   },
 
+  async updateAlbum(album: GalleryAlbum): Promise<void> {
+    const current = await this.getAlbums();
+    const updated = current.map(a => a.id === album.id ? album : a);
+    saveToStorage(STORAGE_KEYS.ALBUMS, updated);
+
+    // Update photos associated with this album
+    const photos = await this.getGalleryPhotos();
+    const updatedPhotos = photos.map(p => p.albumId === album.id ? { ...p, title: album.title, category: album.category } : p);
+    saveToStorage(STORAGE_KEYS.GALLERY, updatedPhotos);
+  },
+
   async updateAlbumTitle(albumId: string, newTitle: string): Promise<void> {
     const current = await this.getAlbums();
     const updated = current.map(a => a.id === albumId ? { ...a, title: newTitle } : a);
@@ -349,5 +362,38 @@ export const Store = {
   async deleteAudioNote(id: string): Promise<void> {
     const current = await this.getAudioNotes();
     saveToStorage(STORAGE_KEYS.AUDIO_NOTES, current.filter(n => n.id !== id));
+  },
+
+  // CATEGORIES DYNAMIC MANAGEMENT
+  async getCategories(): Promise<string[]> {
+    return getFromStorage<string[]>(STORAGE_KEYS.CATEGORIES, INITIAL_CATEGORIES);
+  },
+
+  async addCategory(name: string): Promise<string[]> {
+    const trimmed = name.trim();
+    if (!trimmed) return this.getCategories();
+    const current = await this.getCategories();
+    if (!current.includes(trimmed)) {
+      const updated = [...current, trimmed];
+      saveToStorage(STORAGE_KEYS.CATEGORIES, updated);
+      return updated;
+    }
+    return current;
+  },
+
+  async updateCategory(oldName: string, newName: string): Promise<string[]> {
+    const trimmed = newName.trim();
+    if (!trimmed) return this.getCategories();
+    const current = await this.getCategories();
+    const updated = current.map(c => c === oldName ? trimmed : c);
+    saveToStorage(STORAGE_KEYS.CATEGORIES, updated);
+    return updated;
+  },
+
+  async deleteCategory(name: string): Promise<string[]> {
+    const current = await this.getCategories();
+    const updated = current.filter(c => c !== name);
+    saveToStorage(STORAGE_KEYS.CATEGORIES, updated);
+    return updated;
   }
 };

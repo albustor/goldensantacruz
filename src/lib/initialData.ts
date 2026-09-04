@@ -14,6 +14,17 @@ export const INITIAL_SETTINGS: SystemSettings = {
   address: "Santa Bárbara de Santa Cruz, Guanacaste, Costa Rica",
 };
 
+export const INITIAL_CATEGORIES: string[] = [
+  "Iniciación / Menores de U8 (U6-U8)",
+  "Mini-Básquet (U8-U10)",
+  "Infantil (U12-U14)",
+  "Juvenil (U16-U18)",
+  "Clínicas de Tecnificación & Tiro",
+  "Intercantonal",
+  "Eventos Especiales",
+  "Presentación de Uniformes"
+];
+
 export const INITIAL_PLAYERS: Player[] = [
   {
     id: "ply-1",
