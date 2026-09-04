@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import React, { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 // 10 FOTOGRAFÍAS PURAMENTE CONCEPTUALES DE BÁSQUETBOL (PLANOS DETALLE, MACRO, SIN ROSTROS NI PERSONAS)
 export const HERO_BG_PHOTOS = [
@@ -69,13 +69,15 @@ export const HERO_BG_PHOTOS = [
 
 export default function HeroBackground() {
   const [currentIdx, setCurrentIdx] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(() => {
       setCurrentIdx((prev) => (prev === HERO_BG_PHOTOS.length - 1 ? 0 : prev + 1));
     }, 4500);
     return () => clearInterval(timer);
-  }, []);
+  }, [isPaused]);
 
   const nextPhoto = () => {
     setCurrentIdx((prev) => (prev === HERO_BG_PHOTOS.length - 1 ? 0 : prev + 1));
@@ -89,8 +91,12 @@ export default function HeroBackground() {
 
   return (
     <>
-      {/* 1. Fondo Panorámico Continuo con las 10 Fotos Conceptuales Locales */}
-      <div className="absolute inset-0 z-0 bg-dark-950 overflow-hidden pointer-events-none">
+      {/* 1. Fondo Panorámico Continuo con pausa al pasar el mouse */}
+      <div 
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        className="absolute inset-0 z-0 bg-dark-950 overflow-hidden pointer-events-auto"
+      >
         {HERO_BG_PHOTOS.map((photo, idx) => (
           <div
             key={`detail-${photo.url}`}
@@ -111,17 +117,26 @@ export default function HeroBackground() {
         <div className="absolute inset-0 bg-gradient-to-r from-dark-950/50 via-transparent to-dark-950/50 pointer-events-none" />
       </div>
 
-      {/* 2. Controles de Foto Flotantes con Identificador del Tipo de Plano */}
+      {/* 2. Controles de Foto Flotantes con Identificador del Tipo de Plano y Estado de Pausa */}
       <div className="relative z-30 pt-20 pr-4 sm:pr-8 flex justify-end items-center max-w-7xl mx-auto w-full">
         <div className="flex items-center gap-2.5 bg-dark-950/85 backdrop-blur-md px-4 py-1.5 rounded-full border border-golden-500/40 shadow-xl shadow-black/80">
           <div className="text-right hidden sm:block border-r border-gray-700/80 pr-2.5">
-            <span className="text-[10px] font-black uppercase text-golden-400 block leading-tight">
-              🏀 {current.tag}
+            <span className="text-[10px] font-black uppercase text-golden-400 block leading-tight flex items-center gap-1 justify-end">
+              <span>🏀 {current.tag}</span>
+              {isPaused && <span className="text-[8px] px-1 bg-golden-500/30 text-golden-300 rounded">Pausado</span>}
             </span>
             <span className="text-[9px] text-gray-400 block leading-tight">
               {current.shotType}
             </span>
           </div>
+
+          <button
+            onClick={() => setIsPaused(!isPaused)}
+            className="p-1 rounded-full text-gray-300 hover:text-golden-400 hover:bg-dark-800 transition-colors"
+            title={isPaused ? "Reanudar rotación" : "Pausar rotación"}
+          >
+            {isPaused ? <Play className="w-3.5 h-3.5 text-golden-400" /> : <Pause className="w-3.5 h-3.5 text-gray-400" />}
+          </button>
 
           <button
             onClick={prevPhoto}

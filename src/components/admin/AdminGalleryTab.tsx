@@ -13,7 +13,9 @@ import {
   X,
   Lock,
   Unlock,
-  Tag
+  Tag,
+  TreeDeciduous,
+  ExternalLink
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
@@ -96,6 +98,37 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
   return (
     <div className="space-y-8">
+      
+      {/* BANNER DE VINCULACIÓN AL ÁRBOL DE GUANACASTE */}
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-dark-800 to-dark-800 border-2 border-emerald-500/50 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+            <TreeDeciduous className="w-6 h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">
+              Ecosistema Central Curiol Studio
+            </span>
+            <h3 className="text-base font-black text-white uppercase">
+              Árbol de Guanacaste • Línea de Tiempo Histórica
+            </h3>
+            <p className="text-xs text-gray-300">
+              Al finalizar cada jornada, consolida el material y accede a la línea de tiempo oficial en Curiol Studio.
+            </p>
+          </div>
+        </div>
+
+        <a
+          href="https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
+          target="_blank"
+          rel="noreferrer"
+          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shrink-0 transition-transform hover:scale-105"
+        >
+          <span>Abrir Árbol de Guanacaste ↗</span>
+          <ExternalLink className="w-3.5 h-3.5" />
+        </a>
+      </div>
+
       {/* 1. SECCIÓN DE GESTIÓN Y EDICIÓN DE ÁLBUMES ACTIVOS */}
       <div className="p-6 rounded-3xl bg-dark-800 border-2 border-golden-500/40 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-700 pb-3">

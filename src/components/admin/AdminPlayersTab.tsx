@@ -10,7 +10,9 @@ import {
   Phone, 
   Eye,
   Filter,
-  X
+  X,
+  Download,
+  FileSpreadsheet
 } from "lucide-react";
 import { Player, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
@@ -28,27 +30,26 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
   const [viewingPlayer, setViewingPlayer] = useState<Player | null>(null);
 
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     birthDate: "",
     category: "Iniciación / Menores de U8 (U6-U8)" as PlayerCategory,
     jerseyNumber: 0,
-    position: "Iniciación" as any,
+    position: "Iniciación",
     medicalNotes: "",
     guardianName: "",
     guardianPhone: "62806989",
     guardianEmail: "",
-    monthlyFee: 18000,
-    dueDay: 5,
+    monthlyFee: 15000,
+    paymentStatus: "al_dia" as any,
     isActive: true,
     photoUrl: "",
+    registrationDate: new Date().toISOString().split("T")[0],
   });
 
   const handleOpenCreate = () => {
     setEditingPlayer(null);
     setFormData({
-      firstName: "",
-      lastName: "",
+      fullName: "",
       birthDate: "",
       category: "Iniciación / Menores de U8 (U6-U8)",
       jerseyNumber: 0,
@@ -57,10 +58,11 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
       guardianName: "",
       guardianPhone: "62806989",
       guardianEmail: "",
-      monthlyFee: 18000,
-      dueDay: 5,
+      monthlyFee: 15000,
+      paymentStatus: "al_dia",
       isActive: true,
       photoUrl: "",
+      registrationDate: new Date().toISOString().split("T")[0],
     });
     setIsModalOpen(true);
   };
@@ -68,8 +70,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
   const handleOpenEdit = (player: Player) => {
     setEditingPlayer(player);
     setFormData({
-      firstName: player.firstName,
-      lastName: player.lastName,
+      fullName: player.fullName,
       birthDate: player.birthDate,
       category: player.category,
       jerseyNumber: player.jerseyNumber || 0,
@@ -79,9 +80,10 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
       guardianPhone: player.guardianPhone,
       guardianEmail: player.guardianEmail || "",
       monthlyFee: player.monthlyFee,
-      dueDay: player.dueDay,
+      paymentStatus: player.paymentStatus,
       isActive: player.isActive,
       photoUrl: player.photoUrl || "",
+      registrationDate: player.registrationDate,
     });
     setIsModalOpen(true);
   };
@@ -109,8 +111,34 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
     }
   };
 
+  const handleExportCSV = () => {
+    const headers = ["ID", "Nombre Completo", "Categoría", "Posición", "Dorsal", "Tutor", "Teléfono WhatsApp", "Email", "Cuota Mensual", "Estado"];
+    const rows = players.map(p => [
+      p.id,
+      `"${p.fullName}"`,
+      `"${p.category}"`,
+      `"${p.position || 'Formativo'}"`,
+      p.jerseyNumber || "N/A",
+      `"${p.guardianName}"`,
+      p.guardianPhone,
+      p.guardianEmail || "N/A",
+      p.monthlyFee,
+      p.isActive ? "Activo" : "Inactivo"
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Padron_Atletas_Golden_Sport_Santa_Cruz_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filtered = players.filter((p) => {
-    const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
+    const fullName = p.fullName.toLowerCase();
     const matchesSearch =
       fullName.includes(searchTerm.toLowerCase()) ||
       p.guardianName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -132,13 +160,24 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
           </p>
         </div>
 
-        <button
-          onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all shrink-0"
-        >
-          <Plus className="w-4 h-4" />
-          Registrar Atleta
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-4 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-emerald-400 font-bold text-xs uppercase border border-emerald-500/30 transition-colors shadow-md"
+            title="Exportar a Excel / CSV"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Exportar CSV</span>
+          </button>
+
+          <button
+            onClick={handleOpenCreate}
+            className="flex items-center gap-2 px-5 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Registrar Atleta</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters & Search */}
@@ -180,7 +219,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                 <th className="py-3.5 px-4">Jugador / Atleta</th>
                 <th className="py-3.5 px-4">Categoría & Posición</th>
                 <th className="py-3.5 px-4">Tutor Legal & Celular</th>
-                <th className="py-3.5 px-4">Cuota & Día de Pago</th>
+                <th className="py-3.5 px-4">Cuota Mensual</th>
                 <th className="py-3.5 px-4">Estado</th>
                 <th className="py-3.5 px-4 text-right">Acciones</th>
               </tr>
@@ -199,14 +238,14 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full overflow-hidden bg-dark-900 border border-golden-500/40 shrink-0 flex items-center justify-center">
                           {player.photoUrl ? (
-                            <img src={player.photoUrl} alt={player.firstName} className="w-full h-full object-cover" />
+                            <img src={player.photoUrl} alt={player.fullName} className="w-full h-full object-cover" />
                           ) : (
                             <span className="font-bold text-golden-400 text-xs">#{player.jerseyNumber || "G"}</span>
                           )}
                         </div>
                         <div>
                           <p className="font-bold text-white text-sm">
-                            {player.firstName} {player.lastName}
+                            {player.fullName}
                           </p>
                           <p className="text-[11px] text-gray-400">
                             Nacimiento: {player.birthDate || "No indicada"}
@@ -242,7 +281,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                         ₡{player.monthlyFee.toLocaleString("es-CR")}
                       </span>
                       <p className="text-[10px] text-gray-400">
-                        Día {player.dueDay} de cada mes
+                        Mensual
                       </p>
                     </td>
 
@@ -274,7 +313,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(player.id, `${player.firstName} ${player.lastName}`)}
+                        onClick={() => handleDelete(player.id, player.fullName)}
                         className="p-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400"
                         title="Eliminar Jugador"
                       >
@@ -301,31 +340,19 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
             </button>
 
             <h3 className="text-2xl font-black text-white uppercase">
-              {editingPlayer ? `Editar a ${editingPlayer.firstName}` : "Registrar Atleta"}
+              {editingPlayer ? `Editar a ${editingPlayer.fullName}` : "Registrar Atleta"}
             </h3>
 
             <form onSubmit={handleSave} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block font-bold text-gray-300 uppercase mb-1">Nombre *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-300 uppercase mb-1">Apellidos *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                  />
-                </div>
+              <div>
+                <label className="block font-bold text-gray-300 uppercase mb-1">Nombre Completo del Atleta *</label>
+                <input
+                  type="text"
+                  required
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -357,7 +384,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                   <label className="block font-bold text-gray-300 uppercase mb-1">Posición</label>
                   <select
                     value={formData.position}
-                    onChange={(e) => setFormData({ ...formData, position: e.target.value as any })}
+                    onChange={(e) => setFormData({ ...formData, position: e.target.value })}
                     className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
                   >
                     <option value="Iniciación">Iniciación</option>
@@ -371,7 +398,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block font-bold text-gray-300 uppercase mb-1">Número Dorsal</label>
                   <input
@@ -388,18 +415,6 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
                     required
                     value={formData.monthlyFee}
                     onChange={(e) => setFormData({ ...formData, monthlyFee: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
-                  />
-                </div>
-                <div>
-                  <label className="block font-bold text-gray-300 uppercase mb-1">Día de Pago (1-31) *</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={31}
-                    required
-                    value={formData.dueDay}
-                    onChange={(e) => setFormData({ ...formData, dueDay: parseInt(e.target.value) || 5 })}
                     className="w-full px-3.5 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
                   />
                 </div>
@@ -494,7 +509,7 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
               </div>
               <div>
                 <span className="text-xs font-bold text-golden-400 uppercase">{viewingPlayer.category}</span>
-                <h3 className="text-xl font-black text-white">{viewingPlayer.firstName} {viewingPlayer.lastName}</h3>
+                <h3 className="text-xl font-black text-white">{viewingPlayer.fullName}</h3>
                 <p className="text-xs text-gray-400">{viewingPlayer.position || "Formativo"}</p>
               </div>
             </div>
@@ -513,10 +528,6 @@ export default function AdminPlayersTab({ players, onRefresh }: Props) {
               <div className="flex justify-between border-b border-gray-700 pb-1.5">
                 <span className="text-gray-400">Mensualidad:</span>
                 <strong className="text-golden-400 font-bold">₡{viewingPlayer.monthlyFee.toLocaleString("es-CR")}</strong>
-              </div>
-              <div className="flex justify-between border-b border-gray-700 pb-1.5">
-                <span className="text-gray-400">Día de Corte:</span>
-                <strong className="text-white">Día {viewingPlayer.dueDay} de cada mes</strong>
               </div>
               <div>
                 <span className="text-gray-400 block mb-1">Observaciones Médicas:</span>

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { 
   Camera, 
   Upload, 
@@ -19,9 +20,13 @@ import {
   ShoppingBag,
   Info,
   Smartphone,
-  CheckCircle2
+  CheckCircle2,
+  TreeDeciduous,
+  ExternalLink,
+  Search,
+  X
 } from "lucide-react";
-import { GalleryAlbum, GalleryPhoto, PlayerCategory } from "@/types";
+import { GalleryAlbum, GalleryPhoto, PlayerCategory, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
 import PhotoUploadModal from "@/components/galeria/PhotoUploadModal";
 import PhotoLightboxModal from "@/components/galeria/PhotoLightboxModal";
@@ -31,9 +36,11 @@ import SouvenirStoreBanner from "@/components/galeria/SouvenirStoreBanner";
 export default function GaleriaPage() {
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
+  const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community"); // Papás primero
   const [selectedAlbumId, setSelectedAlbumId] = useState<string>("all");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Modales
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -45,12 +52,14 @@ export default function GaleriaPage() {
   }, []);
 
   const loadData = async () => {
-    const [aData, pData] = await Promise.all([
+    const [aData, pData, sData] = await Promise.all([
       Store.getAlbums(),
       Store.getGalleryPhotos(),
+      Store.getSettings(),
     ]);
     setAlbums(aData);
     setPhotos(pData.filter((p) => p.isApproved));
+    setSettings(sData);
   };
 
   const handleLike = async (photoId: string, e?: React.MouseEvent) => {
@@ -61,13 +70,21 @@ export default function GaleriaPage() {
     );
   };
 
-  // Filtrado de fotos por pestaña activa (Papás vs Pro)
+  // Filtrado de fotos por pestaña activa, álbum, categoría y buscador
   const currentPhotos = photos.filter((p) => {
     const matchesTab = activeTab === "pro_studio" ? p.photoType === "pro_studio" : p.photoType === "community";
     const matchesAlbum = selectedAlbumId === "all" || p.albumId === selectedAlbumId;
     const matchesCategory = selectedCategory === "all" || p.category === selectedCategory;
-    return matchesTab && matchesAlbum && matchesCategory;
+    const matchesSearch = 
+      !searchQuery.trim() || 
+      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.uploaderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (p.caption && p.caption.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return matchesTab && matchesAlbum && matchesCategory && matchesSearch;
   });
+
+  const arbolUrl = settings?.arbolGuanacasteUrl || "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
@@ -90,7 +107,7 @@ export default function GaleriaPage() {
             <span>¿Cómo funciona esta Galería Web App?</span>
           </div>
           <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-            Esta Web App permite que <strong>papá, mamá o familiares suban directamente desde su celular</strong> las fotos y videos que tomen a sus hijos durante los entrenamientos en la cancha de Santa Bárbara y en los partidos de <strong>Golden Sport Academy Santa Cruz</strong>. Todas las fotos quedan protegidas con la marca de agua institucional.
+            Esta Web App permite que <strong>papá, mamá o familiares suban directamente desde su celular</strong> las fotos y videos que tomen a sus hijos durante los entrenamientos y partidos de <strong>Golden Sport Academy Santa Cruz</strong>. Todas las fotos quedan protegidas con la marca de agua institucional.
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-gray-400">
             <span className="flex items-center gap-1 text-emerald-400">
@@ -106,7 +123,39 @@ export default function GaleriaPage() {
         </div>
       </div>
 
-      {/* 2. DOS PESTAÑAS GRANDES CENTRADAS */}
+      {/* 2. TARJETA OFICIAL DE VINCULACIÓN: ÁRBOL DE GUANACASTE (LÍNEA DE TIEMPO) */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-dark-900 via-emerald-950/30 to-dark-900 border-2 border-emerald-500/50 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="flex items-start gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center text-emerald-400 shrink-0 shadow-lg">
+            <TreeDeciduous className="w-8 h-8" />
+          </div>
+          <div className="space-y-1 text-left">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+              <span>Línea de Tiempo Histórica & Legado</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight">
+              Árbol de Guanacaste de Golden Sport Academy
+            </h3>
+            <p className="text-xs sm:text-sm text-gray-300 max-w-2xl leading-relaxed">
+              Toda la producción fotográfica oficial y los hitos deportivos del club se integran en la <strong>Línea de Tiempo del Árbol de Guanacaste</strong> en Curiol Studio para su preservación digital permanente.
+            </p>
+          </div>
+        </div>
+
+        <div className="shrink-0 w-full lg:w-auto">
+          <a
+            href={arbolUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="w-full lg:w-auto px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-dark-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 transition-transform hover:scale-105"
+          >
+            <span>Ver Árbol de Guanacaste ↗</span>
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        </div>
+      </div>
+
+      {/* 3. DOS PESTAÑAS GRANDES CENTRADAS */}
       <div className="flex justify-center">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 rounded-3xl bg-dark-900 border-2 border-golden-500/40 max-w-2xl w-full shadow-2xl">
           {/* Pestaña 1: Papás y Familias */}
@@ -153,7 +202,7 @@ export default function GaleriaPage() {
         </div>
       </div>
 
-      {/* 3. BANNER DE ACCIÓN SEGÚN PESTAÑA */}
+      {/* 4. BANNER DE ACCIÓN SEGÚN PESTAÑA */}
       {activeTab === "community" ? (
         /* Call to Action para Papás */
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-dark-900 via-dark-800 to-golden-950/40 border-2 border-golden-500/40 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-6">
@@ -194,49 +243,88 @@ export default function GaleriaPage() {
         </div>
       )}
 
-      {/* 4. FILTROS RÁPIDOS POR FECHA / EVENTO */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-b border-gray-800 pb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-black text-gray-400 uppercase flex items-center gap-1.5 mr-1">
-            <Filter className="w-3.5 h-3.5 text-golden-500" />
-            <span>Eventos:</span>
-          </span>
-          <button
-            onClick={() => setSelectedAlbumId("all")}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-colors ${
-              selectedAlbumId === "all"
-                ? "bg-golden-500 text-dark-950 shadow font-black"
-                : "bg-dark-800 text-gray-300 hover:bg-dark-700"
-            }`}
-          >
-            Todos ({photos.filter(p => activeTab === "pro_studio" ? p.photoType === "pro_studio" : p.photoType === "community").length})
-          </button>
-          {albums.map((album) => (
+      {/* 5. BUSCADOR & FILTROS AVANZADOS */}
+      <div className="p-5 rounded-2xl bg-dark-900 border border-gray-800 space-y-4 shadow-lg">
+        <div className="flex flex-col md:flex-row gap-4 justify-between items-stretch md:items-center">
+          
+          {/* Buscador de fotos en tiempo real */}
+          <div className="relative flex-1 max-w-md">
+            <Search className="w-4 h-4 text-golden-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar foto por título, familia o atleta..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white placeholder-gray-400 text-xs focus:outline-none focus:border-golden-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro por Categoría */}
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-golden-400 shrink-0" />
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full md:w-auto px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs font-semibold focus:outline-none focus:border-golden-500"
+            >
+              <option value="all">Todas las Categorías</option>
+              <option value="Iniciación / Menores de U8 (U6-U8)">Menores de U8</option>
+              <option value="Mini-Básquet (U8-U10)">Mini-Básquet (U8-U10)</option>
+              <option value="Infantil (U12-U14)">Infantil (U12-U14)</option>
+              <option value="Juvenil (U16-U18)">Juvenil (U16-U18)</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Selector de Álbumes por Evento */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-gray-800 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-bold text-gray-400 uppercase text-[11px]">Álbumes:</span>
             <button
-              key={album.id}
-              onClick={() => setSelectedAlbumId(album.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                selectedAlbumId === album.id
+              onClick={() => setSelectedAlbumId("all")}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase transition-colors ${
+                selectedAlbumId === "all"
                   ? "bg-golden-500 text-dark-950 shadow font-black"
                   : "bg-dark-800 text-gray-300 hover:bg-dark-700"
               }`}
             >
-              📅 {album.eventDate}: {album.title}
+              Todos
             </button>
-          ))}
-        </div>
+            {albums.map((album) => (
+              <button
+                key={album.id}
+                onClick={() => setSelectedAlbumId(album.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
+                  selectedAlbumId === album.id
+                    ? "bg-golden-500 text-dark-950 shadow font-black"
+                    : "bg-dark-800 text-gray-300 hover:bg-dark-700"
+                }`}
+              >
+                📅 {album.eventDate}: {album.title}
+              </button>
+            ))}
+          </div>
 
-        <span className="text-xs text-gray-400 font-semibold">
-          Mostrando <strong>{currentPhotos.length}</strong> fotos
-        </span>
+          <span className="text-xs text-gray-400 font-semibold">
+            Mostrando <strong>{currentPhotos.length}</strong> fotos
+          </span>
+        </div>
       </div>
 
-      {/* 5. GRILLA DE FOTOGRAFÍAS CON MARCA DE AGUA BLANCA TRANSLÚCIDA: GOLDEN SPORT ACADEMY SANTA CRUZ */}
+      {/* 6. GRILLA DE FOTOGRAFÍAS CON MARCA DE AGUA BLANCA TRANSLÚCIDA: GOLDEN SPORT ACADEMY SANTA CRUZ */}
       {currentPhotos.length === 0 ? (
         <div className="text-center py-16 space-y-3 rounded-3xl bg-dark-900 border border-gray-800">
           <Camera className="w-12 h-12 text-gray-600 mx-auto" />
           <h3 className="text-base font-bold text-white uppercase">
-            No hay fotos en esta sección aún
+            No se encontraron fotos para estos filtros
           </h3>
           <p className="text-xs text-gray-400">
             {activeTab === "community"

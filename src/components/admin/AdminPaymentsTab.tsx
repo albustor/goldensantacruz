@@ -15,28 +15,30 @@ import {
   DollarSign, 
   Calendar,
   X,
-  FileText
+  FileText,
+  FileSpreadsheet,
+  Download
 } from "lucide-react";
-import { AcademySettings, PaymentRecord, PaymentStatus, Player } from "@/types";
+import { SystemSettings, PaymentRecord, Player } from "@/types";
 import { Store } from "@/lib/store";
-import { createWhatsAppPaymentLink, generatePaymentWhatsAppMessage } from "@/lib/whatsapp";
+import { generatePaymentWhatsAppMessage } from "@/lib/whatsapp";
 
 interface Props {
   payments: PaymentRecord[];
   players: Player[];
-  settings: AcademySettings;
+  settings: SystemSettings;
   onRefresh: () => void;
 }
 
 export default function AdminPaymentsTab({ payments, players, settings, onRefresh }: Props) {
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState<number>(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<string>("Septiembre");
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Modal registrar pago
   const [payingRecord, setPayingRecord] = useState<PaymentRecord | null>(null);
-  const [payMethod, setPayMethod] = useState<"Sinpe Móvil" | "Transferencia" | "Efectivo">("Sinpe Móvil");
+  const [payMethod, setPayMethod] = useState<string>("Sinpe Móvil");
   const [payNotes, setPayNotes] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -45,11 +47,9 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
   ];
 
-  const currentMonthName = `${months[selectedMonthIndex - 1]} ${selectedYear}`;
-
   // Filter payments by selected month/year and search
   const currentMonthPayments = payments.filter(
-    (p) => p.monthIndex === selectedMonthIndex && p.year === selectedYear
+    (p) => p.month === selectedMonth && p.year === selectedYear
   );
 
   const filtered = (currentMonthPayments.length > 0 ? currentMonthPayments : payments).filter((p) => {
@@ -63,9 +63,9 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
 
   // KPI calculations
   const totalDue = filtered.reduce((acc, curr) => acc + curr.amount, 0);
-  const paidList = filtered.filter((p) => p.status === "paid");
-  const pendingList = filtered.filter((p) => p.status === "pending");
-  const overdueList = filtered.filter((p) => p.status === "overdue");
+  const paidList = filtered.filter((p) => p.status === "pagado");
+  const pendingList = filtered.filter((p) => p.status === "pendiente");
+  const overdueList = filtered.filter((p) => p.status === "atrasado");
 
   const totalPaid = paidList.reduce((acc, curr) => acc + curr.amount, 0);
   const totalPending = pendingList.reduce((acc, curr) => acc + curr.amount, 0);
@@ -75,11 +75,22 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
 
   const handleGenerateMonthly = async () => {
     setIsGenerating(true);
-    await Store.generateMonthlyPaymentsForActivePlayers(
-      currentMonthName,
-      selectedMonthIndex,
-      selectedYear
-    );
+    for (const player of players.filter(p => p.isActive)) {
+      const existing = payments.find(p => p.playerId === player.id && p.month === selectedMonth && p.year === selectedYear);
+      if (!existing) {
+        await Store.addPayment({
+          playerId: player.id,
+          playerName: player.fullName,
+          guardianName: player.guardianName,
+          guardianPhone: player.guardianPhone,
+          month: selectedMonth,
+          year: selectedYear,
+          amount: player.monthlyFee,
+          status: "pendiente",
+          dueDate: `${selectedYear}-${(months.indexOf(selectedMonth) + 1).toString().padStart(2, '0')}-05`
+        });
+      }
+    }
     setIsGenerating(false);
     onRefresh();
   };
@@ -87,16 +98,36 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
   const handleConfirmPayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payingRecord) return;
-    await Store.markPaymentPaid(payingRecord.id, payMethod, payNotes);
+    await Store.updatePaymentStatus(payingRecord.id, "pagado", payNotes || "SINPE-CONFIRMADO");
     setPayingRecord(null);
     setPayNotes("");
     onRefresh();
   };
 
-  const handleSendEmail = (payment: PaymentRecord) => {
-    const subject = encodeURIComponent(`Aviso de Mensualidad - Golden Sport Academy Santa Cruz (${payment.month})`);
-    const body = encodeURIComponent(generatePaymentWhatsAppMessage(payment, settings));
-    window.open(`mailto:${payment.guardianPhone || ""}?subject=${subject}&body=${body}`, "_blank");
+  const handleExportCSV = () => {
+    const headers = ["ID Recibo", "Atleta", "Tutor", "Teléfono WhatsApp", "Mes", "Año", "Monto", "Estado", "Fecha Vencimiento", "Referencia Sinpe"];
+    const rows = filtered.map(p => [
+      p.id,
+      `"${p.playerName}"`,
+      `"${p.guardianName}"`,
+      p.guardianPhone,
+      p.month,
+      p.year,
+      p.amount,
+      p.status,
+      p.dueDate,
+      `"${p.sinpeReference || 'Pendiente'}"`
+    ]);
+
+    const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Control_Pagos_${selectedMonth}_${selectedYear}_Golden_Sport.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -108,7 +139,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             Gestión de Cobranzas & Mensajería a Padres
           </h2>
           <p className="text-xs text-gray-400">
-            Control de mensualidades, generación de recibos y recordatorios automáticos por WhatsApp y Correo.
+            Control de mensualidades, generación de recibos y recordatorios automáticos por WhatsApp con Sinpe (6280-6989).
           </p>
         </div>
 
@@ -117,12 +148,12 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
           <div className="flex items-center gap-2 bg-dark-800 px-3 py-1.5 rounded-xl border border-gray-700">
             <Calendar className="w-4 h-4 text-golden-400" />
             <select
-              value={selectedMonthIndex}
-              onChange={(e) => setSelectedMonthIndex(Number(e.target.value))}
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
               className="bg-transparent text-white text-xs font-bold focus:outline-none"
             >
-              {months.map((m, i) => (
-                <option key={m} value={i + 1} className="bg-dark-900 text-white">
+              {months.map((m) => (
+                <option key={m} value={m} className="bg-dark-900 text-white">
                   {m}
                 </option>
               ))}
@@ -137,6 +168,15 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             </select>
           </div>
 
+          <button
+            onClick={handleExportCSV}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-emerald-400 font-bold text-xs uppercase border border-emerald-500/30 transition-colors shadow-md"
+            title="Exportar a CSV / Excel"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>Exportar CSV</span>
+          </button>
+
           {/* Generate Button */}
           <button
             onClick={handleGenerateMonthly}
@@ -144,7 +184,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
           >
             <Sparkles className="w-4 h-4" />
-            {isGenerating ? "Generando..." : `Generar Cuotas de ${months[selectedMonthIndex - 1]}`}
+            {isGenerating ? "Generando..." : `Generar Cuotas de ${selectedMonth}`}
           </button>
         </div>
       </div>
@@ -152,7 +192,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
       {/* Financial Overview Metrics */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-dark-800 border border-gray-800 space-y-1">
-          <span className="text-[11px] font-bold text-gray-400 uppercase">Total Facturado ({currentMonthName})</span>
+          <span className="text-[11px] font-bold text-gray-400 uppercase">Total Facturado ({selectedMonth})</span>
           <p className="text-2xl font-black text-white">₡{totalDue.toLocaleString("es-CR")}</p>
           <div className="w-full bg-dark-900 h-1.5 rounded-full overflow-hidden mt-2">
             <div className="bg-golden-500 h-full" style={{ width: `${collectionRate}%` }}></div>
@@ -201,25 +241,25 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             Todos ({filtered.length})
           </button>
           <button
-            onClick={() => setStatusFilter("paid")}
+            onClick={() => setStatusFilter("pagado")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              statusFilter === "paid" ? "bg-emerald-600 text-white" : "bg-dark-900 text-gray-400"
+              statusFilter === "pagado" ? "bg-emerald-600 text-white" : "bg-dark-900 text-gray-400"
             }`}
           >
             Al Día ({paidList.length})
           </button>
           <button
-            onClick={() => setStatusFilter("pending")}
+            onClick={() => setStatusFilter("pendiente")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              statusFilter === "pending" ? "bg-amber-600 text-white" : "bg-dark-900 text-gray-400"
+              statusFilter === "pendiente" ? "bg-amber-600 text-white" : "bg-dark-900 text-gray-400"
             }`}
           >
             Pendientes ({pendingList.length})
           </button>
           <button
-            onClick={() => setStatusFilter("overdue")}
+            onClick={() => setStatusFilter("atrasado")}
             className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
-              statusFilter === "overdue" ? "bg-red-600 text-white" : "bg-dark-900 text-gray-400"
+              statusFilter === "atrasado" ? "bg-red-600 text-white" : "bg-dark-900 text-gray-400"
             }`}
           >
             Vencidos ({overdueList.length})
@@ -250,15 +290,15 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                 </tr>
               ) : (
                 filtered.map((p) => {
-                  const isPaid = p.status === "paid";
-                  const isOverdue = p.status === "overdue";
-                  const waLink = createWhatsAppPaymentLink(p, settings);
+                  const isPaid = p.status === "pagado";
+                  const isOverdue = p.status === "atrasado";
+                  const waMessage = generatePaymentWhatsAppMessage(p, settings);
 
                   return (
                     <tr key={p.id} className="hover:bg-dark-700/40 transition-colors">
                       <td className="py-3 px-4">
                         <p className="font-bold text-white text-sm">{p.playerName}</p>
-                        {p.notes && <p className="text-[10px] text-gray-400 italic">Nota: {p.notes}</p>}
+                        {p.sinpeReference && <p className="text-[10px] text-gray-400 italic">Ref: {p.sinpeReference}</p>}
                       </td>
 
                       <td className="py-3 px-4">
@@ -275,8 +315,8 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
 
                       <td className="py-3 px-4">
                         <span className="font-medium text-gray-300">{p.dueDate}</span>
-                        {p.paidDate && (
-                          <p className="text-[10px] text-emerald-400">Pagado el: {p.paidDate}</p>
+                        {p.paymentDate && (
+                          <p className="text-[10px] text-emerald-400">Pagado el: {p.paymentDate}</p>
                         )}
                       </td>
 
@@ -284,7 +324,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                         {isPaid ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" />
-                            Al Día ({p.paymentMethod || "Sinpe"})
+                            Al Día
                           </span>
                         ) : isOverdue ? (
                           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center gap-1">
@@ -301,7 +341,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                       <td className="py-3 px-4 text-right space-x-2">
                         {!isPaid && (
                           <a
-                            href={waLink}
+                            href={`https://wa.me/506${p.guardianPhone.replace(/\D/g, "")}?text=${encodeURIComponent(waMessage)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all"
@@ -365,10 +405,10 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                 </label>
                 <select
                   value={payMethod}
-                  onChange={(e) => setPayMethod(e.target.value as any)}
+                  onChange={(e) => setPayMethod(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs focus:border-golden-500"
                 >
-                  <option value="Sinpe Móvil">Sinpe Móvil</option>
+                  <option value="Sinpe Móvil">Sinpe Móvil (6280-6989)</option>
                   <option value="Transferencia">Transferencia Bancaria (IBAN)</option>
                   <option value="Efectivo">Efectivo</option>
                 </select>
@@ -376,11 +416,11 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
 
               <div>
                 <label className="block text-xs font-bold text-gray-300 uppercase mb-1">
-                  Número de Comprobante / Notas
+                  Número de Comprobante / Referencia Sinpe
                 </label>
                 <input
                   type="text"
-                  placeholder="Ej. Comprobante Sinpe #459201"
+                  placeholder="Ej. SINPE-992810"
                   value={payNotes}
                   onChange={(e) => setPayNotes(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs placeholder-gray-500 focus:border-golden-500"

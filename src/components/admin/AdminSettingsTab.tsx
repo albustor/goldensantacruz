@@ -1,18 +1,18 @@
 ﻿"use client";
 
 import React, { useState } from "react";
-import { Settings, Save, CheckCircle2, Database, Phone, MapPin } from "lucide-react";
-import { AcademySettings } from "@/types";
+import { Settings, Save, CheckCircle2, Database, Phone, MapPin, TreeDeciduous, Lock, ExternalLink } from "lucide-react";
+import { SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
 import { isSupabaseConfigured } from "@/lib/supabase";
 
 interface Props {
-  settings: AcademySettings;
+  settings: SystemSettings;
   onRefresh: () => void;
 }
 
 export default function AdminSettingsTab({ settings, onRefresh }: Props) {
-  const [formData, setFormData] = useState<AcademySettings>(settings);
+  const [formData, setFormData] = useState<SystemSettings>(settings);
   const [saved, setSaved] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -30,7 +30,7 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
           Configuración General de la Academia
         </h2>
         <p className="text-xs text-gray-400">
-          Modificar teléfonos de Sinpe Móvil (<strong>62806989</strong>), cuentas bancarias, cuotas y sedes en Santa Bárbara de Santa Cruz.
+          Modificar teléfonos de Sinpe Móvil (<strong>62806989</strong>), cuentas bancarias, cuotas y enlace al Árbol de Guanacaste.
         </p>
       </div>
 
@@ -56,7 +56,41 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 rounded-3xl bg-dark-800 border border-gray-800 space-y-6">
+        
+        {/* Sección Árbol de Guanacaste */}
         <div className="space-y-4">
+          <h3 className="text-xs font-bold text-emerald-400 uppercase tracking-wider border-b border-gray-700 pb-2 flex items-center gap-1.5">
+            <TreeDeciduous className="w-4 h-4 text-emerald-400" />
+            <span>Vinculación Oficial: Árbol de Guanacaste (Curiol Studio)</span>
+          </h3>
+
+          <div className="space-y-2 text-xs">
+            <label className="block font-bold text-gray-300 uppercase">
+              URL Oficial de la Línea de Tiempo en Curiol Studio
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                required
+                value={formData.arbolGuanacasteUrl}
+                onChange={(e) => setFormData({ ...formData, arbolGuanacasteUrl: e.target.value })}
+                className="flex-1 px-3.5 py-2.5 rounded-xl bg-dark-900 border border-emerald-500/50 text-emerald-300 font-mono text-xs focus:border-emerald-400"
+              />
+              <a
+                href={formData.arbolGuanacasteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shrink-0"
+              >
+                <span>Probar</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Información Financiera */}
+        <div className="space-y-4 pt-2">
           <h3 className="text-xs font-bold text-golden-400 uppercase tracking-wider border-b border-gray-700 pb-2">
             Información de Sinpe Móvil & Cuentas Oficiales
           </h3>
@@ -90,33 +124,34 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
 
             <div>
               <label className="block font-bold text-gray-300 uppercase mb-1">
-                Sede Principal de Entrenamiento
+                Cuenta IBAN Oficial
               </label>
               <input
                 type="text"
-                value={formData.locationName}
-                onChange={(e) => setFormData({ ...formData, locationName: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white focus:border-golden-500"
+                value={formData.ibanAccount}
+                onChange={(e) => setFormData({ ...formData, ibanAccount: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white font-mono text-xs focus:border-golden-500"
               />
             </div>
 
             <div>
               <label className="block font-bold text-gray-300 uppercase mb-1">
-                Marca del Estudio Fotográfico
+                Banco Emisor
               </label>
               <input
                 type="text"
-                value={formData.brandStudio}
-                onChange={(e) => setFormData({ ...formData, brandStudio: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-golden-400 font-bold focus:border-golden-500"
+                value={formData.bankName}
+                onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white focus:border-golden-500"
               />
             </div>
           </div>
         </div>
 
+        {/* Seguridad & Cuotas */}
         <div className="space-y-4 pt-2">
           <h3 className="text-xs font-bold text-golden-400 uppercase tracking-wider border-b border-gray-700 pb-2">
-            Valores Predeterminados de Mensualidad
+            Seguridad & Cuotas Predeterminadas
           </h3>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -126,23 +161,21 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
               </label>
               <input
                 type="number"
-                value={formData.defaultMonthlyFee}
-                onChange={(e) => setFormData({ ...formData, defaultMonthlyFee: parseInt(e.target.value) || 18000 })}
+                value={formData.monthlyFeeDefault}
+                onChange={(e) => setFormData({ ...formData, monthlyFeeDefault: parseInt(e.target.value) || 15000 })}
                 className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white focus:border-golden-500"
               />
             </div>
 
             <div>
               <label className="block font-bold text-gray-300 uppercase mb-1">
-                Día de Corte Mensual (1-31)
+                PIN de Acceso al Panel Admin
               </label>
               <input
-                type="number"
-                min={1}
-                max={31}
-                value={formData.defaultDueDay}
-                onChange={(e) => setFormData({ ...formData, defaultDueDay: parseInt(e.target.value) || 5 })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-white focus:border-golden-500"
+                type="password"
+                value={formData.adminPin}
+                onChange={(e) => setFormData({ ...formData, adminPin: e.target.value })}
+                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-900 border border-gray-700 text-golden-400 font-bold focus:border-golden-500"
               />
             </div>
           </div>
@@ -160,7 +193,7 @@ export default function AdminSettingsTab({ settings, onRefresh }: Props) {
 
           <button
             type="submit"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-transform hover:scale-105"
           >
             <Save className="w-4 h-4" />
             Guardar Cambios

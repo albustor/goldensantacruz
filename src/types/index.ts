@@ -1,30 +1,29 @@
-﻿export type PlayerCategory = 
-  | 'Iniciación / Menores de U8 (U6-U8)'
-  | 'Mini-Básquet (U8-U10)'
-  | 'Infantil (U12-U14)'
-  | 'Juvenil (U16-U18)'
-  | 'Clínicas de Tecnificación & Tiro';
+﻿export type PlayerCategory =
+  | "Iniciación / Menores de U8 (U6-U8)"
+  | "Mini-Básquet (U8-U10)"
+  | "Infantil (U12-U14)"
+  | "Juvenil (U16-U18)"
+  | "Clínicas de Tecnificación & Tiro";
+
+export type PaymentStatus = "al_dia" | "pendiente" | "vencido";
 
 export interface Player {
   id: string;
-  firstName: string;
-  lastName: string;
+  fullName: string;
   birthDate: string;
   category: PlayerCategory;
-  jerseyNumber?: number;
-  position?: 'Base (PG)' | 'Escolta (SG)' | 'Alero (SF)' | 'Ala-Pívot (PF)' | 'Pívot (C)' | 'Formativo' | 'Iniciación';
-  medicalNotes?: string;
   guardianName: string;
   guardianPhone: string;
   guardianEmail?: string;
-  monthlyFee: number;
-  dueDay: number;
-  isActive: boolean;
   photoUrl?: string;
-  createdAt: string;
+  jerseyNumber?: number;
+  position?: string;
+  medicalNotes?: string;
+  registrationDate: string;
+  monthlyFee: number;
+  paymentStatus: PaymentStatus;
+  isActive: boolean;
 }
-
-export type PaymentStatus = 'paid' | 'pending' | 'overdue';
 
 export interface PaymentRecord {
   id: string;
@@ -33,94 +32,94 @@ export interface PaymentRecord {
   guardianName: string;
   guardianPhone: string;
   month: string;
-  monthIndex: number;
   year: number;
   amount: number;
-  status: PaymentStatus;
-  dueDate: string;
-  paidDate?: string;
-  paymentMethod?: 'Sinpe Móvil' | 'Transferencia' | 'Efectivo';
+  status: "pagado" | "pendiente" | "atrasado";
+  paymentDate?: string;
+  sinpeReference?: string;
   receiptUrl?: string;
-  notes?: string;
+  dueDate: string;
 }
 
 export interface Match {
   id: string;
-  opponent: string;
-  opponentLogo?: string;
   category: PlayerCategory;
+  opponent: string;
   matchDate: string;
   matchTime: string;
   location: string;
   locationUrl?: string;
-  homeAway: 'local' | 'visita';
-  status: 'upcoming' | 'live' | 'finished';
-  scoreGolden?: number;
-  scoreOpponent?: number;
+  isHome: boolean;
+  ourScore?: number;
+  opponentScore?: number;
+  status: "upcoming" | "finished" | "live";
   summary?: string;
+  mvp?: string;
+}
+
+export interface GalleryPhoto {
+  id: string;
+  photoUrl: string;
+  title: string;
+  caption?: string;
+  category: PlayerCategory;
+  uploaderName: string;
+  uploaderPhone?: string;
+  uploaderRole: "padre" | "madre" | "entrenador" | "aficionado" | "staff";
+  photoType: "community" | "pro_studio";
+  albumId?: string;
+  eventDate?: string;
+  likesCount: number;
+  isApproved: boolean;
+  uploadedAt: string;
+  watermarkTag?: string; // "Curiol Studio Santa Cruz"
+  priceDigital?: number; // Precios para fotos de estudio
+  pricePrint?: number;
 }
 
 export interface GalleryAlbum {
   id: string;
   title: string;
+  coverPhotoUrl: string;
   eventDate: string;
-  category: PlayerCategory | 'General' | 'Entrenamiento';
-  description?: string;
-  createdBy?: string;
-  isOpenForUploads: boolean;
-  coverPhotoUrl?: string;
-}
-
-export type PhotoType = 'community' | 'pro_studio';
-
-export interface GalleryPhoto {
-  id: string;
-  albumId?: string;
-  eventDate: string;
-  title: string;
-  category?: PlayerCategory | 'General' | 'Entrenamiento';
-  photoUrl: string;
-  caption?: string;
-  uploaderName: string;
-  isApproved: boolean;
-  likesCount: number;
-  createdAt: string;
-  photoType: PhotoType;
-  watermarkTag?: string; // "Curiol Studio Santa Cruz"
-  priceDigital?: number; // 2500 (convenio) vs 4000 regular
-  priceRegularDigital?: number; // 4000
-  pricePrintedFridge?: number; // 3500 (imán nevera)
-  hasCanvasRetablo?: boolean; // Retablos y Canvas (consultar precio)
+  category: string;
+  createdBy: string;
+  isLocked?: boolean;
 }
 
 export interface Sponsor {
   id: string;
   name: string;
-  tier: 'oro' | 'plata' | 'bronce';
   logoUrl: string;
-  tagline: string;
+  tier: "oro" | "plata" | "bronce";
   websiteUrl?: string;
-  whatsappPhone?: string;
+  phone?: string;
+  contactName?: string;
   isActive: boolean;
-  orderIndex: number;
 }
 
-export interface AcademySettings {
-  name: string;
-  brandStudio: string; // "Curiol Studio"
-  locationName: string;
-  address: string;
-  venueNote: string;
-  wazeUrl: string;
-  googleMapsUrl: string;
+export interface AudioNote {
+  id: string;
+  title: string;
+  audioBlobUrl?: string;
+  transcript: string;
+  summaryIA?: string;
+  actionItems?: string[];
+  category: "directiva" | "entrenador" | "patrocinio" | "reunion";
+  recordedAt: string;
+  author: string;
+}
+
+export interface SystemSettings {
+  academyName: string;
   sinpePhone: string;
   sinpeOwner: string;
   ibanAccount: string;
   bankName: string;
-  contactPhone: string;
-  contactEmail: string;
-  instagramUrl: string;
-  facebookUrl: string;
-  defaultMonthlyFee: number;
-  defaultDueDay: number;
+  monthlyFeeDefault: number;
+  coachPhone: string;
+  adminPin: string;
+  brandStudio: string; // "Curiol Studio"
+  arbolGuanacasteUrl: string; // "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
+  address: string;
 }
