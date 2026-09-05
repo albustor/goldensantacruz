@@ -87,7 +87,14 @@ export default function GaleriaPage() {
   // Filtrado de fotos según pestaña, álbum, categoría y buscador
   const currentPhotos = photos.filter((p) => {
     const matchesTab = activeTab === "pro_studio" ? p.photoType === "pro_studio" : p.photoType === "community";
-    const matchesAlbum = selectedAlbumId === "all" || p.albumId === selectedAlbumId;
+    
+    // Si se seleccionó un álbum específico, buscar por albumId o por eventDate del álbum
+    const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
+    const matchesAlbum =
+      selectedAlbumId === "all" ||
+      p.albumId === selectedAlbumId ||
+      (selectedAlbum && p.eventDate === selectedAlbum.eventDate);
+
     const matchesCategory = selectedCategory === "all" || p.category === selectedCategory;
     const matchesSearch = 
       !searchQuery.trim() || 
@@ -235,7 +242,7 @@ export default function GaleriaPage() {
 
           {/* Íconos de Álbumes Específicos */}
           {albums.map((album) => {
-            const albumPhotos = photos.filter((p) => p.albumId === album.id);
+            const albumPhotos = photos.filter((p) => p.albumId === album.id || p.eventDate === album.eventDate);
             const isSelected = selectedAlbumId === album.id;
             const coverPhoto = album.coverPhotoUrl || albumPhotos[0]?.photoUrl;
 
@@ -294,6 +301,29 @@ export default function GaleriaPage() {
           )}
         </div>
       </div>
+
+      {/* Indicador de Álbum Activo Seleccionado */}
+      {selectedAlbumId !== "all" && (() => {
+        const activeAlbum = albums.find((a) => a.id === selectedAlbumId);
+        if (!activeAlbum) return null;
+        return (
+          <div className="p-3 px-4 rounded-2xl bg-dark-900/95 border border-golden-500/40 flex items-center justify-between text-xs animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded bg-golden-500 text-dark-950 font-black uppercase text-[10px]">
+                Álbum Activo
+              </span>
+              <strong className="text-white font-black">{activeAlbum.title}</strong>
+              <span className="text-gray-400 text-[11px]">({formatShortDate(activeAlbum.eventDate)} • {activeAlbum.category})</span>
+            </div>
+            <button
+              onClick={() => setSelectedAlbumId("all")}
+              className="text-golden-400 hover:text-golden-300 font-bold text-[11px] underline"
+            >
+              Ver todas las fotos
+            </button>
+          </div>
+        );
+      })()}
 
       {/* 5. BUSCADOR & FILTRO POR CATEGORÍA */}
       <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 flex flex-col sm:flex-row gap-3 items-center justify-between">
@@ -380,16 +410,17 @@ export default function GaleriaPage() {
                   </span>
                 </div>
 
-                {/* MARCA DE AGUA OFICIAL: GOLDEN SPORT ACADEMY SANTA CRUZ */}
-                <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1 bg-black/40 backdrop-blur-[2px] px-2 py-0.5 rounded-lg border border-white/15">
+                {/* MARCA DE AGUA OFICIAL: CURIOL STUDIO TRANSPARENTE */}
+                <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1.5 bg-black/50 backdrop-blur-[3px] px-2.5 py-1 rounded-xl border border-white/20 shadow-md">
                   <img
-                    src="/logo.png"
-                    alt="Golden Sport Academy Watermark"
-                    className="w-4 h-4 object-contain brightness-0 invert opacity-80"
+                    src="/curiol-studio-transparent.png"
+                    alt="Curiol Studio"
+                    className="h-3.5 w-auto object-contain drop-shadow"
                   />
+                  <span className="text-gray-400 text-[9px] font-thin">|</span>
                   <div className="flex flex-col text-left leading-none">
-                    <span className="text-[7px] font-black tracking-widest text-white/90 uppercase">
-                      GOLDEN SPORT ACADEMY
+                    <span className="text-[7px] font-black tracking-widest text-white/95 uppercase">
+                      GOLDEN SPORT
                     </span>
                     <span className="text-[6px] font-black tracking-widest text-golden-400 uppercase">
                       SANTA CRUZ

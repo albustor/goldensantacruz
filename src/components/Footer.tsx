@@ -103,13 +103,13 @@ export default function Footer() {
 
           {/* Col 4: Curiol Studio & Enlaces Oficiales */}
           <div className="space-y-3">
-            <div className="h-9 w-28 bg-white rounded-lg p-1 border border-golden-500/50 flex items-center justify-center shadow-sm">
+            <div className="h-10 w-36 relative flex items-center">
               <Image
-                src="/curiol-studio-logo.png"
+                src="/curiol-studio-transparent.png"
                 alt="Curiol Studio"
-                width={100}
-                height={28}
-                className="object-contain max-h-full max-w-full"
+                width={130}
+                height={36}
+                className="object-contain max-h-full max-w-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
               />
             </div>
             <p className="text-xs text-gray-300 leading-relaxed">

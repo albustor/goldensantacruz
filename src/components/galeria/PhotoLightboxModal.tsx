@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -48,18 +48,24 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy }
             className="max-h-[65vh] w-auto object-contain mx-auto"
           />
 
-          {/* MARCA DE AGUA OFICIAL EN BLANCO TRANSLÚCIDO: GOLDEN SPORT ACADEMY SANTA CRUZ */}
-          <div className="absolute top-4 right-4 pointer-events-none flex items-center gap-2 bg-black/50 backdrop-blur-sm px-3 py-1.5 rounded-2xl border border-white/20 shadow-lg">
+          {/* MARCA DE AGUA OFICIAL: CURIOL STUDIO & GOLDEN SPORT ACADEMY */}
+          <div className="absolute top-4 right-4 pointer-events-none flex items-center gap-2 bg-black/60 backdrop-blur-md px-3.5 py-1.5 rounded-2xl border border-white/20 shadow-xl">
+            <img
+              src="/curiol-studio-transparent.png"
+              alt="Curiol Studio"
+              className="h-5 w-auto object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+            />
+            <span className="text-gray-400 text-xs font-thin">|</span>
             <img
               src="/logo.png"
-              alt="Golden Sport Academy Santa Cruz Watermark"
-              className="w-7 h-7 object-contain brightness-0 invert opacity-80 drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]"
+              alt="Golden Sport Academy Santa Cruz"
+              className="w-5 h-5 object-contain brightness-0 invert opacity-90"
             />
             <div className="flex flex-col text-left leading-none">
-              <span className="text-[10px] font-black tracking-widest text-white/95 uppercase">
+              <span className="text-[8px] font-black tracking-widest text-white/95 uppercase">
                 GOLDEN SPORT ACADEMY
               </span>
-              <span className="text-[9px] font-black tracking-widest text-golden-400 uppercase">
+              <span className="text-[7px] font-black tracking-widest text-golden-400 uppercase">
                 SANTA CRUZ
               </span>
             </div>

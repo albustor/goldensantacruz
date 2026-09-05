@@ -50,6 +50,20 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     description: "",
   });
 
+  // Upload photo state (Admin / Curiol Studio)
+  const [isUploadPhotoOpen, setIsUploadPhotoOpen] = useState(false);
+  const [uploadPhotoForm, setUploadPhotoForm] = useState({
+    albumId: "",
+    title: "",
+    category: "Iniciación / Menores de U8 (U6-U8)",
+    uploaderName: "Curiol Studio Oficial",
+    photoType: "pro_studio" as "pro_studio" | "community",
+    caption: "",
+    previewUrl: "",
+    priceDigital: 2500,
+    pricePrint: 3500,
+  });
+
   useEffect(() => {
     loadAlbums();
     loadCategories();
@@ -128,6 +142,51 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     onRefresh();
   };
 
+  const handleOpenUploadPhoto = (albumId?: string) => {
+    const targetAlbum = albums.find(a => a.id === albumId) || albums[0];
+    setUploadPhotoForm({
+      albumId: targetAlbum ? targetAlbum.id : "",
+      title: targetAlbum ? `Fotografía Oficial • ${targetAlbum.title}` : "",
+      category: targetAlbum?.category || categories[0] || "Iniciación / Menores de U8 (U6-U8)",
+      uploaderName: "Curiol Studio Oficial",
+      photoType: "pro_studio",
+      caption: "",
+      previewUrl: "",
+      priceDigital: 2500,
+      pricePrint: 3500,
+    });
+    setIsUploadPhotoOpen(true);
+  };
+
+  const handleSavePhotoSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadPhotoForm.previewUrl) {
+      alert("Por favor selecciona una fotografía para subir.");
+      return;
+    }
+    const targetAlbum = albums.find(a => a.id === uploadPhotoForm.albumId);
+    const eventDate = targetAlbum ? targetAlbum.eventDate : new Date().toISOString().split("T")[0];
+
+    await Store.addGalleryPhoto({
+      albumId: uploadPhotoForm.albumId,
+      eventDate: eventDate,
+      title: uploadPhotoForm.title || (targetAlbum ? targetAlbum.title : "Foto Oficial"),
+      category: uploadPhotoForm.category,
+      photoUrl: uploadPhotoForm.previewUrl,
+      caption: uploadPhotoForm.caption,
+      uploaderName: uploadPhotoForm.uploaderName || "Curiol Studio",
+      photoType: uploadPhotoForm.photoType,
+      isApproved: true,
+      watermarkTag: "Curiol Studio Santa Cruz",
+      priceDigital: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.priceDigital : undefined,
+      pricePrint: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.pricePrint : undefined,
+    });
+
+    setIsUploadPhotoOpen(false);
+    onRefresh();
+    alert("¡Fotografía subida y publicada con éxito en el álbum!");
+  };
+
   const handleDeletePhoto = async (id: string, title: string) => {
     if (confirm(`¿Eliminar la fotografía "${title}"?`)) {
       await Store.deleteGalleryPhoto(id);
@@ -193,17 +252,25 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
             <button
               onClick={() => setIsAddAlbumOpen(true)}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-md shrink-0"
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-golden-300 font-bold text-xs uppercase border border-golden-500/40 shadow-md shrink-0"
             >
               <Plus className="w-4 h-4" />
-              <span>Crear Nuevo Álbum</span>
+              <span>Crear Álbum</span>
+            </button>
+
+            <button
+              onClick={() => handleOpenUploadPhoto()}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-md shrink-0"
+            >
+              <Upload className="w-4 h-4" />
+              <span>Subir Fotografías</span>
             </button>
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {albums.map((album) => {
-            const count = photos.filter((p) => p.albumId === album.id || p.title === album.title).length;
+            const count = photos.filter((p) => p.albumId === album.id || p.eventDate === album.eventDate).length;
 
             return (
               <div
@@ -223,15 +290,23 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                   </p>
                 </div>
 
-                <div className="pt-2 border-t border-gray-800 flex items-center justify-between gap-2">
+                <div className="pt-2 border-t border-gray-800 flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex items-center gap-1.5">
                     <button
+                      onClick={() => handleOpenUploadPhoto(album.id)}
+                      className="px-2.5 py-1.5 rounded-lg bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs flex items-center gap-1 shadow-sm"
+                      title="Subir fotos directamente a este álbum"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>+ Foto</span>
+                    </button>
+
+                    <button
                       onClick={() => handleOpenEditAlbum(album)}
-                      className="px-2.5 py-1.5 rounded-lg bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 font-bold text-xs flex items-center gap-1"
+                      className="px-2 py-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-300 font-bold text-xs flex items-center gap-1 border border-gray-700"
                       title="Editar título, fecha y categoría"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
-                      <span>Editar</span>
                     </button>
 
                     <button
@@ -395,6 +470,173 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
         </div>
       )}
 
+      {/* 4. MODAL PARA SUBIR FOTOGRAFÍAS (ADMIN / CURIOL STUDIO) */}
+      {isUploadPhotoOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto animate-fadeIn">
+          <div className="w-full max-w-lg bg-dark-900 border-2 border-golden-500/50 rounded-3xl p-6 sm:p-8 space-y-4 shadow-2xl relative my-8">
+            <button
+              onClick={() => setIsUploadPhotoOpen(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2.5 border-b border-gray-800 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/40">
+                <Camera className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-white uppercase">
+                  Subir Fotografía al Álbum
+                </h3>
+                <p className="text-xs text-gray-400">
+                  Panel oficial de Curiol Studio & Administración
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSavePhotoSubmit} className="space-y-4 text-xs">
+              {/* Selector de Archivo */}
+              <div>
+                <label className="block font-bold text-gray-300 uppercase mb-1">
+                  Fotografía *
+                </label>
+                <label className="border-2 border-dashed border-golden-500/40 hover:border-golden-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer bg-dark-950/60 transition-colors">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => {
+                          setUploadPhotoForm({ ...uploadPhotoForm, previewUrl: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="hidden"
+                  />
+                  {uploadPhotoForm.previewUrl ? (
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-golden-500/40">
+                      <img
+                        src={uploadPhotoForm.previewUrl}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-dark-950/90 text-[10px] text-emerald-400 font-bold">
+                        ✓ Foto cargada (Toca para cambiar)
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="w-8 h-8 text-golden-400 animate-bounce" />
+                      <span className="font-bold text-white text-xs">
+                        Selecciona la foto desde tu equipo
+                      </span>
+                      <span className="text-[10px] text-gray-400">JPG, PNG o WEBP</span>
+                    </>
+                  )}
+                </label>
+              </div>
+
+              {/* Álbum Destino & Tipo de Foto */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-300 uppercase mb-1">Álbum Asignado *</label>
+                  <select
+                    value={uploadPhotoForm.albumId}
+                    onChange={(e) => setUploadPhotoForm({ ...uploadPhotoForm, albumId: e.target.value })}
+                    required
+                    className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                  >
+                    <option value="">Seleccionar Álbum...</option>
+                    {albums.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.eventDate} - {a.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-gray-300 uppercase mb-1">Tipo de Publicación *</label>
+                  <select
+                    value={uploadPhotoForm.photoType}
+                    onChange={(e) => setUploadPhotoForm({ ...uploadPhotoForm, photoType: e.target.value as any })}
+                    className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                  >
+                    <option value="pro_studio">Curiol Studio Pro (Oficial)</option>
+                    <option value="community">Comunidad (Papás y Familias)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Título & Categoría */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-gray-300 uppercase mb-1">Título de la Foto *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej. Jugada de Thiago / Tiro al aro"
+                    value={uploadPhotoForm.title}
+                    onChange={(e) => setUploadPhotoForm({ ...uploadPhotoForm, title: e.target.value })}
+                    className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                  />
+                </div>
+
+                <CategorySelect
+                  value={uploadPhotoForm.category}
+                  onChange={(cat) => setUploadPhotoForm({ ...uploadPhotoForm, category: cat })}
+                  label="Categoría"
+                />
+              </div>
+
+              {/* Autor / Fotógrafo */}
+              <div>
+                <label className="block font-bold text-gray-300 uppercase mb-1">Nombre del Fotógrafo / Autor</label>
+                <input
+                  type="text"
+                  value={uploadPhotoForm.uploaderName}
+                  onChange={(e) => setUploadPhotoForm({ ...uploadPhotoForm, uploaderName: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                />
+              </div>
+
+              {/* Pie de foto / Observación */}
+              <div>
+                <label className="block font-bold text-gray-300 uppercase mb-1">Descripción / Pie de Foto</label>
+                <textarea
+                  rows={2}
+                  value={uploadPhotoForm.caption}
+                  onChange={(e) => setUploadPhotoForm({ ...uploadPhotoForm, caption: e.target.value })}
+                  placeholder="Detalles sobre el momento deportivo..."
+                  className="w-full px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white focus:border-golden-500"
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-gray-800">
+                <button
+                  type="button"
+                  onClick={() => setIsUploadPhotoOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-dark-800 text-gray-300 font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black uppercase shadow-lg flex items-center gap-1.5"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Publicar en Álbum</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {/* Modal General de Gestión de Categorías */}
       <CategoryManagerModal
         categories={categories}
@@ -406,12 +648,21 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
         }}
       />
 
-      {/* 4. MODERACIÓN DE FOTOGRAFÍAS */}
+      {/* 5. MODERACIÓN DE FOTOGRAFÍAS */}
       <div className="space-y-4">
-        <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
-          <Camera className="w-5 h-5 text-golden-400" />
-          <span>Fotografías en Galería ({photos.length})</span>
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+            <Camera className="w-5 h-5 text-golden-400" />
+            <span>Fotografías en Galería ({photos.length})</span>
+          </h3>
+          <button
+            onClick={() => handleOpenUploadPhoto()}
+            className="px-3.5 py-1.5 rounded-xl bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 font-bold text-xs uppercase flex items-center gap-1 border border-golden-500/40"
+          >
+            <Upload className="w-3.5 h-3.5" />
+            <span>+ Subir Foto</span>
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {photos.map((p) => (
