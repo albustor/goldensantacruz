@@ -1,6 +1,7 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
 // 10 FOTOGRAFÍAS PURAMENTE CONCEPTUALES DE BÁSQUETBOL (PLANOS DETALLE, MACRO, SIN ROSTROS NI PERSONAS)
@@ -100,15 +101,22 @@ export default function HeroBackground() {
         {HERO_BG_PHOTOS.map((photo, idx) => (
           <div
             key={`detail-${photo.url}`}
-            className={`absolute inset-0 w-full h-full bg-cover bg-center transition-all duration-1000 ease-in-out transform ${
+            className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${
               idx === currentIdx
-                ? "opacity-90 scale-100"
-                : "opacity-0 scale-105 pointer-events-none"
+                ? "opacity-95 z-10"
+                : "opacity-0 z-0 pointer-events-none"
             }`}
-            style={{
-              backgroundImage: `url(${photo.url})`,
-            }}
-          />
+          >
+            <Image
+              src={photo.url}
+              alt={photo.title}
+              fill
+              priority={idx === 0}
+              sizes="100vw"
+              className="object-cover object-center select-none"
+              quality={90}
+            />
+          </div>
         ))}
 
         {/* Viñeta Suave en Bordes, Laterales y Base */}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Image from "next/image";
@@ -13,7 +13,7 @@ import {
 
 export default function HeroSection() {
   return (
-    <div className="relative min-h-[85vh] lg:min-h-[92vh] flex flex-col justify-between pt-6 pb-4">
+    <div className="relative z-10 flex-1 flex flex-col justify-between pt-4 sm:pt-6 pb-4 sm:pb-6">
       
       {/* 1. LOGO OFICIAL FLOTANDO SOBRE LA FOTO EN GRANDE (A LA IZQUIERDA) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-4">

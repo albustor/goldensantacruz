@@ -93,17 +93,17 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md animate-fadeIn">
       <div className="relative w-full max-w-xl rounded-3xl bg-dark-900 border-2 border-golden-500/50 p-6 sm:p-8 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-800 pb-4">
+        <div className="flex items-center justify-between border-b border-gray-800 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/40">
+            <div className="w-10 h-10 rounded-2xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/40 shrink-0">
               <Camera className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-tight">
-                Subir Foto Familiar del Partido
+              <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
+                Subir Foto Familiar
               </h2>
-              <p className="text-xs text-gray-400">
-                Se asociará automáticamente al álbum de fotos de la fecha
+              <p className="text-[11px] text-gray-400">
+                Álbum colaborativo de papás y familias
               </p>
             </div>
           </div>
@@ -114,6 +114,14 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
           >
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Aviso de Consolidación del Álbum del Día */}
+        <div className="p-3 rounded-xl bg-golden-500/10 border border-golden-500/30 text-[11px] text-golden-300 flex items-start gap-2">
+          <Sparkles className="w-4 h-4 text-golden-400 shrink-0 mt-0.5" />
+          <span>
+            <strong>Álbum del Día:</strong> Si ya existe un álbum de la fecha (iniciado por Lenny, Alberto o una familia), tu foto se agregará automáticamente a ese mismo álbum para tener todos los recuerdos unidos.
+          </span>
         </div>
 
         {/* Formulario */}
