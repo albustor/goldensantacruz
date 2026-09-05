@@ -517,23 +517,49 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                     type="file"
                     multiple
                     accept="image/*"
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const files = e.target.files;
                       if (files && files.length > 0) {
                         const fileArray = Array.from(files);
-                        const readPromises = fileArray.map((file) => {
+                        const compressPromises = fileArray.map((file) => {
                           return new Promise<string>((resolve) => {
                             const reader = new FileReader();
                             reader.onloadend = () => {
-                              resolve(reader.result as string);
+                              const base64 = reader.result as string;
+                              const img = new Image();
+                              img.onload = () => {
+                                const MAX = 1000;
+                                let { width, height } = img;
+                                if (width > MAX || height > MAX) {
+                                  if (width >= height) {
+                                    height = Math.round((height * MAX) / width);
+                                    width = MAX;
+                                  } else {
+                                    width = Math.round((width * MAX) / height);
+                                    height = MAX;
+                                  }
+                                }
+                                const canvas = document.createElement("canvas");
+                                canvas.width = width;
+                                canvas.height = height;
+                                const ctx = canvas.getContext("2d");
+                                if (!ctx) return resolve(base64);
+                                ctx.drawImage(img, 0, 0, width, height);
+                                let out = canvas.toDataURL("image/webp", 0.80);
+                                if (!out.startsWith("data:image/webp")) {
+                                  out = canvas.toDataURL("image/jpeg", 0.82);
+                                }
+                                resolve(out);
+                              };
+                              img.onerror = () => resolve(base64);
+                              img.src = base64;
                             };
                             reader.readAsDataURL(file);
                           });
                         });
 
-                        Promise.all(readPromises).then((results) => {
-                          setUploadPhotoForm({ ...uploadPhotoForm, previewUrls: results });
-                        });
+                        const results = await Promise.all(compressPromises);
+                        setUploadPhotoForm((prev) => ({ ...prev, previewUrls: [...prev.previewUrls, ...results] }));
                       }
                     }}
                     className="hidden"

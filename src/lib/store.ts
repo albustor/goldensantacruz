@@ -18,6 +18,16 @@ import {
   INITIAL_CATEGORIES,
 } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
+import {
+  getGalleryPhotosFromDB,
+  saveGalleryPhotosToDB,
+  addGalleryPhotoToDB,
+  deleteGalleryPhotoFromDB,
+  getAudioNotesFromDB,
+  addAudioNoteToDB,
+  deleteAudioNoteFromDB,
+  saveAudioNotesToDB,
+} from './indexedDb';
 
 export interface DirectivaAudioNote {
   id: string;
@@ -56,10 +66,17 @@ function saveToStorage<T>(key: string, data: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (err) {
-    // Lanzamos el error para que el llamador lo capture y muestre al usuario
-    // (ej: cuota de localStorage excedida con imágenes base64 muy pesadas)
-    console.error(`[Store] Error al guardar en localStorage [${key}]:`, err);
-    throw err;
+    console.warn(`[Store] Cuota excedida en localStorage al guardar [${key}]. Limpiando claves pesadas heredadas...`, err);
+    try {
+      // Liberar espacio eliminando imágenes/audios viejos que ahora viven en IndexedDB
+      localStorage.removeItem('golden_gallery_v7');
+      localStorage.removeItem('golden_gallery_v6');
+      localStorage.removeItem('golden_gallery_v5');
+      localStorage.removeItem('golden_audio_notes_v5');
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (retryErr) {
+      console.error(`[Store] Error definitivo al guardar en localStorage [${key}]:`, retryErr);
+    }
   }
 }
 
@@ -254,7 +271,7 @@ export const Store = {
     // Update photos associated with this album
     const photos = await this.getGalleryPhotos();
     const updatedPhotos = photos.map(p => p.albumId === album.id ? { ...p, title: album.title, category: album.category } : p);
-    saveToStorage(STORAGE_KEYS.GALLERY, updatedPhotos);
+    await saveGalleryPhotosToDB(updatedPhotos);
   },
 
   async updateAlbumTitle(albumId: string, newTitle: string): Promise<void> {
@@ -265,7 +282,7 @@ export const Store = {
     // Also update all photos with this albumId
     const photos = await this.getGalleryPhotos();
     const updatedPhotos = photos.map(p => p.albumId === albumId ? { ...p, title: newTitle } : p);
-    saveToStorage(STORAGE_KEYS.GALLERY, updatedPhotos);
+    await saveGalleryPhotosToDB(updatedPhotos);
   },
 
   async addAlbum(album: Omit<GalleryAlbum, 'id'>): Promise<GalleryAlbum> {
@@ -285,33 +302,31 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.ALBUMS, current.filter(a => a.id !== albumId));
   },
 
-  // GALLERY PHOTOS
+  // GALLERY PHOTOS (Stored in high-capacity IndexedDB to prevent localStorage quota errors)
   async getGalleryPhotos(): Promise<GalleryPhoto[]> {
-    return getFromStorage<GalleryPhoto[]>(STORAGE_KEYS.GALLERY, INITIAL_GALLERY_PHOTOS);
+    return getGalleryPhotosFromDB();
   },
 
   async addGalleryPhoto(photo: Omit<GalleryPhoto, 'id' | 'likesCount' | 'createdAt'>): Promise<GalleryPhoto> {
     const newPhoto: GalleryPhoto = {
       ...photo,
-      id: `gal-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+      id: `gal-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`,
       likesCount: 0,
       createdAt: new Date().toISOString(),
       watermarkTag: photo.watermarkTag || "Curiol Studio Santa Cruz",
     };
-    const current = await this.getGalleryPhotos();
-    saveToStorage(STORAGE_KEYS.GALLERY, [newPhoto, ...current]);
+    await addGalleryPhotoToDB(newPhoto);
     return newPhoto;
   },
 
   async likeGalleryPhoto(id: string): Promise<void> {
     const current = await this.getGalleryPhotos();
     const updated = current.map(p => p.id === id ? { ...p, likesCount: p.likesCount + 1 } : p);
-    saveToStorage(STORAGE_KEYS.GALLERY, updated);
+    await saveGalleryPhotosToDB(updated);
   },
 
   async deleteGalleryPhoto(id: string): Promise<void> {
-    const current = await this.getGalleryPhotos();
-    saveToStorage(STORAGE_KEYS.GALLERY, current.filter(p => p.id !== id));
+    await deleteGalleryPhotoFromDB(id);
   },
 
   // SPONSORS
@@ -336,9 +351,9 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.SPONSORS, current.filter(s => s.id !== id));
   },
 
-  // DIRECTIVA AUDIO NOTES
+  // DIRECTIVA AUDIO NOTES (Stored in IndexedDB)
   async getAudioNotes(): Promise<DirectivaAudioNote[]> {
-    return getFromStorage<DirectivaAudioNote[]>(STORAGE_KEYS.AUDIO_NOTES, [
+    return getAudioNotesFromDB([
       {
         id: "aud-1",
         title: "Estrategia de patrocinadores y recuerdos con Curiol Studio",
@@ -357,14 +372,12 @@ export const Store = {
       id: `aud-${Date.now()}`,
       createdAt: new Date().toISOString(),
     };
-    const current = await this.getAudioNotes();
-    saveToStorage(STORAGE_KEYS.AUDIO_NOTES, [newNote, ...current]);
+    await addAudioNoteToDB(newNote);
     return newNote;
   },
 
   async deleteAudioNote(id: string): Promise<void> {
-    const current = await this.getAudioNotes();
-    saveToStorage(STORAGE_KEYS.AUDIO_NOTES, current.filter(n => n.id !== id));
+    await deleteAudioNoteFromDB(id);
   },
 
   // CATEGORIES DYNAMIC MANAGEMENT
