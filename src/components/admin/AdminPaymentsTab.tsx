@@ -59,6 +59,14 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
   const [activeNotifyPayment, setActiveNotifyPayment] = useState<PaymentRecord | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<ReminderLevel>("nivel1_preventivo");
   const [copied, setCopied] = useState(false);
+  const [isSendingEvolution, setIsSendingEvolution] = useState(false);
+  const [evolutionStatus, setEvolutionStatus] = useState<string | null>(null);
+
+  // Modal de barrido automático
+  const [isSweepOpen, setIsSweepOpen] = useState(false);
+  const [isSweeping, setIsSweeping] = useState(false);
+  const [sweepResult, setSweepResult] = useState<any>(null);
+  const [sweepTestPhone, setSweepTestPhone] = useState("60602617");
 
   // Modal de comprobante / recibo enviado
   const [receiptRecord, setReceiptRecord] = useState<PaymentRecord | null>(null);
@@ -144,12 +152,60 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     setSelectedLevel(suggested);
     setActiveNotifyPayment(payment);
     setCopied(false);
+    setEvolutionStatus(null);
   };
 
   const handleCopyMessage = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
+  };
+
+  const handleSendDirectEvolution = async () => {
+    if (!activeNotifyPayment) return;
+    setIsSendingEvolution(true);
+    setEvolutionStatus(null);
+    try {
+      const res = await fetch("/api/notificaciones/whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "reminder",
+          phone: activeNotifyPayment.guardianPhone,
+          level: selectedLevel,
+          payment: activeNotifyPayment,
+          settings: settings,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setEvolutionStatus("success");
+      } else {
+        setEvolutionStatus(`error: ${data.error || "No se pudo enviar"}`);
+      }
+    } catch (err: any) {
+      setEvolutionStatus(`error: ${err.message}`);
+    } finally {
+      setIsSendingEvolution(false);
+    }
+  };
+
+  const handleRunSweep = async (isDryRun: boolean) => {
+    setIsSweeping(true);
+    setSweepResult(null);
+    try {
+      const url = `/api/cron/cobranzas-automaticas?dryRun=${isDryRun}&testPhone=${encodeURIComponent(sweepTestPhone)}`;
+      const res = await fetch(url, { method: "POST" });
+      const data = await res.json();
+      setSweepResult(data);
+      if (!isDryRun) {
+        onRefresh();
+      }
+    } catch (err: any) {
+      setSweepResult({ error: err.message });
+    } finally {
+      setIsSweeping(false);
+    }
   };
 
   const handleExportCSV = () => {
@@ -228,6 +284,19 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
           >
             <FileSpreadsheet className="w-4 h-4" />
             <span>Exportar CSV</span>
+          </button>
+
+          {/* Evolution API Automated Sweep Trigger */}
+          <button
+            onClick={() => {
+              setIsSweepOpen(true);
+              setSweepResult(null);
+            }}
+            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-950/80 hover:bg-emerald-900/90 text-emerald-300 font-bold text-xs uppercase border border-emerald-500/50 transition-all shadow-md"
+            title="Ejecutar barrido de cobranza automática vía Evolution API"
+          >
+            <Send className="w-4 h-4 text-emerald-400" />
+            <span>⚡ Barrido Automático</span>
           </button>
 
           {/* Generate Button */}
@@ -574,32 +643,173 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
               </div>
             </div>
 
-            {/* Acciones de Envío */}
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <a
-                href={createWhatsAppPaymentLink(activeNotifyPayment, settings, selectedLevel)}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-lg transition-all"
-              >
-                <Phone className="w-4 h-4" />
-                <span>Enviar por WhatsApp</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-
-              <a
-                href={createEmailPaymentLink(
-                  activeNotifyPayment,
-                  settings,
-                  playersMap.get(activeNotifyPayment.playerId)?.guardianEmail,
-                  selectedLevel
+            {/* Estado de envío Evolution API */}
+            {evolutionStatus && (
+              <div className={`p-3 rounded-xl text-xs font-bold flex items-center gap-2 ${
+                evolutionStatus === "success" 
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40" 
+                  : "bg-red-500/20 text-red-300 border border-red-500/40"
+              }`}>
+                {evolutionStatus === "success" ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                    <span>✓ Mensaje enviado exitosamente a WhatsApp por Evolution API</span>
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>{evolutionStatus}</span>
+                  </>
                 )}
-                className="flex-1 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-lg transition-all"
+              </div>
+            )}
+
+            {/* Acciones de Envío */}
+            <div className="space-y-2.5 pt-2">
+              <button
+                type="button"
+                onClick={handleSendDirectEvolution}
+                disabled={isSendingEvolution}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider text-center flex items-center justify-center gap-2 shadow-lg transition-all"
               >
-                <Mail className="w-4 h-4" />
-                <span>Enviar por Correo (Email)</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
+                <Send className="w-4 h-4" />
+                <span>{isSendingEvolution ? "Enviando por Evolution API..." : "⚡ Enviar Directo a WhatsApp (Evolution API)"}</span>
+              </button>
+
+              <div className="flex flex-col sm:flex-row gap-2">
+                <a
+                  href={createWhatsAppPaymentLink(activeNotifyPayment, settings, selectedLevel)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-gray-200 font-bold text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 border border-gray-700 transition-all"
+                >
+                  <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Abrir en WhatsApp Web</span>
+                  <ExternalLink className="w-3 h-3 text-gray-400" />
+                </a>
+
+                <a
+                  href={createEmailPaymentLink(
+                    activeNotifyPayment,
+                    settings,
+                    playersMap.get(activeNotifyPayment.playerId)?.guardianEmail,
+                    selectedLevel
+                  )}
+                  className="flex-1 py-2.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-gray-200 font-bold text-xs uppercase tracking-wider text-center flex items-center justify-center gap-1.5 border border-gray-700 transition-all"
+                >
+                  <Mail className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Enviar por Correo</span>
+                  <ExternalLink className="w-3 h-3 text-gray-400" />
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE BARRIDO AUTOMÁTICO DE COBRANZAS (EVOLUTION API) */}
+      {isSweepOpen && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-xl bg-dark-900 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 space-y-5 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <button
+              onClick={() => setIsSweepOpen(false)}
+              className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-gray-800 pb-3">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40 shrink-0">
+                <Send className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-white uppercase">
+                  Barrido Automatizado de Cobranzas
+                </h3>
+                <p className="text-xs text-gray-400">
+                  Envío programado de mensajes según la política de fechas y estado
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-dark-950 border border-gray-800 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Política de Fecha Hoy:</span>
+                <span className="font-bold text-emerald-400 uppercase">
+                  {new Date().getDate() <= 12 ? "Nivel 1 (Preventivo)" : new Date().getDate() <= 15 ? "Nivel 2 (Seguimiento)" : new Date().getDate() <= 18 ? "Nivel 3 (Formativo)" : "Nivel 4 (Opciones / Cierre)"}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Total Pendientes Evaluados:</span>
+                <span className="font-bold text-white">
+                  {payments.filter(p => p.status === "pendiente" || p.status === "atrasado").length} atletas
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400">Servidor Evolution API:</span>
+                <span className="font-bold text-emerald-400">🟢 Cloud DigitalOcean Conectado</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-gray-300 uppercase">
+                Teléfono de Prueba (Opcional):
+              </label>
+              <input
+                type="text"
+                value={sweepTestPhone}
+                onChange={(e) => setSweepTestPhone(e.target.value)}
+                placeholder="Ej. 60602617"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs focus:border-emerald-500"
+              />
+              <p className="text-[11px] text-gray-400">
+                Si colocas tu número, todos los mensajes de prueba te llegarán a ti sin enviar a los padres reales.
+              </p>
+            </div>
+
+            {sweepResult && (
+              <div className="p-4 rounded-2xl bg-dark-950 border border-emerald-500/40 space-y-2 text-xs">
+                <div className="flex items-center justify-between font-bold">
+                  <span className="text-emerald-400">Resultado del Barrido:</span>
+                  <span className="text-white">
+                    {sweepResult.dryRun ? "SIMULACIÓN" : "ENVÍO REAL"}
+                  </span>
+                </div>
+                <p className="text-gray-300">
+                  Enviados: <strong>{sweepResult.dispatchedCount}</strong> • Simulados: <strong>{sweepResult.simulatedCount}</strong> • Errores: <strong>{sweepResult.errorCount}</strong>
+                </p>
+                {sweepResult.details && sweepResult.details.length > 0 && (
+                  <div className="max-h-40 overflow-y-auto space-y-1.5 pt-2 border-t border-gray-800">
+                    {sweepResult.details.map((d: any, idx: number) => (
+                      <div key={idx} className="flex items-center justify-between text-[11px] p-1.5 rounded bg-dark-900">
+                        <span className="font-bold text-white">{d.playerName}</span>
+                        <span className={`font-black ${d.status === 'enviado' ? 'text-emerald-400' : d.status === 'simulado' ? 'text-blue-400' : 'text-red-400'}`}>
+                          {d.status.toUpperCase()} ({d.level})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => handleRunSweep(true)}
+                disabled={isSweeping}
+                className="flex-1 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-blue-400 font-bold text-xs uppercase border border-blue-500/40"
+              >
+                {isSweeping ? "Procesando..." : "🧪 Simulación (Dry Run)"}
+              </button>
+              <button
+                type="button"
+                onClick={() => handleRunSweep(false)}
+                disabled={isSweeping}
+                className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider shadow-lg"
+              >
+                {isSweeping ? "Enviando..." : "🚀 Ejecutar Barrido Real"}
+              </button>
             </div>
           </div>
         </div>
