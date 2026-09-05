@@ -103,14 +103,20 @@ export default function Footer() {
 
           {/* Col 4: Curiol Studio & Enlaces Oficiales */}
           <div className="space-y-3">
-            <div className="h-10 w-36 relative flex items-center">
-              <Image
-                src="/curiol-studio-transparent.png"
-                alt="Curiol Studio"
-                width={130}
-                height={36}
-                className="object-contain max-h-full max-w-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
-              />
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
+                <Image
+                  src="/curiol-studio-transparent.png"
+                  alt="Curiol Studio"
+                  width={44}
+                  height={44}
+                  className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
+                />
+              </div>
+              <div>
+                <span className="text-sm font-black text-white block tracking-wide">CURIOL STUDIO</span>
+                <span className="text-[10px] text-golden-400 font-bold uppercase tracking-wider block">Fotografía • Tecnología</span>
+              </div>
             </div>
             <p className="text-xs text-gray-300 leading-relaxed">
               Cobertura fotográfica profesional de partidos oficiales, retratos HD y producción de recuerdos familiares para Golden Sport Academy Santa Cruz.

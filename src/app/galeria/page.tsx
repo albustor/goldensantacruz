@@ -415,7 +415,7 @@ export default function GaleriaPage() {
                   <img
                     src="/curiol-studio-transparent.png"
                     alt="Curiol Studio"
-                    className="h-3.5 w-auto object-contain drop-shadow"
+                    className="h-4 w-4 rounded-full object-contain drop-shadow"
                   />
                   <span className="text-gray-400 text-[9px] font-thin">|</span>
                   <div className="flex flex-col text-left leading-none">

@@ -9,13 +9,13 @@ export default function SouvenirStoreBanner() {
     <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-golden-950/50 via-dark-800 to-dark-800 border-2 border-golden-500/40 flex flex-col lg:flex-row items-center justify-between gap-6 shadow-xl">
       <div className="space-y-3 text-center lg:text-left">
         <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3">
-          <div className="h-10 w-32 relative flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-dark-950 border-2 border-golden-500/50 p-1 flex items-center justify-center shrink-0 shadow-lg">
             <Image
               src="/curiol-studio-transparent.png"
               alt="Curiol Studio"
-              width={120}
-              height={32}
-              className="object-contain max-h-full max-w-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
+              width={44}
+              height={44}
+              className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
             />
           </div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-golden-500 text-dark-900 text-[10px] font-black uppercase shadow-md">

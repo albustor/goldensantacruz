@@ -53,7 +53,7 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy }
             <img
               src="/curiol-studio-transparent.png"
               alt="Curiol Studio"
-              className="h-5 w-auto object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+              className="h-6 w-6 rounded-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
             />
             <span className="text-gray-400 text-xs font-thin">|</span>
             <img
