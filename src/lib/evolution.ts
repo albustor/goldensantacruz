@@ -6,7 +6,7 @@
 
 const EVOLUTION_URL = process.env.EVOLUTION_URL || "http://165.227.77.203:8080";
 const EVOLUTION_API_KEY = process.env.EVOLUTION_API_KEY || "b00d9ce9195643d3";
-const INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME || "cs-cst-evolution-api-d149db45";
+const INSTANCE_NAME = process.env.EVOLUTION_INSTANCE_NAME || "curiol_agents";
 
 export interface SendMessageResult {
   success: boolean;
