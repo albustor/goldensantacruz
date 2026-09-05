@@ -100,10 +100,38 @@ export const INITIAL_PLAYERS: Player[] = [
     monthlyFee: 10000,
     paymentStatus: "al_dia",
     isActive: true,
+  },
+  {
+    id: "ply-test-alberto",
+    fullName: "Mateo Bustos (Prueba Oficial)",
+    birthDate: "2015-06-18",
+    category: "Mini-Básquet (U8-U10)",
+    guardianName: "Alberto Bustos",
+    guardianPhone: "60602617",
+    guardianEmail: "alberto.bustos.ortega@mep.go.cr",
+    photoUrl: "/Hero_Basketball/1.jpg",
+    jerseyNumber: 18,
+    position: "Alero",
+    registrationDate: "2026-01-10",
+    monthlyFee: 10000,
+    paymentStatus: "pendiente",
+    isActive: true,
   }
 ];
 
 export const INITIAL_PAYMENTS: PaymentRecord[] = [
+  {
+    id: "pay-test-alberto",
+    playerId: "ply-test-alberto",
+    playerName: "Mateo Bustos (Prueba Oficial)",
+    guardianName: "Alberto Bustos",
+    guardianPhone: "60602617",
+    month: "Septiembre",
+    year: 2026,
+    amount: 10000,
+    status: "pendiente",
+    dueDate: "2026-09-12",
+  },
   {
     id: "pay-1",
     playerId: "ply-1",
