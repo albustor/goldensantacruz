@@ -189,18 +189,6 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
 // CARTELERA OFICIAL DE PARTIDOS DEL SÁBADO 5 DE SEPTIEMBRE EN LIBERIA
 export const INITIAL_MATCHES: Match[] = [
   {
-    id: "mtc-lib-1",
-    category: "Iniciación / Menores de U8 (U6-U8)",
-    opponent: "Golden Sport Academy Santa Cruz",
-    matchDate: "2026-09-05",
-    matchTime: "08:00 AM",
-    location: "Gimnasio Municipal de Liberia",
-    locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
-    isHome: false,
-    status: "upcoming",
-    summary: "Gran clásico de iniciación entre Golden Sport Academy Liberia vs Golden Sport Academy Santa Cruz (U8).",
-  },
-  {
     id: "mtc-lib-2",
     category: "Mini-Básquet (U8-U10)",
     opponent: "Parajeles",
