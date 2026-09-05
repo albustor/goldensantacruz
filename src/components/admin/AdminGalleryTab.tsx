@@ -59,7 +59,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     uploaderName: "Curiol Studio Oficial",
     photoType: "pro_studio" as "pro_studio" | "community",
     caption: "",
-    previewUrl: "",
+    previewUrls: [] as string[],
     priceDigital: 2500,
     pricePrint: 3500,
   });
@@ -151,7 +151,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
       uploaderName: "Curiol Studio Oficial",
       photoType: "pro_studio",
       caption: "",
-      previewUrl: "",
+      previewUrls: [],
       priceDigital: 2500,
       pricePrint: 3500,
     });
@@ -160,31 +160,37 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
   const handleSavePhotoSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadPhotoForm.previewUrl) {
-      alert("Por favor selecciona una fotografía para subir.");
+    if (uploadPhotoForm.previewUrls.length === 0) {
+      alert("Por favor selecciona una o más fotografías para subir.");
       return;
     }
     const targetAlbum = albums.find(a => a.id === uploadPhotoForm.albumId);
     const eventDate = targetAlbum ? targetAlbum.eventDate : new Date().toISOString().split("T")[0];
 
-    await Store.addGalleryPhoto({
-      albumId: uploadPhotoForm.albumId,
-      eventDate: eventDate,
-      title: uploadPhotoForm.title || (targetAlbum ? targetAlbum.title : "Foto Oficial"),
-      category: uploadPhotoForm.category,
-      photoUrl: uploadPhotoForm.previewUrl,
-      caption: uploadPhotoForm.caption,
-      uploaderName: uploadPhotoForm.uploaderName || "Curiol Studio",
-      photoType: uploadPhotoForm.photoType,
-      isApproved: true,
-      watermarkTag: "Curiol Studio Santa Cruz",
-      priceDigital: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.priceDigital : undefined,
-      pricePrint: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.pricePrint : undefined,
-    });
+    for (let i = 0; i < uploadPhotoForm.previewUrls.length; i++) {
+      const url = uploadPhotoForm.previewUrls[i];
+      const baseTitle = uploadPhotoForm.title || (targetAlbum ? targetAlbum.title : "Foto Oficial");
+      const finalTitle = uploadPhotoForm.previewUrls.length > 1 ? `${baseTitle} #${i + 1}` : baseTitle;
+
+      await Store.addGalleryPhoto({
+        albumId: uploadPhotoForm.albumId,
+        eventDate: eventDate,
+        title: finalTitle,
+        category: uploadPhotoForm.category,
+        photoUrl: url,
+        caption: uploadPhotoForm.caption,
+        uploaderName: uploadPhotoForm.uploaderName || "Curiol Studio",
+        photoType: uploadPhotoForm.photoType,
+        isApproved: true,
+        watermarkTag: "Curiol Studio Santa Cruz",
+        priceDigital: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.priceDigital : undefined,
+        pricePrint: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.pricePrint : undefined,
+      });
+    }
 
     setIsUploadPhotoOpen(false);
     onRefresh();
-    alert("¡Fotografía subida y publicada con éxito en el álbum!");
+    alert(`¡${uploadPhotoForm.previewUrls.length} ${uploadPhotoForm.previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} y publicadas con éxito en el álbum!`);
   };
 
   const handleDeletePhoto = async (id: string, title: string) => {
@@ -496,45 +502,69 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
             </div>
 
             <form onSubmit={handleSavePhotoSubmit} className="space-y-4 text-xs">
-              {/* Selector de Archivo */}
+              {/* Selector de Archivo (Múltiples) */}
               <div>
-                <label className="block font-bold text-gray-300 uppercase mb-1">
-                  Fotografía *
+                <label className="block font-bold text-gray-300 uppercase mb-1 flex items-center justify-between">
+                  <span>Fotografías * (Puedes seleccionar todas de una vez)</span>
+                  {uploadPhotoForm.previewUrls.length > 0 && (
+                    <span className="text-golden-400 font-black">
+                      📸 {uploadPhotoForm.previewUrls.length} {uploadPhotoForm.previewUrls.length === 1 ? 'foto lista' : 'fotos listas'}
+                    </span>
+                  )}
                 </label>
                 <label className="border-2 border-dashed border-golden-500/40 hover:border-golden-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer bg-dark-950/60 transition-colors">
                   <input
                     type="file"
+                    multiple
                     accept="image/*"
                     onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          setUploadPhotoForm({ ...uploadPhotoForm, previewUrl: reader.result as string });
-                        };
-                        reader.readAsDataURL(file);
+                      const files = e.target.files;
+                      if (files && files.length > 0) {
+                        const fileArray = Array.from(files);
+                        const readPromises = fileArray.map((file) => {
+                          return new Promise<string>((resolve) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => {
+                              resolve(reader.result as string);
+                            };
+                            reader.readAsDataURL(file);
+                          });
+                        });
+
+                        Promise.all(readPromises).then((results) => {
+                          setUploadPhotoForm({ ...uploadPhotoForm, previewUrls: results });
+                        });
                       }
                     }}
                     className="hidden"
                   />
-                  {uploadPhotoForm.previewUrl ? (
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-golden-500/40">
-                      <img
-                        src={uploadPhotoForm.previewUrl}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                      />
-                      <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-dark-950/90 text-[10px] text-emerald-400 font-bold">
-                        ✓ Foto cargada (Toca para cambiar)
-                      </span>
+                  {uploadPhotoForm.previewUrls.length > 0 ? (
+                    <div className="w-full space-y-2">
+                      <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
+                        {uploadPhotoForm.previewUrls.map((url, idx) => (
+                          <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-golden-500/40 bg-dark-900">
+                            <img
+                              src={url}
+                              alt={`Foto ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                            <span className="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/80 text-[8px] text-golden-300 font-bold">
+                              #{idx + 1}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="text-center text-emerald-400 font-bold text-[11px] pt-1">
+                        ✓ {uploadPhotoForm.previewUrls.length} {uploadPhotoForm.previewUrls.length === 1 ? 'fotografía cargada' : 'fotografías cargadas'} (Toca para cambiar)
+                      </div>
                     </div>
                   ) : (
                     <>
                       <Upload className="w-8 h-8 text-golden-400 animate-bounce" />
                       <span className="font-bold text-white text-xs">
-                        Selecciona la foto desde tu equipo
+                        Selecciona una o varias fotos desde tu equipo
                       </span>
-                      <span className="text-[10px] text-gray-400">JPG, PNG o WEBP</span>
+                      <span className="text-[10px] text-gray-400">JPG, PNG o WEBP (Sube todo el lote de una vez)</span>
                     </>
                   )}
                 </label>

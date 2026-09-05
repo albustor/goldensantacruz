@@ -21,7 +21,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
   const [category, setCategory] = useState<PlayerCategory>(INITIAL_CATEGORIES[0] || "Mini-Básquet (U8-U10)");
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -37,22 +37,30 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
 
   if (!isOpen) return null;
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewUrl(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+  const handleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const fileArray = Array.from(files);
+      const readPromises = fileArray.map((file) => {
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            resolve(reader.result as string);
+          };
+          reader.readAsDataURL(file);
+        });
+      });
+
+      Promise.all(readPromises).then((results) => {
+        setPreviewUrls(results);
+      });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!previewUrl) {
-      alert("Por favor selecciona una foto de tu celular o computadora.");
+    if (previewUrls.length === 0) {
+      alert("Por favor selecciona una o más fotos de tu celular o computadora.");
       return;
     }
     if (!uploaderName) {
@@ -66,24 +74,31 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
       const albumTitle = title.trim() || `Fotos del Encuentro (${eventDate})`;
       const album = await Store.getOrCreateDailyAlbum(eventDate, albumTitle, uploaderName, category);
 
-      // 2. Guardar la foto asociada al álbum del día
-      await Store.addGalleryPhoto({
-        albumId: album.id,
-        eventDate: eventDate,
-        title: title || album.title,
-        category: category,
-        photoUrl: previewUrl,
-        caption: caption,
-        uploaderName: uploaderName,
-        isApproved: true,
-        photoType: "community",
-        watermarkTag: "Álbum Familiar Santa Bárbara",
-      });
+      // 2. Guardar todas las fotos asociadas al álbum del día en lote
+      for (let i = 0; i < previewUrls.length; i++) {
+        const photoUrl = previewUrls[i];
+        const photoTitle = previewUrls.length > 1
+          ? `${title || album.title} #${i + 1}`
+          : (title || album.title);
 
-      alert("¡Foto subida con éxito al álbum familiar del día!");
+        await Store.addGalleryPhoto({
+          albumId: album.id,
+          eventDate: eventDate,
+          title: photoTitle,
+          category: category,
+          photoUrl: photoUrl,
+          caption: caption,
+          uploaderName: uploaderName,
+          isApproved: true,
+          photoType: "community",
+          watermarkTag: "Álbum Familiar Santa Bárbara",
+        });
+      }
+
+      alert(`¡${previewUrls.length} ${previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} con éxito al álbum familiar del día!`);
       onSuccess();
     } catch (err) {
-      alert("Error al subir la fotografía. Inténtelo nuevamente.");
+      alert("Error al subir las fotografías. Inténtelo nuevamente.");
     } finally {
       setIsSubmitting(false);
     }
@@ -100,10 +115,10 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
-                Subir Foto Familiar
+                Subir Fotos Familiares
               </h2>
               <p className="text-[11px] text-gray-400">
-                Álbum colaborativo de papás y familias
+                Álbum colaborativo de papás y familias (puedes subir varias fotos a la vez)
               </p>
             </div>
           </div>
@@ -120,7 +135,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
         <div className="p-3 rounded-xl bg-golden-500/10 border border-golden-500/30 text-[11px] text-golden-300 flex items-start gap-2">
           <Sparkles className="w-4 h-4 text-golden-400 shrink-0 mt-0.5" />
           <span>
-            <strong>Álbum del Día:</strong> Si ya existe un álbum de la fecha (iniciado por Lenny, Alberto o una familia), tu foto se agregará automáticamente a ese mismo álbum para tener todos los recuerdos unidos.
+            <strong>Álbum del Día:</strong> Si ya existe un álbum de la fecha (iniciado por Lenny, Alberto o una familia), todas tus fotos se agregarán automáticamente a ese mismo álbum para tener los recuerdos unidos.
           </span>
         </div>
 
@@ -128,35 +143,50 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
         <form onSubmit={handleSubmit} className="space-y-4 text-xs">
           {/* Selector de Foto / Cámara */}
           <div>
-            <label className="block font-bold text-gray-300 uppercase mb-1.5">
-              Fotografía desde el celular / archivo *
+            <label className="block font-bold text-gray-300 uppercase mb-1.5 flex items-center justify-between">
+              <span>Fotografías desde el celular / archivo (Múltiples) *</span>
+              {previewUrls.length > 0 && (
+                <span className="text-golden-400 font-black">
+                  📸 {previewUrls.length} {previewUrls.length === 1 ? 'foto lista' : 'fotos listas'}
+                </span>
+              )}
             </label>
             <label className="border-2 border-dashed border-golden-500/40 hover:border-golden-500 rounded-2xl p-4 flex flex-col items-center justify-center gap-2 cursor-pointer bg-dark-950/60 transition-colors">
               <input
                 type="file"
+                multiple
                 accept="image/*"
-                onChange={handleFileChange}
+                onChange={handleFilesChange}
                 className="hidden"
               />
-              {previewUrl ? (
-                <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-golden-500/40">
-                  <img
-                    src={previewUrl}
-                    alt="Vista previa"
-                    className="w-full h-full object-cover"
-                  />
-                  <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded bg-dark-950/80 text-[10px] text-emerald-400 font-bold">
-                    ✓ Foto seleccionada (Toca para cambiar)
-                  </span>
+              {previewUrls.length > 0 ? (
+                <div className="w-full space-y-2">
+                  <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto p-1">
+                    {previewUrls.map((url, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-golden-500/40 bg-dark-900">
+                        <img
+                          src={url}
+                          alt={`Foto ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <span className="absolute bottom-1 right-1 px-1 py-0.2 rounded bg-black/80 text-[8px] text-golden-300 font-bold">
+                          #{idx + 1}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="text-center text-emerald-400 font-bold text-[11px] pt-1">
+                    ✓ {previewUrls.length} {previewUrls.length === 1 ? 'fotografía seleccionada' : 'fotografías seleccionadas'} (Toca para cambiar selección)
+                  </div>
                 </div>
               ) : (
                 <>
                   <Upload className="w-8 h-8 text-golden-400 animate-bounce" />
                   <span className="font-bold text-white text-xs text-center">
-                    Toca aquí para seleccionar una foto o tomarla con la cámara
+                    Toca aquí para seleccionar una o varias fotos a la vez
                   </span>
                   <span className="text-[10px] text-gray-400">
-                    Formatos JPG, PNG, WEBP (Hasta 15MB)
+                    Formatos JPG, PNG, WEBP (Puedes seleccionar todas de una vez)
                   </span>
                 </>
               )}

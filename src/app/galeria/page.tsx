@@ -210,7 +210,7 @@ export default function GaleriaPage() {
         <div className="flex items-center justify-between text-xs text-gray-400 px-1">
           <span className="font-black text-white uppercase tracking-wider text-[11px] flex items-center gap-1.5">
             <FolderHeart className="w-3.5 h-3.5 text-golden-400" />
-            <span>Álbumes por Fecha</span>
+            <span>Álbumes Oficiales & Eventos</span>
           </span>
           <span className="text-[11px]">
             {currentPhotos.length} fotos encontradas
@@ -222,7 +222,7 @@ export default function GaleriaPage() {
           {/* Botón Icono "Todas las fotos" */}
           <button
             onClick={() => setSelectedAlbumId("all")}
-            className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl min-w-[70px] transition-all ${
+            className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl min-w-[80px] max-w-[100px] transition-all ${
               selectedAlbumId === "all"
                 ? "bg-golden-500/20 text-golden-400 ring-2 ring-golden-400 scale-105"
                 : "bg-dark-900 text-gray-400 hover:text-white border border-gray-800"
@@ -235,7 +235,7 @@ export default function GaleriaPage() {
             }`}>
               <Layers className="w-5 h-5" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-tight">
+            <span className="text-[10px] font-black uppercase tracking-tight text-center">
               Todas
             </span>
           </button>
@@ -250,15 +250,15 @@ export default function GaleriaPage() {
               <button
                 key={album.id}
                 onClick={() => setSelectedAlbumId(album.id)}
-                className={`flex flex-col items-center gap-1.5 p-2 rounded-2xl min-w-[76px] transition-all relative ${
+                className={`flex flex-col items-center gap-1.5 p-2.5 rounded-2xl min-w-[95px] max-w-[130px] transition-all relative ${
                   isSelected
                     ? "bg-golden-500/20 text-golden-400 ring-2 ring-golden-400 scale-105"
                     : "bg-dark-900 text-gray-400 hover:text-white border border-gray-800"
                 }`}
-                title={`${album.eventDate}: ${album.title}`}
+                title={`${album.title} (${album.eventDate})`}
               >
                 {/* Miniatura / Avatar Circular del Álbum */}
-                <div className={`w-11 h-11 rounded-full overflow-hidden flex items-center justify-center relative shadow-md ${
+                <div className={`w-12 h-12 rounded-full overflow-hidden flex items-center justify-center relative shadow-md ${
                   isSelected ? "border-2 border-golden-400" : "border border-gray-700 bg-dark-800"
                 }`}>
                   {coverPhoto ? (
@@ -271,14 +271,14 @@ export default function GaleriaPage() {
                     <Camera className="w-5 h-5 text-golden-400" />
                   )}
                   {/* Badge de cantidad */}
-                  <span className="absolute bottom-0 right-0 bg-dark-950/90 text-golden-300 text-[9px] font-bold px-1 rounded-full border border-golden-500/40">
+                  <span className="absolute bottom-0 right-0 bg-dark-950/90 text-golden-300 text-[9px] font-bold px-1.5 rounded-full border border-golden-500/40">
                     {albumPhotos.length}
                   </span>
                 </div>
 
-                {/* Fecha corta en icono */}
-                <span className="text-[10px] font-black uppercase tracking-tight truncate max-w-[70px]">
-                  {formatShortDate(album.eventDate)}
+                {/* Nombre del Álbum */}
+                <span className="text-[10px] font-black uppercase tracking-tight line-clamp-2 text-center leading-tight">
+                  {album.title}
                 </span>
               </button>
             );

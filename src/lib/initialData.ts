@@ -1,4 +1,4 @@
-import { Player, PaymentRecord, Match, GalleryPhoto, GalleryAlbum, Sponsor, SystemSettings, AudioNote } from "@/types";
+import { Player, PaymentRecord, Match, GalleryPhoto, GalleryAlbum, Sponsor, SystemSettings, AudioNote, PlayerCategory } from "@/types";
 
 export const INITIAL_SETTINGS: SystemSettings = {
   academyName: "Golden Sport Academy Santa Cruz",
@@ -262,7 +262,7 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     title: "Presentación del Uniforme Oficial",
     eventDate: "2026-08-22",
     category: "Presentación de Uniformes",
-    coverPhotoUrl: "/Hero_Basketball/5.jpg",
+    coverPhotoUrl: "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg",
     createdBy: "Administración / Curiol Studio",
     isLocked: false,
     isOpenForUploads: true,
@@ -281,7 +281,7 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
 
 export const INITIAL_PHOTOS: GalleryPhoto[] = [
   {
-    id: "pht-1",
+    id: "pht-lib-1",
     photoUrl: "/Hero_Basketball/2.jpg",
     title: "Mecánica y agarre de balón en U8",
     caption: "Mano infantil con muñequera en sesión formativa.",
@@ -299,7 +299,7 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     pricePrint: 3500,
   },
   {
-    id: "pht-2",
+    id: "pht-lib-2",
     photoUrl: "/Hero_Basketball/9.jpg",
     title: "Unión y trabajo en equipo semillero",
     caption: "Las cuatro manos de nuestros atletas en señal de compañerismo.",
@@ -317,7 +317,7 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     pricePrint: 3500,
   },
   {
-    id: "pht-3",
+    id: "pht-lib-3",
     photoUrl: "/Hero_Basketball/7.jpg",
     title: "Drible dinámico y velocidad",
     caption: "Control de bote bajo la guía de la entrenadora Lenny Monge.",
@@ -331,39 +331,28 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     isApproved: true,
     uploadedAt: "2026-09-04",
   },
-  {
-    id: "pht-4",
-    photoUrl: "/Hero_Basketball/5.jpg",
-    title: "Presentación oficial de indumentaria y calzado",
-    caption: "Nuevas zapatillas y uniforme oficial de Golden Sport Academy Santa Cruz.",
-    category: "Presentación de Uniformes",
+  // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - PRESENTACIÓN DEL UNIFORME OFICIAL (16 FOTOS)
+  ...[
+    "001", "002", "003", "004", "005", "006", "007", "008",
+    "009", "010", "011", "012", "013", "014", "015", "016"
+  ].map((num, idx) => ({
+    id: `pht-uni-${num}`,
+    photoUrl: `/photos/uniforme/GoldenAcademy_StaCruz_${num}.jpg`,
+    title: `Presentación Oficial • Atleta #${num}`,
+    caption: `Sesión fotográfica oficial de gala para la presentación de indumentaria deportiva de Golden Sport Academy Santa Cruz.`,
+    category: "Presentación de Uniformes" as PlayerCategory,
     uploaderName: "Curiol Studio Oficial",
-    uploaderRole: "staff",
-    photoType: "pro_studio",
+    uploaderRole: "staff" as const,
+    photoType: "pro_studio" as const,
     albumId: "alb-2",
     eventDate: "2026-08-22",
-    likesCount: 32,
+    likesCount: 15 + (idx % 12),
     isApproved: true,
     uploadedAt: "2026-08-22",
     watermarkTag: "Curiol Studio Santa Cruz",
     priceDigital: 2500,
     pricePrint: 3500,
-  },
-  {
-    id: "pht-5",
-    photoUrl: "/Hero_Basketball/4.jpg",
-    title: "Sesión de tiro y fogueo en cancha",
-    caption: "Foto familiar tomada desde las gradas en Santa Bárbara.",
-    category: "Presentación de Uniformes",
-    uploaderName: "Carlos Gutiérrez (Papá)",
-    uploaderRole: "padre",
-    photoType: "community",
-    albumId: "alb-2",
-    eventDate: "2026-08-22",
-    likesCount: 9,
-    isApproved: true,
-    uploadedAt: "2026-08-22",
-  }
+  }))
 ];
 
 export const INITIAL_GALLERY_PHOTOS = INITIAL_PHOTOS;
