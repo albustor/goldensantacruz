@@ -147,7 +147,12 @@ export function generatePaymentWhatsAppMessage(
         `Estimado(a) *${payment.guardianName}*,\n\n` +
         `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, respeto y consideración de parte de la directiva y cuerpo técnico de Golden Sport Academy.\n\n` +
         `Observamos que la cuota de *${payment.month}* de *${payment.playerName}* presenta un atraso de varios días. Entendemos plenamente que como familias todos podemos atravesar momentos imprevistos o situaciones complejas. Queremos recordarle que ponemos a su disposición el **Programa de Becas Deportivas** (cobertura 100% o esquema compartido 60/40) con el compromiso de integrarse a apoyar las actividades del **Comité de Padres de Familia**.\n\n` +
-        `Si desea coordinar la regularización de la cuota (*${formattedAmount}* al Sinpe *${settings.sinpePhone}*) o evaluar la opción de beca, por favor comuníquese con nosotros al *${settings.coachPhone || settings.sinpePhone}*.\n\n` +
+        `📌 *Datos de Pago y Regularización:*\n` +
+        `• Atleta: *${payment.playerName}*\n` +
+        `• Monto pendiente: *${formattedAmount}*\n` +
+        `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
+        `• Cuenta IBAN BCR: ${settings.ibanAccount} (${settings.bankName})\n\n` +
+        `Si desea coordinar la regularización de la cuota o evaluar la opción de beca, por favor comuníquese con la entrenadora Lenny al *${settings.coachPhone || settings.sinpePhone}*.\n\n` +
         `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento a usted y a su familia por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto y cariño que en esta etapa no podrá continuar, deseándole siempre el mayor de los éxitos a *${payment.playerName}* y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
         `¡Un cordial saludo y bendiciones! 💛🖤`;
   }
