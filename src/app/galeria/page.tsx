@@ -2,38 +2,34 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import Link from "next/link";
-import { 
-  Camera, 
-  Upload, 
-  Heart, 
-  Calendar, 
-  User, 
-  Sparkles, 
-  Filter, 
-  Plus, 
-  Users, 
-  ShoppingBag, 
-  TreeDeciduous, 
-  ExternalLink, 
-  Search, 
+import {
+  Camera,
+  Upload,
+  Heart,
+  Calendar,
+  User,
+  Sparkles,
+  Plus,
+  Users,
+  ShoppingBag,
+  TreeDeciduous,
+  Search,
   X,
-  Layers,
   CheckCircle2,
   FolderHeart,
   ArrowLeft,
   Lock,
   Unlock,
-  ChevronRight
+  ChevronRight,
+  Radio,
 } from "lucide-react";
-import { GalleryAlbum, GalleryPhoto, PlayerCategory, SystemSettings } from "@/types";
+import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
 import PhotoUploadModal from "@/components/galeria/PhotoUploadModal";
 import PhotoLightboxModal from "@/components/galeria/PhotoLightboxModal";
 import PhotoPurchaseModal from "@/components/galeria/PhotoPurchaseModal";
 import SouvenirStoreBanner from "@/components/galeria/SouvenirStoreBanner";
 
-// Función auxiliar para formatear fechas completas (ej: 5 de Septiembre, 2026)
 function formatFullDate(dateStr: string): string {
   if (!dateStr) return "Fecha";
   try {
@@ -42,7 +38,7 @@ function formatFullDate(dateStr: string): string {
       const day = parseInt(parts[2], 10);
       const monthNames = [
         "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
+        "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
       ];
       const monthIdx = parseInt(parts[1], 10) - 1;
       return `${day} de ${monthNames[monthIdx] || ""}, ${parts[0]}`;
@@ -51,7 +47,6 @@ function formatFullDate(dateStr: string): string {
   return dateStr;
 }
 
-// Función auxiliar para formatear fechas cortas (ej: 05 Sep)
 function formatShortDate(dateStr: string): string {
   if (!dateStr) return "Fecha";
   try {
@@ -69,11 +64,9 @@ function formatShortDate(dateStr: string): string {
 export default function GaleriaPage() {
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community");
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // Modales
@@ -86,16 +79,16 @@ export default function GaleriaPage() {
   }, []);
 
   const loadData = async () => {
-    const [aData, pData, sData, cData] = await Promise.all([
+    const [aData, pData, sData] = await Promise.all([
       Store.getAlbums(),
       Store.getGalleryPhotos(),
-      Store.getSettings(),
-      Store.getCategories(),
+      // getSettings() es síncrono, wrapeamos para que sea compatible con Promise.all
+      Promise.resolve(Store.getSettings()),
     ]);
     setAlbums(aData);
+    // Mostrar TODAS las fotos aprobadas (community y pro_studio)
     setPhotos(pData.filter((p) => p.isApproved));
-    setSettings(sData);
-    setCategories(cData);
+    setSettings(sData as unknown as SystemSettings);
   };
 
   const handleLike = async (photoId: string, e?: React.MouseEvent) => {
@@ -108,69 +101,68 @@ export default function GaleriaPage() {
 
   const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
 
-  // Filtrado de fotos según pestaña, álbum, categoría y buscador
-  const currentPhotos = photos.filter((p) => {
-    const matchesTab = activeTab === "pro_studio" ? p.photoType === "pro_studio" : p.photoType === "community";
-    
-    // Si se seleccionó un álbum específico, buscar por albumId o por eventDate del álbum
-    const matchesAlbum =
-      !selectedAlbumId ||
-      selectedAlbumId === "all" ||
-      p.albumId === selectedAlbumId ||
-      (selectedAlbum && p.eventDate === selectedAlbum.eventDate);
+  // Fotos del álbum seleccionado: busca por albumId O por eventDate del álbum
+  const albumPhotos = selectedAlbum
+    ? photos.filter(
+        (p) =>
+          p.albumId === selectedAlbum.id ||
+          p.eventDate === selectedAlbum.eventDate
+      )
+    : [];
 
-    const matchesCategory = selectedCategory === "all" || p.category === selectedCategory;
-    const matchesSearch = 
-      !searchQuery.trim() || 
-      p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      p.uploaderName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (p.caption && p.caption.toLowerCase().includes(searchQuery.toLowerCase()));
-
-    return matchesTab && matchesAlbum && matchesCategory && matchesSearch;
+  // Filtro de pestaña + búsqueda de texto dentro del álbum
+  const currentPhotos = albumPhotos.filter((p) => {
+    const matchesTab =
+      activeTab === "pro_studio"
+        ? p.photoType === "pro_studio"
+        : p.photoType === "community";
+    const matchesSearch =
+      !searchQuery.trim() ||
+      p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
   });
 
-  const arbolUrl = settings?.arbolGuanacasteUrl || "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz";
+  const arbolUrl =
+    settings?.arbolGuanacasteUrl ||
+    "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz";
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      
-      {/* 1. HEADER MINIMALISTA */}
+
+      {/* 1. HEADER */}
       <div className="text-center space-y-2 max-w-3xl mx-auto">
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500/15 border border-golden-500/30 text-golden-400 text-xs font-black uppercase tracking-wider">
           <Camera className="w-3.5 h-3.5" />
           <span>Galería Fotográfica Oficial</span>
         </div>
         <h1 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
-          Álbum & <span className="text-transparent bg-clip-text bg-gradient-to-r from-golden-300 via-golden-400 to-amber-500">Recuerdos Deportivos</span>
+          Álbum &{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-golden-300 via-golden-400 to-amber-500">
+            Recuerdos Deportivos
+          </span>
         </h1>
       </div>
 
-      {/* 2. SELECTOR PRINCIPAL EN DOS SECCIONES (MINIMALISTA) */}
+      {/* 2. SELECTOR PRINCIPAL */}
       <div className="flex justify-center">
         <div className="inline-flex p-1.5 rounded-2xl bg-dark-900 border border-gray-800 shadow-xl max-w-xl w-full">
           <button
-            onClick={() => {
-              setActiveTab("community");
-              setSelectedAlbumId(null);
-            }}
+            onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
             className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
               activeTab === "community"
-                ? "bg-golden-500 text-dark-950 shadow-md font-black"
+                ? "bg-golden-500 text-dark-950 shadow-md"
                 : "text-gray-400 hover:text-white hover:bg-dark-800"
             }`}
           >
             <Users className="w-4 h-4" />
             <span>Fotos de Familias & Papás</span>
           </button>
-
           <button
-            onClick={() => {
-              setActiveTab("pro_studio");
-              setSelectedAlbumId(null);
-            }}
+            onClick={() => { setActiveTab("pro_studio"); setSelectedAlbumId(null); }}
             className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
               activeTab === "pro_studio"
-                ? "bg-golden-500 text-dark-950 shadow-md font-black"
+                ? "bg-golden-500 text-dark-950 shadow-md"
                 : "text-gray-400 hover:text-white hover:bg-dark-800"
             }`}
           >
@@ -180,26 +172,19 @@ export default function GaleriaPage() {
         </div>
       </div>
 
-      {/* 3. BANNER INFORMATIVO SEGÚN PESTAÑA */}
+      {/* 3. BANNER PRO STUDIO */}
       {activeTab === "pro_studio" && (
-        <div className="space-y-4 animate-fadeIn">
+        <div className="space-y-4">
           <div className="p-4 rounded-2xl bg-dark-900 border border-golden-500/30 text-xs text-gray-300 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3 text-center sm:text-left">
               <div className="w-10 h-10 rounded-2xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
-                <Image
-                  src="/curiol-studio-transparent.png"
-                  alt="Curiol Studio"
-                  width={36}
-                  height={36}
-                  className="object-contain"
-                />
+                <Image src="/curiol-studio-transparent.png" alt="Curiol Studio" width={36} height={36} className="object-contain" />
               </div>
               <div>
                 <strong className="text-white block uppercase text-xs">Fotografía Profesional por Curiol Studio</strong>
-                <span>Cobertura en partidos oficiales. Puedes encargar recuerdos impresos (imanes para nevera, retablos o cuadros canvas).</span>
+                <span>Cobertura en partidos oficiales. Encarga recuerdos impresos (imanes, retablos, canvas).</span>
               </div>
             </div>
-
             <a
               href={arbolUrl}
               target="_blank"
@@ -210,14 +195,13 @@ export default function GaleriaPage() {
               <span>Árbol de Guanacaste ↗</span>
             </a>
           </div>
-
           <SouvenirStoreBanner />
         </div>
       )}
 
-      {/* 4. VISTA NIVEL 1: LISTADO DE ÁLBUMES OFICIALES (VISTA PRINCIPAL) */}
+      {/* 4. LISTADO DE ÁLBUMES */}
       {!selectedAlbumId ? (
-        <div className="space-y-6 animate-fadeIn">
+        <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
             <div>
               <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
@@ -225,7 +209,7 @@ export default function GaleriaPage() {
                 <span>Álbumes Oficiales & Eventos</span>
               </h2>
               <p className="text-xs text-gray-400">
-                Selecciona un álbum para explorar sus fotografías o para subir las fotos del día.
+                Selecciona un álbum para explorar las fotos o subir las tuyas.
               </p>
             </div>
             <span className="text-xs text-golden-400 font-bold">
@@ -233,14 +217,17 @@ export default function GaleriaPage() {
             </span>
           </div>
 
-          {/* Grilla de Carpetas / Álbumes */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {albums.map((album) => {
-              const albumPhotos = photos.filter(
+              const albumPics = photos.filter(
                 (p) => p.albumId === album.id || p.eventDate === album.eventDate
               );
-              const isTodayAlbum = album.eventDate === "2026-09-05" || album.isOpenForUploads;
-              const coverPhoto = album.coverPhotoUrl || albumPhotos[0]?.photoUrl || "/Hero_Basketball/1.jpg";
+              const communityPics = albumPics.filter((p) => p.photoType === "community");
+              const isTodayAlbum = album.isOpenForUploads;
+              const coverPhoto = album.coverPhotoUrl || albumPics[0]?.photoUrl || "/Hero_Basketball/1.jpg";
+
+              // Últimas 3 fotos subidas por papás para el efecto en vivo
+              const recentUploads = communityPics.slice(0, 3);
 
               return (
                 <div
@@ -252,16 +239,16 @@ export default function GaleriaPage() {
                       : "border-gray-800 hover:border-gray-700 opacity-95"
                   }`}
                 >
-                  {/* Foto de Portada con Badges */}
+                  {/* Foto de Portada */}
                   <div className="relative aspect-[16/10] w-full overflow-hidden bg-dark-950">
                     <img
                       src={coverPhoto}
                       alt={album.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/30 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/20 to-transparent" />
 
-                    {/* Badge Estado del Álbum */}
+                    {/* Badge Estado */}
                     <div className="absolute top-3 left-3">
                       {isTodayAlbum ? (
                         <span className="px-3 py-1 rounded-full bg-golden-500 text-dark-950 text-[10px] font-black uppercase flex items-center gap-1.5 shadow-lg animate-pulse">
@@ -276,34 +263,78 @@ export default function GaleriaPage() {
                       )}
                     </div>
 
-                    {/* Badge Conteo de Fotos */}
+                    {/* Badge Fotos */}
                     <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-golden-300 text-[10px] font-black border border-white/20">
-                      📸 {albumPhotos.length} fotos
+                      📸 {albumPics.length} fotos
                     </div>
 
-                    {/* Título sobre portada */}
-                    <div className="absolute bottom-3 left-3 right-3 space-y-1">
-                      <span className="text-[10px] font-bold text-golden-400 uppercase tracking-wider block">
-                        📅 {formatFullDate(album.eventDate)}
-                      </span>
-                      <h3 className="text-base sm:text-lg font-black text-white group-hover:text-golden-400 transition-colors leading-snug">
-                        {album.title}
-                      </h3>
-                    </div>
+                    {/* Tira de fotos recientes de papás — efecto "publicación en vivo" */}
+                    {isTodayAlbum && recentUploads.length > 0 && (
+                      <div className="absolute bottom-0 left-0 right-0 px-3 pb-2">
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <Radio className="w-3 h-3 text-red-400 animate-pulse" />
+                          <span className="text-[9px] font-black text-red-300 uppercase tracking-widest">
+                            En Vivo — Papás publicando
+                          </span>
+                        </div>
+                        <div className="flex gap-1.5">
+                          {recentUploads.map((pic, i) => (
+                            <div
+                              key={pic.id}
+                              className="w-11 h-11 rounded-lg overflow-hidden border-2 border-golden-400 shadow-lg shadow-golden-500/30"
+                              style={{ animationDelay: `${i * 0.15}s` }}
+                            >
+                              <img
+                                src={pic.photoUrl}
+                                alt={`Foto papá ${i + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                          {communityPics.length > 3 && (
+                            <div className="w-11 h-11 rounded-lg bg-dark-900/90 border-2 border-golden-500/50 flex items-center justify-center">
+                              <span className="text-[9px] font-black text-golden-400">
+                                +{communityPics.length - 3}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Título sobre portada (cuando NO hay tira en vivo) */}
+                    {!(isTodayAlbum && recentUploads.length > 0) && (
+                      <div className="absolute bottom-3 left-3 right-3 space-y-1">
+                        <span className="text-[10px] font-bold text-golden-400 uppercase tracking-wider block">
+                          📅 {formatFullDate(album.eventDate)}
+                        </span>
+                        <h3 className="text-base sm:text-lg font-black text-white group-hover:text-golden-400 transition-colors leading-snug">
+                          {album.title}
+                        </h3>
+                      </div>
+                    )}
                   </div>
 
                   {/* Cuerpo y Acción */}
-                  <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
-                    <div className="space-y-1.5">
-                      <span className="inline-block px-2 py-0.5 rounded-md bg-dark-800 text-gray-300 text-[10px] font-bold uppercase border border-gray-700">
-                        {album.category}
-                      </span>
-                      <p className="text-xs text-gray-300 line-clamp-2">
-                        {album.description || `Fotografías oficiales y momentos familiares del evento realizado el ${formatShortDate(album.eventDate)}.`}
+                  <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      {/* Título cuando hay tira en vivo arriba */}
+                      {isTodayAlbum && recentUploads.length > 0 && (
+                        <h3 className="text-sm font-black text-white group-hover:text-golden-400 transition-colors leading-snug">
+                          {album.title}
+                        </h3>
+                      )}
+                      {!(isTodayAlbum && recentUploads.length > 0) && (
+                        <span className="text-[10px] font-bold text-golden-400 uppercase tracking-wider block">
+                          📅 {formatFullDate(album.eventDate)}
+                        </span>
+                      )}
+                      <p className="text-xs text-gray-400 line-clamp-2">
+                        {album.description ||
+                          `Fotografías y momentos familiares del evento realizado el ${formatShortDate(album.eventDate)}.`}
                       </p>
                     </div>
 
-                    {/* Botón de Entrada */}
                     <div className="pt-2 border-t border-gray-800 flex items-center justify-between">
                       {isTodayAlbum ? (
                         <span className="text-xs font-black text-golden-400 uppercase flex items-center gap-1.5 group-hover:underline">
@@ -316,7 +347,6 @@ export default function GaleriaPage() {
                           <ChevronRight className="w-4 h-4" />
                         </span>
                       )}
-
                       {isTodayAlbum && (
                         <span className="text-[10px] text-emerald-400 font-bold">
                           ● Abierto para papás
@@ -330,30 +360,22 @@ export default function GaleriaPage() {
           </div>
         </div>
       ) : (
-        /* 5. VISTA NIVEL 2: DENTRO DEL ÁLBUM SELECCIONADO */
-        <div className="space-y-6 animate-fadeIn">
-          {/* Botón Volver y Cabecera del Álbum */}
+        /* 5. VISTA DENTRO DEL ÁLBUM */
+        <div className="space-y-6">
           <div className="space-y-4">
             <button
-              onClick={() => {
-                setSelectedAlbumId(null);
-                setSelectedCategory("all");
-                setSearchQuery("");
-              }}
+              onClick={() => { setSelectedAlbumId(null); setSearchQuery(""); }}
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-800 text-gray-300 hover:text-white text-xs font-bold uppercase border border-gray-800 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 text-golden-400" />
               <span>← Volver a todos los Álbumes</span>
             </button>
 
-            {/* Banner Destacado del Álbum Seleccionado */}
+            {/* Banner del álbum */}
             {selectedAlbum && (
               <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-dark-900 via-dark-800 to-dark-900 border-2 border-golden-500/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
                 <div className="space-y-2 text-center md:text-left">
                   <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md bg-golden-500 text-dark-950 text-[10px] font-black uppercase">
-                      {selectedAlbum.category}
-                    </span>
                     <span className="text-xs text-gray-400">
                       📅 {formatFullDate(selectedAlbum.eventDate)}
                     </span>
@@ -365,23 +387,20 @@ export default function GaleriaPage() {
                     ) : (
                       <span className="px-2.5 py-0.5 rounded-md bg-gray-800 text-gray-400 border border-gray-700 text-[10px] font-bold uppercase flex items-center gap-1">
                         <Lock className="w-3 h-3" />
-                        <span>Álbum Concluido (Solo Lectura)</span>
+                        <span>Álbum Concluido</span>
                       </span>
                     )}
                   </div>
-
                   <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
                     {selectedAlbum.title}
                   </h2>
-
                   <p className="text-xs text-gray-300 max-w-xl">
                     {selectedAlbum.isOpenForUploads
-                      ? "Álbum oficial activo del día. Papás, mamás y familiares pueden subir directamente las fotos de los partidos y momentos del evento."
-                      : "Álbum histórico cerrado para nuevas subidas. Explora la galería oficial de recuerdos en alta resolución."}
+                      ? "Álbum oficial activo del día. Papás, mamás y familiares pueden subir directamente sus fotos."
+                      : "Álbum histórico cerrado. Explora la galería de recuerdos."}
                   </p>
                 </div>
 
-                {/* Acción de Subida: HABILITADA SOLO EN EL ÁLBUM DEL DÍA */}
                 {selectedAlbum.isOpenForUploads ? (
                   <button
                     onClick={() => setIsUploadOpen(true)}
@@ -400,59 +419,41 @@ export default function GaleriaPage() {
             )}
           </div>
 
-          {/* 6. BUSCADOR & FILTRO POR CATEGORÍA DENTRO DEL ÁLBUM */}
-          <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 flex flex-col sm:flex-row gap-3 items-center justify-between">
-            {/* Buscador */}
-            <div className="relative w-full sm:max-w-xs">
-              <Search className="w-3.5 h-3.5 text-golden-400 absolute left-3 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Buscar por título o familiar..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-7 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white placeholder-gray-400 text-xs focus:outline-none focus:border-golden-500"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              )}
-            </div>
-
-            {/* Filtro por Categoría */}
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <Filter className="w-3.5 h-3.5 text-golden-400 shrink-0" />
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full sm:w-auto px-3 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs font-semibold focus:outline-none focus:border-golden-500"
+          {/* 6. BUSCADOR (sin filtro de categoría) */}
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="w-3.5 h-3.5 text-golden-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Buscar por nombre del papá..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-7 py-2 rounded-xl bg-dark-900 border border-gray-700 text-white placeholder-gray-400 text-xs focus:outline-none focus:border-golden-500"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
               >
-                <option value="all">Todas las Categorías</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
 
-          {/* 7. GRILLA DE FOTOGRAFÍAS DENTRO DEL ÁLBUM */}
+          {/* 7. GRILLA DE FOTOS */}
           {currentPhotos.length === 0 ? (
             <div className="text-center py-16 space-y-3 rounded-3xl bg-dark-900 border border-gray-800">
               <Camera className="w-10 h-10 text-gray-600 mx-auto" />
               <h3 className="text-sm font-bold text-white uppercase">
-                Aún no hay fotos registradas en este álbum
+                {searchQuery
+                  ? "No se encontraron fotos con esa búsqueda"
+                  : "Aún no hay fotos en este álbum"}
               </h3>
               <p className="text-xs text-gray-400 max-w-md mx-auto">
                 {selectedAlbum?.isOpenForUploads
                   ? "¡Sé el primer papá o mamá en subir fotos de la jornada de hoy!"
-                  : "No se encontraron fotos para el filtro seleccionado."}
+                  : "No se encontraron fotos para esta búsqueda."}
               </p>
-              {selectedAlbum?.isOpenForUploads && (
+              {selectedAlbum?.isOpenForUploads && !searchQuery && (
                 <button
                   onClick={() => setIsUploadOpen(true)}
                   className="mt-2 px-5 py-2.5 rounded-xl bg-golden-500 text-dark-950 font-black text-xs uppercase inline-flex items-center gap-1.5 shadow-md"
@@ -468,47 +469,28 @@ export default function GaleriaPage() {
                 <div
                   key={photo.id}
                   onClick={() => setSelectedPhotoForView(photo)}
-                  className="group rounded-2xl overflow-hidden bg-dark-900 border border-gray-800 hover:border-golden-500/60 shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
+                  className="group rounded-2xl overflow-hidden bg-dark-900 border border-gray-800 hover:border-golden-500/60 shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col"
                 >
-                  {/* Imagen con Aspect Ratio y Marca de Agua */}
+                  {/* Imagen */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-950">
                     <img
                       src={photo.photoUrl}
                       alt={photo.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
-
-                    {/* Badge Categoría */}
-                    <div className="absolute top-2.5 left-2.5 flex gap-1.5 z-10">
-                      <span className="px-2 py-0.5 rounded-md bg-dark-950/85 backdrop-blur-md text-white text-[9px] font-black uppercase border border-white/20">
-                        {photo.category}
-                      </span>
-                    </div>
-
-                    {/* MARCA DE AGUA OFICIAL: CURIOL STUDIO TRANSPARENTE */}
+                    {/* Marca de agua */}
                     <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1.5 bg-black/50 backdrop-blur-[3px] px-2.5 py-1 rounded-xl border border-white/20 shadow-md">
-                      <img
-                        src="/curiol-studio-transparent.png"
-                        alt="Curiol Studio"
-                        className="h-4 w-4 rounded-full object-contain drop-shadow"
-                      />
-                      <span className="text-gray-400 text-[9px] font-thin">|</span>
+                      <img src="/curiol-studio-transparent.png" alt="Golden" className="h-4 w-4 rounded-full object-contain" />
                       <div className="flex flex-col text-left leading-none">
-                        <span className="text-[7px] font-black tracking-widest text-white/95 uppercase">
-                          GOLDEN SPORT
-                        </span>
-                        <span className="text-[6px] font-black tracking-widest text-golden-400 uppercase">
-                          SANTA CRUZ
-                        </span>
+                        <span className="text-[7px] font-black tracking-widest text-white/95 uppercase">GOLDEN SPORT</span>
+                        <span className="text-[6px] font-black tracking-widest text-golden-400 uppercase">SANTA CRUZ</span>
                       </div>
                     </div>
-
-                    {/* Sello Inferior: Autoría */}
+                    {/* Autoría */}
                     <div className="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-md bg-dark-950/85 backdrop-blur-sm text-[8px] font-bold text-golden-300 uppercase tracking-wider border border-golden-500/30">
                       📸 {photo.photoType === "pro_studio" ? "Curiol Studio" : `Familia: ${photo.uploaderName}`}
                     </div>
-
-                    {/* Like Button */}
+                    {/* Like */}
                     <button
                       onClick={(e) => handleLike(photo.id, e)}
                       className="absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded-full bg-dark-950/85 backdrop-blur-md text-red-400 hover:text-red-300 text-[11px] font-bold flex items-center gap-1 border border-white/20 transition-transform active:scale-125 shadow-md"
@@ -519,42 +501,25 @@ export default function GaleriaPage() {
                     </button>
                   </div>
 
-                  {/* Información y Acciones */}
-                  <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
-                    <div className="space-y-0.5">
-                      <h3 className="font-black text-xs sm:text-sm text-white group-hover:text-golden-400 transition-colors line-clamp-1">
-                        {photo.title}
-                      </h3>
-                      {photo.caption && (
-                        <p className="text-[11px] text-gray-400 line-clamp-1">
-                          {photo.caption}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[10px] text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-golden-500" />
-                        <span className="truncate max-w-[120px]">{photo.uploaderName}</span>
+                  {/* Info */}
+                  <div className="p-3 flex items-center justify-between text-[10px] text-gray-400">
+                    <span className="flex items-center gap-1">
+                      <User className="w-3 h-3 text-golden-500" />
+                      <span className="truncate max-w-[130px]">{photo.uploaderName}</span>
+                    </span>
+                    {photo.photoType === "pro_studio" ? (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSelectedPhotoForPurchase(photo); }}
+                        className="px-2 py-0.5 rounded-md bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-[9px] uppercase flex items-center gap-1 shadow-sm"
+                      >
+                        <ShoppingBag className="w-2.5 h-2.5" />
+                        <span>Encargar</span>
+                      </button>
+                    ) : (
+                      <span className="text-[9px] text-gray-500">
+                        📅 {formatShortDate(photo.eventDate || "")}
                       </span>
-
-                      {photo.photoType === "pro_studio" ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPhotoForPurchase(photo);
-                          }}
-                          className="px-2 py-0.5 rounded-md bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-[9px] uppercase flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
-                        >
-                          <ShoppingBag className="w-2.5 h-2.5" />
-                          <span>Encargar</span>
-                        </button>
-                      ) : (
-                        <span className="text-[9px] text-gray-500">
-                          📅 {formatShortDate(photo.eventDate || "")}
-                        </span>
-                      )}
-                    </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -569,10 +534,7 @@ export default function GaleriaPage() {
           isOpen={isUploadOpen}
           targetAlbum={selectedAlbum}
           onClose={() => setIsUploadOpen(false)}
-          onSuccess={() => {
-            setIsUploadOpen(false);
-            loadData();
-          }}
+          onSuccess={() => { setIsUploadOpen(false); loadData(); }}
         />
       )}
 
@@ -581,10 +543,7 @@ export default function GaleriaPage() {
           photo={selectedPhotoForView}
           onClose={() => setSelectedPhotoForView(null)}
           onLike={(e) => handleLike(selectedPhotoForView.id, e)}
-          onOpenBuy={(photo) => {
-            setSelectedPhotoForView(null);
-            setSelectedPhotoForPurchase(photo);
-          }}
+          onOpenBuy={(photo) => { setSelectedPhotoForView(null); setSelectedPhotoForPurchase(photo); }}
         />
       )}
 

@@ -56,7 +56,10 @@ function saveToStorage<T>(key: string, data: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(data));
   } catch (err) {
-    console.warn(`Error writing storage [${key}]:`, err);
+    // Lanzamos el error para que el llamador lo capture y muestre al usuario
+    // (ej: cuota de localStorage excedida con imágenes base64 muy pesadas)
+    console.error(`[Store] Error al guardar en localStorage [${key}]:`, err);
+    throw err;
   }
 }
 
