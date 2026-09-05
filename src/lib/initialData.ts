@@ -265,7 +265,7 @@ export const INITIAL_MATCHES: Match[] = [
 export const INITIAL_ALBUMS: GalleryAlbum[] = [
   {
     id: "alb-1",
-    title: "Gran Jornada Oficial Liberia 2026",
+    title: "Gran Jornada Oficial de Liberia",
     eventDate: "2026-09-05",
     category: "Intercantonal",
     coverPhotoUrl: "/Hero_Basketball/1.jpg",
@@ -280,8 +280,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     category: "Presentación de Uniformes",
     coverPhotoUrl: "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg",
     createdBy: "Administración / Curiol Studio",
-    isLocked: false,
-    isOpenForUploads: true,
+    isLocked: true,
+    isOpenForUploads: false,
   },
   {
     id: "alb-3",
@@ -290,8 +290,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     category: "Clínicas de Tecnificación & Tiro",
     coverPhotoUrl: "/Hero_Basketball/2.jpg",
     createdBy: "Curiol Studio",
-    isLocked: false,
-    isOpenForUploads: true,
+    isLocked: true,
+    isOpenForUploads: false,
   }
 ];
 

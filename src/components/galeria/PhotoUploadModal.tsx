@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Upload, Camera, Calendar, User, Sparkles, CheckCircle2, Image as ImageIcon } from "lucide-react";
-import { PlayerCategory } from "@/types";
+import { GalleryAlbum, PlayerCategory } from "@/types";
 import { Store } from "@/lib/store";
 import { INITIAL_CATEGORIES } from "@/lib/initialData";
 
@@ -10,30 +10,39 @@ interface Props {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  targetAlbum?: GalleryAlbum | null;
 }
 
-export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) {
+export default function PhotoUploadModal({ isOpen, onClose, onSuccess, targetAlbum }: Props) {
   const todayStr = new Date().toISOString().split("T")[0];
-  const [eventDate, setEventDate] = useState(todayStr);
+  const [eventDate, setEventDate] = useState(targetAlbum?.eventDate || todayStr);
   const [title, setTitle] = useState("");
   const [uploaderName, setUploaderName] = useState("");
   const [categories, setCategories] = useState<string[]>(INITIAL_CATEGORIES);
-  const [category, setCategory] = useState<PlayerCategory>(INITIAL_CATEGORIES[0] || "Mini-Básquet (U8-U10)");
+  const [category, setCategory] = useState<PlayerCategory>(
+    (targetAlbum?.category as PlayerCategory) || INITIAL_CATEGORIES[0] || "Mini-Básquet (U8-U10)"
+  );
   const [caption, setCaption] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
+    if (targetAlbum) {
+      setEventDate(targetAlbum.eventDate);
+      if (targetAlbum.category) {
+        setCategory(targetAlbum.category as PlayerCategory);
+      }
+    }
     Store.getCategories().then((cats) => {
       if (cats && cats.length > 0) {
         setCategories(cats);
-        if (!cats.includes(category)) {
+        if (!targetAlbum && !cats.includes(category)) {
           setCategory(cats[0]);
         }
       }
     });
-  }, [isOpen]);
+  }, [isOpen, targetAlbum]);
 
   if (!isOpen) return null;
 
@@ -70,22 +79,29 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
 
     setIsSubmitting(true);
     try {
-      // 1. Obtener o crear el álbum oficial del día
-      const albumTitle = title.trim() || `Fotos del Encuentro (${eventDate})`;
-      const album = await Store.getOrCreateDailyAlbum(eventDate, albumTitle, uploaderName, category);
+      // 1. Obtener el álbum objetivo o crear el álbum oficial del día
+      let albumId = targetAlbum?.id;
+      let effectiveEventDate = targetAlbum?.eventDate || eventDate;
+      let effectiveCategory = targetAlbum?.category || category;
+      let effectiveAlbumTitle = targetAlbum?.title || title.trim() || `Fotos del Encuentro (${effectiveEventDate})`;
 
-      // 2. Guardar todas las fotos asociadas al álbum del día en lote
+      if (!albumId) {
+        const album = await Store.getOrCreateDailyAlbum(effectiveEventDate, effectiveAlbumTitle, uploaderName, effectiveCategory);
+        albumId = album.id;
+      }
+
+      // 2. Guardar todas las fotos asociadas al álbum con permisos inmediatos (isApproved: true)
       for (let i = 0; i < previewUrls.length; i++) {
         const photoUrl = previewUrls[i];
         const photoTitle = previewUrls.length > 1
-          ? `${title || album.title} #${i + 1}`
-          : (title || album.title);
+          ? `${title || effectiveAlbumTitle} #${i + 1}`
+          : (title || effectiveAlbumTitle);
 
         await Store.addGalleryPhoto({
-          albumId: album.id,
-          eventDate: eventDate,
+          albumId: albumId,
+          eventDate: effectiveEventDate,
           title: photoTitle,
-          category: category,
+          category: effectiveCategory as PlayerCategory,
           photoUrl: photoUrl,
           caption: caption,
           uploaderName: uploaderName,
@@ -95,7 +111,7 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
         });
       }
 
-      alert(`¡${previewUrls.length} ${previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} con éxito al álbum familiar del día!`);
+      alert(`¡${previewUrls.length} ${previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} con éxito al álbum "${effectiveAlbumTitle}"!`);
       onSuccess();
     } catch (err) {
       alert("Error al subir las fotografías. Inténtelo nuevamente.");
@@ -115,10 +131,12 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
             </div>
             <div>
               <h2 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
-                Subir Fotos Familiares
+                {targetAlbum ? `Subir Fotos: ${targetAlbum.title}` : "Subir Fotos Familiares"}
               </h2>
               <p className="text-[11px] text-gray-400">
-                Álbum colaborativo de papás y familias (puedes subir varias fotos a la vez)
+                {targetAlbum
+                  ? `Álbum oficial de hoy • ${targetAlbum.eventDate} (${targetAlbum.category})`
+                  : "Álbum colaborativo de papás y familias (puedes subir varias fotos a la vez)"}
               </p>
             </div>
           </div>
@@ -131,11 +149,19 @@ export default function PhotoUploadModal({ isOpen, onClose, onSuccess }: Props) 
           </button>
         </div>
 
-        {/* Aviso de Consolidación del Álbum del Día */}
+        {/* Aviso de Consolidación o Álbum Activo */}
         <div className="p-3 rounded-xl bg-golden-500/10 border border-golden-500/30 text-[11px] text-golden-300 flex items-start gap-2">
           <Sparkles className="w-4 h-4 text-golden-400 shrink-0 mt-0.5" />
           <span>
-            <strong>Álbum del Día:</strong> Si ya existe un álbum de la fecha (iniciado por Lenny, Alberto o una familia), todas tus fotos se agregarán automáticamente a ese mismo álbum para tener los recuerdos unidos.
+            {targetAlbum ? (
+              <>
+                <strong>Álbum Activo:</strong> Estás publicando fotos directamente en <strong>{targetAlbum.title}</strong>. Las fotos se publicarán de inmediato con visibilidad total.
+              </>
+            ) : (
+              <>
+                <strong>Álbum del Día:</strong> Si ya existe un álbum de la fecha, todas tus fotos se agregarán automáticamente a ese mismo álbum para tener los recuerdos unidos.
+              </>
+            )}
           </span>
         </div>
 
