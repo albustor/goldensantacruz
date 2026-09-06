@@ -71,13 +71,14 @@ export async function getGalleryPhotosFromDB(): Promise<GalleryPhoto[]> {
     });
 
     if (photos && photos.length > 0) {
-      // Sincronizar automáticamente cualquier nueva foto de initialData con las fotos existentes
-      const existingIds = new Set(photos.map(p => p.id));
+      // Limpiar fotos mock de prueba para que solo queden las fotos reales subidas por papás y el álbum de uniformes
+      const cleanPhotos = photos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
+      
+      const existingIds = new Set(cleanPhotos.map(p => p.id));
       const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id));
       
-      let finalPhotos = photos;
-      if (missingInitial.length > 0) {
-        finalPhotos = [...photos, ...missingInitial];
+      let finalPhotos = [...cleanPhotos, ...missingInitial];
+      if (cleanPhotos.length !== photos.length || missingInitial.length > 0) {
         await saveGalleryPhotosToDB(finalPhotos);
       }
 
