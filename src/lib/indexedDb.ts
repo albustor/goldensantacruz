@@ -74,19 +74,18 @@ export async function getGalleryPhotosFromDB(): Promise<GalleryPhoto[]> {
       // Limpiar fotos mock de prueba para que solo queden las fotos reales
       const cleanPhotos = photos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
       
-      // Deduplicar fotos repetidas por URL de imagen para evitar que subidas duplicadas cuenten doble
-      const seenUrls = new Set<string>();
+      // Deduplicar estrictamente por ID único
+      const seenIds = new Set<string>();
       const deduplicated: GalleryPhoto[] = [];
       for (const p of cleanPhotos) {
-        const key = p.photoUrl ? (p.photoUrl.length > 200 ? p.photoUrl.slice(0, 200) + '_' + p.title : p.photoUrl) : p.id;
-        if (!seenUrls.has(key)) {
-          seenUrls.add(key);
+        if (!seenIds.has(p.id)) {
+          seenIds.add(p.id);
           deduplicated.push(p);
         }
       }
 
       const existingIds = new Set(deduplicated.map(p => p.id));
-      const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id) && !seenUrls.has(p.photoUrl));
+      const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id));
       
       let finalPhotos = [...deduplicated, ...missingInitial];
       if (finalPhotos.length !== photos.length) {
