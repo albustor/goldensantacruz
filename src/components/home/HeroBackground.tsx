@@ -4,127 +4,67 @@ import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 
-// 20 FOTOGRAFÍAS OFICIALES DE ACCIÓN Y JUEGO REAL (CURIOL STUDIO - GOLDEN SPORT ACADEMY)
+// 10 FOTOGRAFÍAS PURAMENTE CONCEPTUALES DE BÁSQUETBOL (PLANOS DETALLE, MACRO, SIN ROSTROS NI PERSONAS)
 export const HERO_BG_PHOTOS = [
   { 
     url: "/Hero_Basketball/1.jpg", 
-    title: "Velocidad & Pase en Transición Ofensiva", 
-    tag: "Acción en Partido #007",
-    shotType: "Juego en Movimiento"
+    title: "Macro Extremo de Cuero & Costuras del Balón", 
+    tag: "Textura & Grano Oficial",
+    shotType: "Macro Extremo"
   },
   { 
     url: "/Hero_Basketball/2.jpg", 
-    title: "Duelo Aéreo por el Rebote en la Pintura", 
-    tag: "Salto & Rebote #033",
-    shotType: "Lucha en el Tablero"
+    title: "Plano Detalle - Manos Infantiles Sosteniendo el Balón", 
+    tag: "Manos & Balón Semillero",
+    shotType: "Plano Detalle"
   },
   { 
     url: "/Hero_Basketball/3.jpg", 
-    title: "Penetración Ofensiva con Balón Protegido", 
-    tag: "Ataque al Aro #069",
-    shotType: "Conducción en Carrera"
+    title: "Balón en el Aro & Red en Movimiento", 
+    tag: "Tiro Limpio al Aro",
+    shotType: "Primerísimo Plano"
   },
   { 
     url: "/Hero_Basketball/4.jpg", 
-    title: "Disputa Técnica 1 vs 1 en el Perímetro", 
-    tag: "Defensa & Presión #034",
-    shotType: "Duelo Individual"
+    title: "Balón Picando con Efecto de Barrido en Duela", 
+    tag: "Bote a Velocidad",
+    shotType: "Efecto de Movimiento"
   },
   { 
     url: "/Hero_Basketball/5.jpg", 
-    title: "Despliegue Táctico y Dinamismo de Equipo", 
-    tag: "Transición Colectiva #138",
-    shotType: "Plano Abierto de Juego"
+    title: "Tenis de Básquetbol & Balón en la Cancha", 
+    tag: "Calzado de Básquetbol & Balón",
+    shotType: "Plano a Ras de Suelo"
   },
   { 
     url: "/Hero_Basketball/6.jpg", 
-    title: "Ataque al Aro con Oposición Defensiva", 
-    tag: "Penetración Intensa #045",
-    shotType: "Acción Bajo el Aro"
+    title: "Contrapicada de Aro & Tablero Iluminado", 
+    tag: "Aro & Luces de Estadio",
+    shotType: "Contrapicada"
   },
   { 
     url: "/Hero_Basketball/7.jpg", 
-    title: "Armado de Juego y Conducción de Balón", 
-    tag: "Visión de Cancha #002",
-    shotType: "Control del Base"
+    title: "Plano Detalle - Mano Infantil Dribleando el Balón", 
+    tag: "Drible Infantil & Reflejo",
+    shotType: "Acción Dinámica"
   },
   { 
     url: "/Hero_Basketball/8.jpg", 
-    title: "Presión Defensiva en Primera Línea", 
-    tag: "Intensidad Defensiva #074",
-    shotType: "Marcaje Activo"
+    title: "Balón en la Línea de Tiro Libre", 
+    tag: "Línea de Tiro Libre",
+    shotType: "Plano de Enfoque"
   },
   { 
     url: "/Hero_Basketball/9.jpg", 
-    title: "Reagrupación Táctica y Movimiento sin Balón", 
-    tag: "Estrategia de Equipo #076",
-    shotType: "Juego Colectivo"
+    title: "Manos de Niños Unidos sobre el Balón", 
+    tag: "Unión & Trabajo en Equipo",
+    shotType: "Plano de Manos en Equipo"
   },
   { 
     url: "/Hero_Basketball/10.jpg", 
-    title: "Búsqueda y Ejecución de Línea de Pase", 
-    tag: "Pase Preciso #005",
-    shotType: "Técnica de Pase"
-  },
-  { 
-    url: "/Hero_Basketball/11.jpg", 
-    title: "Acción Intensa y Fuerza en la Cancha", 
-    tag: "Duelo en Pintura #043",
-    shotType: "Contacto Limpio"
-  },
-  { 
-    url: "/Hero_Basketball/12.jpg", 
-    title: "Suspensión y Lanzamiento a Canasta", 
-    tag: "Tiro al Aro #099",
-    shotType: "Mecánica de Tiro"
-  },
-  { 
-    url: "/Hero_Basketball/13.jpg", 
-    title: "Drible en Velocidad con Cambio de Ritmo", 
-    tag: "Manejo de Balón #024",
-    shotType: "Dribling Ofensivo"
-  },
-  { 
-    url: "/Hero_Basketball/14.jpg", 
-    title: "Definición Rápida ante la Oposición", 
-    tag: "Bandeja al Aro #067",
-    shotType: "Definición Rápida"
-  },
-  { 
-    url: "/Hero_Basketball/15.jpg", 
-    title: "Desplazamiento Lateral y Cobertura", 
-    tag: "Postura Defensiva #003",
-    shotType: "Desplazamiento Táctico"
-  },
-  { 
-    url: "/Hero_Basketball/16.jpg", 
-    title: "Control de Posesión en Media Cancha", 
-    tag: "Equilibrio & Pausa #026",
-    shotType: "Dominio de Balón"
-  },
-  { 
-    url: "/Hero_Basketball/17.jpg", 
-    title: "Lucha por el Balón Suelto en la Pintura", 
-    tag: "Rebote Ofensivo #075",
-    shotType: "Lucha Aérea"
-  },
-  { 
-    url: "/Hero_Basketball/18.jpg", 
-    title: "Posición Defensiva Activa y Alerta", 
-    tag: "Concentración #047",
-    shotType: "Muro Defensivo"
-  },
-  { 
-    url: "/Hero_Basketball/19.jpg", 
-    title: "Transición Rápida Defensa a Ataque", 
-    tag: "Salida Rápida #048",
-    shotType: "Velocidad de Juego"
-  },
-  { 
-    url: "/Hero_Basketball/20.jpg", 
-    title: "Salida en Contragolpe y Acompañamiento", 
-    tag: "Contrataque #028",
-    shotType: "Aceleración en Duela"
+    title: "Aro & Tablero al Atardecer Dorado", 
+    tag: "Aro al Atardecer",
+    shotType: "Contraluz Dorado"
   }
 ];
 
