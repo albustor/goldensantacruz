@@ -83,7 +83,21 @@ CREATE TABLE IF NOT EXISTS public.gallery_photos (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 5. SPONSORS TABLE
+-- 5. GALLERY ALBUMS TABLE
+CREATE TABLE IF NOT EXISTS public.gallery_albums (
+    id TEXT PRIMARY KEY,
+    title VARCHAR(200) NOT NULL,
+    cover_photo_url TEXT,
+    event_date DATE NOT NULL,
+    category VARCHAR(50) DEFAULT 'General',
+    description TEXT,
+    created_by VARCHAR(150) DEFAULT 'Curiol Studio',
+    is_locked BOOLEAN DEFAULT FALSE,
+    is_open_for_uploads BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+-- 6. SPONSORS TABLE
 CREATE TABLE IF NOT EXISTS public.sponsors (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     name VARCHAR(150) NOT NULL,
@@ -97,7 +111,7 @@ CREATE TABLE IF NOT EXISTS public.sponsors (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- 6. PRE-REGISTRATIONS (Prospective Students)
+-- 7. PRE-REGISTRATIONS (Prospective Students)
 CREATE TABLE IF NOT EXISTS public.inquiries_registrations (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     student_name VARCHAR(150) NOT NULL,
@@ -115,29 +129,34 @@ CREATE TABLE IF NOT EXISTS public.inquiries_registrations (
 ALTER TABLE public.players ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.payment_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.matches ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.gallery_albums ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.gallery_photos ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sponsors ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.inquiries_registrations ENABLE ROW LEVEL SECURITY;
 
--- Allow public read access to matches, approved gallery photos, and active sponsors
+-- Allow public read access to matches, approved gallery photos, albums, and active sponsors
 CREATE POLICY "Public Read Matches" ON public.matches FOR SELECT USING (true);
+CREATE POLICY "Public Read Albums" ON public.gallery_albums FOR SELECT USING (true);
+CREATE POLICY "Public Insert Albums" ON public.gallery_albums FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Update Albums" ON public.gallery_albums FOR UPDATE USING (true);
+CREATE POLICY "Public Delete Albums" ON public.gallery_albums FOR DELETE USING (true);
+
 CREATE POLICY "Public Read Photos" ON public.gallery_photos FOR SELECT USING (true);
 CREATE POLICY "Public Insert Photos" ON public.gallery_photos FOR INSERT WITH CHECK (true);
 CREATE POLICY "Public Update Photos" ON public.gallery_photos FOR UPDATE USING (true);
 CREATE POLICY "Public Delete Photos" ON public.gallery_photos FOR DELETE USING (true);
+
 CREATE POLICY "Public Read Sponsors" ON public.sponsors FOR SELECT USING (is_active = true);
 CREATE POLICY "Public Insert Inquiries" ON public.inquiries_registrations FOR INSERT WITH CHECK (true);
 
--- Authenticated full access
+-- Full access policies
 CREATE POLICY "Admin Full Access Players" ON public.players FOR ALL USING (true);
 CREATE POLICY "Admin Full Access Payments" ON public.payment_records FOR ALL USING (true);
 CREATE POLICY "Admin Full Access Matches" ON public.matches FOR ALL USING (true);
+CREATE POLICY "Admin Full Access Albums" ON public.gallery_albums FOR ALL USING (true);
 CREATE POLICY "Admin Full Access Photos" ON public.gallery_photos FOR ALL USING (true);
 CREATE POLICY "Admin Full Access Sponsors" ON public.sponsors FOR ALL USING (true);
 CREATE POLICY "Admin Full Access Inquiries" ON public.inquiries_registrations FOR ALL USING (true);
 
 -- STORAGE BUCKETS SETUP
--- Insert into storage.buckets (Run via Supabase Storage UI or SQL if supported):
--- 1. 'gallery' (Public read, Authenticated/Public write)
--- 2. 'sponsors' (Public read)
--- 3. 'receipts' (Authenticated read/write)
+-- Bucket 'gallery' has been created and is public for image assets.
