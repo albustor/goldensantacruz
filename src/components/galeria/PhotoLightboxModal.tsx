@@ -2,7 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
-import { X, Heart, Share2, ShoppingBag, Download } from "lucide-react";
+import { X, Heart, Share2, ShoppingBag, Download, Trash2 } from "lucide-react";
 import { GalleryPhoto } from "@/types";
 
 interface Props {
@@ -10,9 +10,10 @@ interface Props {
   onClose: () => void;
   onLike: (e: React.MouseEvent, id: string) => void;
   onOpenBuy: (photo: GalleryPhoto) => void;
+  onDelete?: (photo: GalleryPhoto) => void;
 }
 
-export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy }: Props) {
+export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, onDelete }: Props) {
   return (
     <div
       onClick={onClose}
@@ -88,7 +89,18 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy }
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
+            {onDelete && (
+              <button
+                onClick={() => onDelete(photo)}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold border border-red-500/40 transition-colors"
+                title="Eliminar esta foto permanentemente"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Eliminar</span>
+              </button>
+            )}
+
             <button
               onClick={(e) => onLike(e, photo.id)}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-pink-500/20 text-pink-400 font-bold text-xs border border-pink-500/40 hover:bg-pink-500/30 transition-colors"

@@ -24,6 +24,7 @@ import {
   Radio,
   CloudUpload,
   RefreshCw,
+  Trash2,
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
@@ -145,6 +146,18 @@ export default function GaleriaPage() {
     setPhotos((prev) =>
       prev.map((p) => (p.id === photoId ? { ...p, likesCount: p.likesCount + 1 } : p))
     );
+  };
+
+  const handleDeletePhoto = async (photoId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (confirm("¿Estás seguro de que deseas eliminar esta fotografía permanentemente?")) {
+      await Store.deleteGalleryPhoto(photoId);
+      setPhotos((prev) => prev.filter((p) => p.id !== photoId));
+      if (selectedPhotoForView?.id === photoId) {
+        setSelectedPhotoForView(null);
+      }
+      await loadData();
+    }
   };
 
   const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
@@ -597,6 +610,15 @@ export default function GaleriaPage() {
                       alt={photo.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
+                    {/* Botón Eliminar Foto */}
+                    <button
+                      onClick={(e) => handleDeletePhoto(photo.id, e)}
+                      className="absolute top-2.5 left-2.5 z-20 p-1.5 rounded-lg bg-red-600/80 hover:bg-red-600 text-white shadow-md transition-all hover:scale-110"
+                      title="Eliminar esta fotografía"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+
                     {/* Marca de agua */}
                     <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1.5 bg-black/50 backdrop-blur-[3px] px-2.5 py-1 rounded-xl border border-white/20 shadow-md">
                       <img src="/curiol-studio-transparent.png" alt="Golden" className="h-4 w-4 rounded-full object-contain" />
@@ -662,6 +684,7 @@ export default function GaleriaPage() {
           photo={selectedPhotoForView}
           onClose={() => setSelectedPhotoForView(null)}
           onLike={(e) => handleLike(selectedPhotoForView.id, e)}
+          onDelete={(p) => handleDeletePhoto(p.id)}
           onOpenBuy={(photo) => { setSelectedPhotoForView(null); setSelectedPhotoForPurchase(photo); }}
         />
       )}
