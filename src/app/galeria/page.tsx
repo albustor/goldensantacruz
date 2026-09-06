@@ -178,21 +178,31 @@ export default function GaleriaPage() {
 
   const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
 
-  // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa
+  // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa y ordenadas ascendentemente
   const currentPhotos = selectedAlbum
-    ? photos.filter((p) => {
-        const matchesTab =
-          activeTab === "pro_studio"
-            ? p.photoType === "pro_studio"
-            : p.photoType === "community";
-        const matchesAlbum =
-          p.albumId === selectedAlbum.id || p.eventDate === selectedAlbum.eventDate;
-        const matchesSearch =
-          !searchQuery.trim() ||
-          p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
-        return matchesTab && matchesAlbum && matchesSearch;
-      })
+    ? photos
+        .filter((p) => {
+          const matchesTab =
+            activeTab === "pro_studio"
+              ? p.photoType === "pro_studio"
+              : p.photoType === "community";
+          const matchesAlbum =
+            p.albumId === selectedAlbum.id || p.eventDate === selectedAlbum.eventDate;
+          const matchesSearch =
+            !searchQuery.trim() ||
+            p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
+          return matchesTab && matchesAlbum && matchesSearch;
+        })
+        .sort((a, b) => {
+          // Orden ascendente por fecha/hora de creación o por título / secuencia numérica
+          const timeA = new Date(a.createdAt || 0).getTime();
+          const timeB = new Date(b.createdAt || 0).getTime();
+          if (timeA !== timeB && !isNaN(timeA) && !isNaN(timeB)) {
+            return timeA - timeB;
+          }
+          return (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: "base" });
+        })
     : [];
 
   const arbolUrl =
@@ -651,25 +661,12 @@ export default function GaleriaPage() {
                     <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[10px] text-gray-400">
                       <span className="flex items-center gap-1">
                         <User className="w-3 h-3 text-golden-500" />
-                        <span className="truncate max-w-[120px]">{photo.uploaderName}</span>
+                        <span className="truncate max-w-[140px]">{photo.uploaderName}</span>
                       </span>
 
-                      {photo.photoType === "pro_studio" ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedPhotoForPurchase(photo);
-                          }}
-                          className="px-2.5 py-1 rounded-md bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-[10px] uppercase flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
-                        >
-                          <ShoppingBag className="w-3 h-3" />
-                          <span>Pedir HD / Impresa (₡3,500)</span>
-                        </button>
-                      ) : (
-                        <span className="text-[9px] text-gray-500">
-                          📅 {formatShortDate(photo.eventDate || "")}
-                        </span>
-                      )}
+                      <span className="text-[10px] text-gray-400 font-semibold">
+                        📅 {formatShortDate(photo.eventDate || "")}
+                      </span>
                     </div>
                   </div>
                 </div>

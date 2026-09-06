@@ -329,7 +329,7 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     isApproved: true,
     uploadedAt: "2026-08-22",
     watermarkTag: "Curiol Studio Santa Cruz",
-    priceDigital: 3500,
+    priceDigital: 2500,
     pricePrint: 3500,
   }))
 ];

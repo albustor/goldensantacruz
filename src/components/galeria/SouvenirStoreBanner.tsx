@@ -72,7 +72,7 @@ export default function SouvenirStoreBanner() {
               <div>
                 <FileImage className="w-4 h-4 mx-auto text-golden-400 mb-1" />
                 <span className="text-[9px] uppercase font-bold text-emerald-400 block tracking-wider">Digital HD</span>
-                <span className="text-golden-400 font-black text-lg block">₡3,500</span>
+                <span className="text-golden-400 font-black text-lg block">₡2,500</span>
               </div>
               <div>
                 <span className="text-[10px] font-bold text-white block">Sin Logos</span>

@@ -178,7 +178,7 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
                   title="Solicitar fotografía en formato original 300 DPI y limpia sin logos a Curiol Studio"
                 >
                   <ShoppingBag className="w-4 h-4 text-golden-400" />
-                  <span>Solicitar HD Sin Logos (₡3,500)</span>
+                  <span>Solicitar HD Sin Logos (₡2,500)</span>
                 </button>
               )}
 
@@ -195,7 +195,7 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
               {onDelete && (
                 <button
                   onClick={() => onDelete(photo)}
-                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold border border-red-500/40 transition-colors"
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold border border-red-500/40 transition-colors"
                   title="Eliminar esta foto permanentemente"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -215,7 +215,7 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
                 💡 <strong>Información importante:</strong> La fotografía publicada en la web es de <strong>descarga gratuita con logos</strong> para redes sociales e internet (no para impresión).
               </p>
               <p className="text-gray-400">
-                Para impresión, se prepara en formato original de <strong>alta resolución (300 DPI)</strong> y se solicita a <strong>Curiol Studio</strong> sin logos: <strong className="text-golden-400">Digital HD: ₡3,500</strong> | <strong className="text-golden-400">Impresa: ₡3,500</strong> | <strong className="text-golden-400">Retablos o Canvas: a consultar precio especial</strong>. Todo lo que es descarga o encargo en HD se solicita a <strong>Curiol Studio al 6060-2617</strong>.
+                Para impresión, se prepara en formato original de <strong>alta resolución (300 DPI)</strong> y se solicita a <strong>Curiol Studio</strong> sin logos: <strong className="text-golden-400">Digital HD: ₡2,500</strong> | <strong className="text-golden-400">Impresa: ₡3,500</strong> | <strong className="text-golden-400">Retablos o Canvas: a consultar precio especial</strong>. Todo lo que es descarga o encargo en HD se solicita a <strong>Curiol Studio al 6060-2617</strong>.
               </p>
             </div>
             <a

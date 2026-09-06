@@ -17,7 +17,7 @@ export default function PhotoPurchaseModal({ photo, onClose }: Props) {
       case "digital":
         return {
           name: "Fotografía Digital HD Máster (Sin Logos)",
-          price: "₡3,500",
+          price: "₡2,500",
           desc: "Archivo en máxima resolución nativa (300 DPI) para guardar o imprimir por cuenta propia.",
         };
       case "impresa":
@@ -106,7 +106,7 @@ export default function PhotoPurchaseModal({ photo, onClose }: Props) {
                   Máster 300 DPI
                 </span>
               </div>
-              <p className="text-sm font-black pt-1">₡3,500</p>
+              <p className="text-sm font-black pt-1">₡2,500</p>
             </button>
 
             {/* 2. Impresa */}

@@ -312,7 +312,7 @@ export const Store = {
         const { data, error } = await supabase
           .from('gallery_photos')
           .select('*')
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: true });
 
         if (!error && data && data.length > 0) {
           const cloudPhotos: GalleryPhoto[] = data.map((row: any) => ({
