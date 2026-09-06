@@ -676,6 +676,13 @@ export default function GaleriaPage() {
               ))}
             </div>
           )}
+
+          {/* Banner de Tienda y Explicación de Calidad al fondo del álbum */}
+          {activeTab === "pro_studio" && (
+            <div className="pt-6">
+              <SouvenirStoreBanner />
+            </div>
+          )}
         </div>
       )}
 

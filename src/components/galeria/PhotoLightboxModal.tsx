@@ -134,71 +134,88 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
         </div>
 
         {/* Pie del Visor */}
-        <div className="p-5 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="space-y-1 text-center sm:text-left">
-            {photo.caption && (
-              <p className="text-sm text-gray-200">{photo.caption}</p>
-            )}
-            <p className="text-xs text-gray-400">
-              Subida por: <strong className="text-white">{photo.uploaderName}</strong>
-            </p>
+        <div className="p-5 border-t border-gray-800 space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-center sm:text-left">
+              {photo.caption && (
+                <p className="text-sm text-gray-200">{photo.caption}</p>
+              )}
+              <p className="text-xs text-gray-400">
+                Subida por: <strong className="text-white">{photo.uploaderName}</strong>
+              </p>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
+              {/* Botón Descargar JPG para TODAS las fotos */}
+              <button
+                onClick={() => handleDownloadJpg(photo)}
+                disabled={isDownloading}
+                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                title="Descargar fotografía web en formato JPG"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isDownloading ? "Descargando..." : "Descargar JPG"}</span>
+              </button>
+
+              {/* Botón Compartir WhatsApp */}
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(
+                  `🏀 ¡Mira esta foto de Golden Sport Academy Santa Cruz!\n"${photo.title}"\n${typeof window !== 'undefined' ? window.location.origin : ''}/galeria`
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>WhatsApp</span>
+              </a>
+
+              {/* Encargar Recuerdo (si es de Curiol Pro) */}
+              {photo.photoType === "pro_studio" && (
+                <button
+                  onClick={() => onOpenBuy(photo)}
+                  className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/30 to-golden-500/30 text-golden-300 border border-golden-500/50 hover:bg-golden-500/40 font-black text-xs uppercase shadow-md transition-all hover:scale-105"
+                >
+                  <ShoppingBag className="w-4 h-4 text-golden-400" />
+                  <span>Encargar Alta Calidad (₡3,500)</span>
+                </button>
+              )}
+
+              {/* Botón Me Gusta */}
+              <button
+                onClick={(e) => onLike(e, photo.id)}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-pink-500/20 text-pink-400 font-bold text-xs border border-pink-500/40 hover:bg-pink-500/30 transition-colors"
+              >
+                <Heart className="w-4 h-4 fill-pink-500" />
+                <span>{photo.likesCount}</span>
+              </button>
+
+              {/* Botón Eliminar Foto */}
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(photo)}
+                  className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold border border-red-500/40 transition-colors"
+                  title="Eliminar esta foto permanentemente"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
-            {/* Botón Descargar JPG para TODAS las fotos */}
-            <button
-              onClick={() => handleDownloadJpg(photo)}
-              disabled={isDownloading}
-              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-              title="Descargar fotografía en formato JPG"
-            >
-              <Download className="w-4 h-4" />
-              <span>{isDownloading ? "Descargando..." : "Descargar JPG"}</span>
-            </button>
-
-            {/* Botón Compartir WhatsApp */}
+          {/* Nota de Calidad de Impresión, Convenio y Publicidad */}
+          <div className="pt-3 border-t border-gray-800/80 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-gray-400">
+            <div className="text-center md:text-left leading-relaxed">
+              <span className="text-gray-300">💡 <strong>Nota sobre calidad:</strong> La foto visualizada en web incluye logos y compresión para redes. La versión de encargo (₡3,500) se procesa en <strong>alta resolución original 300 DPI y limpia sin logos</strong>. Su compra aporta directamente a la academia.</span>
+            </div>
             <a
-              href={`https://wa.me/?text=${encodeURIComponent(
-                `🏀 ¡Mira esta foto de Golden Sport Academy Santa Cruz!\n"${photo.title}"\n${typeof window !== 'undefined' ? window.location.origin : ''}/galeria`
-              )}`}
+              href="https://wa.me/50660602617?text=Hola%20Curiol%20Studio,%20deseo%20apoyar%20al%20equipo%20y%20anunciar%20mi%20marca%20en%20las%20galer%C3%ADas%20oficiales."
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+              className="shrink-0 px-3 py-1.5 rounded-lg bg-dark-950 border border-golden-500/30 text-golden-400 hover:text-golden-300 hover:border-golden-400 transition-colors font-bold flex items-center gap-1.5"
             >
-              <Share2 className="w-4 h-4" />
-              <span>WhatsApp</span>
+              <span>📢 Anuncie su marca y apoye al equipo</span>
             </a>
-
-            {/* Encargar Recuerdo (si es de Curiol Pro) */}
-            {photo.photoType === "pro_studio" && (
-              <button
-                onClick={() => onOpenBuy(photo)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 hover:bg-amber-500/30 font-bold text-xs uppercase transition-colors"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Encargar Recuerdo</span>
-              </button>
-            )}
-
-            {/* Botón Me Gusta */}
-            <button
-              onClick={(e) => onLike(e, photo.id)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-pink-500/20 text-pink-400 font-bold text-xs border border-pink-500/40 hover:bg-pink-500/30 transition-colors"
-            >
-              <Heart className="w-4 h-4 fill-pink-500" />
-              <span>{photo.likesCount}</span>
-            </button>
-
-            {/* Botón Eliminar Foto */}
-            {onDelete && (
-              <button
-                onClick={() => onDelete(photo)}
-                className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/30 text-xs font-bold border border-red-500/40 transition-colors"
-                title="Eliminar esta foto permanentemente"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
       </div>
