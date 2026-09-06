@@ -204,6 +204,10 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
             </div>
           </div>
 
+          <div className="text-[10px] text-golden-300 font-bold uppercase tracking-wider text-center sm:text-right">
+            🤝 Convenio establecido entre Curiol Studio y Golden Sport Academy Santa Cruz
+          </div>
+
           {/* Nota de Calidad de Impresión, Convenio y Publicidad */}
           <div className="pt-3 border-t border-gray-800/80 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-gray-400">
             <div className="text-center md:text-left leading-relaxed space-y-1">
@@ -211,7 +215,7 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
                 💡 <strong>Información importante:</strong> La fotografía publicada en la web es de <strong>descarga gratuita con logos</strong> para redes sociales e internet (no para impresión).
               </p>
               <p className="text-gray-400">
-                Para impresión, se prepara en formato original de <strong>alta resolución (300 DPI)</strong> y se solicita a <strong>Curiol Studio</strong> sin logos: <strong className="text-golden-400">Digital HD: ₡3,500</strong> | <strong className="text-golden-400">Impresa: ₡3,500</strong> | <strong className="text-golden-400">Retablos o Canvas: a consultar</strong>. Todo lo que es descarga o encargo en HD se solicita a Curiol Studio.
+                Para impresión, se prepara en formato original de <strong>alta resolución (300 DPI)</strong> y se solicita a <strong>Curiol Studio</strong> sin logos: <strong className="text-golden-400">Digital HD: ₡3,500</strong> | <strong className="text-golden-400">Impresa: ₡3,500</strong> | <strong className="text-golden-400">Retablos o Canvas: a consultar precio especial</strong>. Todo lo que es descarga o encargo en HD se solicita a <strong>Curiol Studio al 6060-2617</strong>.
               </p>
             </div>
             <a

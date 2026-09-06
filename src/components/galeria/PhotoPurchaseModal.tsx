@@ -166,7 +166,7 @@ export default function PhotoPurchaseModal({ photo, onClose }: Props) {
         </div>
 
         {/* Botón de Pedido WhatsApp a Curiol Studio */}
-        <div className="pt-1">
+        <div className="pt-1 space-y-2">
           <button
             onClick={handleBuyWhatsApp}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white font-black text-xs uppercase tracking-wider shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
@@ -174,6 +174,10 @@ export default function PhotoPurchaseModal({ photo, onClose }: Props) {
             <MessageCircle className="w-4 h-4" />
             <span>Solicitar a Curiol Studio por WhatsApp (6060-2617)</span>
           </button>
+
+          <p className="text-center text-[10px] sm:text-[11px] text-golden-300 font-bold tracking-wide">
+            🤝 Convenio establecido entre Curiol Studio y Golden Sport Academy Santa Cruz
+          </p>
         </div>
       </div>
     </div>
