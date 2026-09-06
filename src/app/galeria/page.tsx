@@ -82,9 +82,25 @@ export default function GaleriaPage() {
   const [selectedPhotoForPurchase, setSelectedPhotoForPurchase] = useState<GalleryPhoto | null>(null);
 
   useEffect(() => {
-    loadData();
-    checkUnsynced();
+    initGallery();
   }, []);
+
+  const initGallery = async () => {
+    await loadData();
+    await checkUnsynced();
+    // Auto-sincronizar fotos locales con la nube en segundo plano si este teléfono tiene fotos pendientes
+    try {
+      const res = await Store.syncLocalPhotosToSupabase();
+      if (res.syncedCount > 0) {
+        setSyncSuccessMsg(`¡${res.syncedCount} ${res.syncedCount === 1 ? 'foto se publicó' : 'fotos se publicaron'} automáticamente en la nube! Ya están visibles para todos.`);
+        setTimeout(() => setSyncSuccessMsg(""), 7000);
+        await loadData();
+        await checkUnsynced();
+      }
+    } catch (e) {
+      console.warn("Auto-sync background info:", e);
+    }
+  };
 
   const checkUnsynced = async () => {
     const unsynced = await Store.getUnsyncedLocalPhotos();
@@ -99,6 +115,9 @@ export default function GaleriaPage() {
       if (res.syncedCount > 0) {
         setSyncSuccessMsg(`¡${res.syncedCount} ${res.syncedCount === 1 ? 'foto publicada' : 'fotos publicadas'} con éxito en la nube! Ya están visibles para todos.`);
         setTimeout(() => setSyncSuccessMsg(""), 7000);
+      } else {
+        setSyncSuccessMsg("Todas las fotos ya están 100% sincronizadas en la nube.");
+        setTimeout(() => setSyncSuccessMsg(""), 4000);
       }
       await loadData();
       await checkUnsynced();
@@ -279,7 +298,7 @@ export default function GaleriaPage() {
       {/* 4. LISTADO DE ÁLBUMES */}
       {!selectedAlbumId ? (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-800 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
             <div>
               <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
                 <FolderHeart className="w-5 h-5 text-golden-400" />
@@ -289,9 +308,20 @@ export default function GaleriaPage() {
                 Selecciona un álbum para explorar las fotos o subir las tuyas.
               </p>
             </div>
-            <span className="text-xs text-golden-400 font-bold">
-              {albums.length} álbumes registrados
-            </span>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleSyncToCloud}
+                disabled={isSyncing}
+                className="px-3.5 py-1.5 rounded-xl bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 border border-golden-500/40 text-xs font-bold uppercase flex items-center gap-1.5 transition-colors disabled:opacity-50"
+                title="Sincronizar fotos guardadas en este teléfono con la nube"
+              >
+                <CloudUpload className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
+                <span>{isSyncing ? "Sincronizando..." : "☁️ Sincronizar con la Nube"}</span>
+              </button>
+              <span className="text-xs text-golden-400 font-bold hidden sm:inline">
+                {albums.length} álbumes registrados
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -478,20 +508,32 @@ export default function GaleriaPage() {
                   </p>
                 </div>
 
-                {selectedAlbum.isOpenForUploads ? (
+                <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
                   <button
-                    onClick={() => setIsUploadOpen(true)}
-                    className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center gap-2.5 shrink-0 transition-transform hover:scale-105 active:scale-95"
+                    onClick={handleSyncToCloud}
+                    disabled={isSyncing}
+                    className="px-4 py-3 rounded-2xl bg-dark-950 border border-golden-500/40 hover:bg-dark-900 text-golden-300 font-bold text-xs uppercase tracking-wider flex items-center gap-2 transition-colors disabled:opacity-50"
+                    title="Sincronizar fotos con Supabase"
                   >
-                    <Upload className="w-5 h-5" />
-                    <span>Subir Fotos a este Álbum</span>
+                    <CloudUpload className={`w-4 h-4 text-golden-400 ${isSyncing ? "animate-bounce" : ""}`} />
+                    <span>{isSyncing ? "Sincronizando..." : "☁️ Sincronizar Nube"}</span>
                   </button>
-                ) : (
-                  <div className="px-4 py-2.5 rounded-xl bg-dark-950 border border-gray-800 text-gray-400 text-xs text-center shrink-0 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-gray-500" />
-                    <span>Subidas cerradas para este evento</span>
-                  </div>
-                )}
+
+                  {selectedAlbum.isOpenForUploads ? (
+                    <button
+                      onClick={() => setIsUploadOpen(true)}
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center gap-2.5 shrink-0 transition-transform hover:scale-105 active:scale-95"
+                    >
+                      <Upload className="w-5 h-5" />
+                      <span>Subir Fotos a este Álbum</span>
+                    </button>
+                  ) : (
+                    <div className="px-4 py-2.5 rounded-xl bg-dark-950 border border-gray-800 text-gray-400 text-xs text-center shrink-0 flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-gray-500" />
+                      <span>Subidas cerradas para este evento</span>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
