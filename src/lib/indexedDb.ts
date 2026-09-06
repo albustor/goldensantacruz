@@ -71,22 +71,36 @@ export async function getGalleryPhotosFromDB(): Promise<GalleryPhoto[]> {
     });
 
     if (photos && photos.length > 0) {
-      // Limpiar fotos mock de prueba para que solo queden las fotos reales subidas por papás y el álbum de uniformes
+      // Limpiar fotos mock de prueba para que solo queden las fotos reales
       const cleanPhotos = photos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
       
-      const existingIds = new Set(cleanPhotos.map(p => p.id));
-      const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id));
+      // Deduplicar fotos repetidas por URL de imagen para evitar que subidas duplicadas cuenten doble
+      const seenUrls = new Set<string>();
+      const deduplicated: GalleryPhoto[] = [];
+      for (const p of cleanPhotos) {
+        const key = p.photoUrl ? (p.photoUrl.length > 200 ? p.photoUrl.slice(0, 200) + '_' + p.title : p.photoUrl) : p.id;
+        if (!seenUrls.has(key)) {
+          seenUrls.add(key);
+          deduplicated.push(p);
+        }
+      }
+
+      const existingIds = new Set(deduplicated.map(p => p.id));
+      const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id) && !seenUrls.has(p.photoUrl));
       
-      let finalPhotos = [...cleanPhotos, ...missingInitial];
-      if (cleanPhotos.length !== photos.length || missingInitial.length > 0) {
+      let finalPhotos = [...deduplicated, ...missingInitial];
+      if (finalPhotos.length !== photos.length) {
         await saveGalleryPhotosToDB(finalPhotos);
       }
 
-      // Ordenar por fecha descendente (más recientes primero)
+      // Ordenar cronológicamente ascendente
       return finalPhotos.sort((a, b) => {
         const timeA = new Date(a.createdAt || a.uploadedAt || 0).getTime();
         const timeB = new Date(b.createdAt || b.uploadedAt || 0).getTime();
-        return timeB - timeA;
+        if (timeA !== timeB && !isNaN(timeA) && !isNaN(timeB)) {
+          return timeA - timeB;
+        }
+        return (a.title || '').localeCompare(b.title || '', undefined, { numeric: true, sensitivity: 'base' });
       });
     }
 

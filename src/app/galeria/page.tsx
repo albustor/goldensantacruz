@@ -178,32 +178,39 @@ export default function GaleriaPage() {
 
   const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
 
-  // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa y ordenadas ascendentemente
-  const currentPhotos = selectedAlbum
-    ? photos
-        .filter((p) => {
-          const matchesTab =
-            activeTab === "pro_studio"
-              ? p.photoType === "pro_studio"
-              : p.photoType === "community";
-          const matchesAlbum =
-            p.albumId === selectedAlbum.id || p.eventDate === selectedAlbum.eventDate;
-          const matchesSearch =
-            !searchQuery.trim() ||
-            p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
-          return matchesTab && matchesAlbum && matchesSearch;
-        })
-        .sort((a, b) => {
-          // Orden ascendente por fecha/hora de creación o por título / secuencia numérica
-          const timeA = new Date(a.createdAt || 0).getTime();
-          const timeB = new Date(b.createdAt || 0).getTime();
-          if (timeA !== timeB && !isNaN(timeA) && !isNaN(timeB)) {
-            return timeA - timeB;
-          }
-          return (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: "base" });
-        })
+  // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa, deduplicadas y ordenadas ascendentemente
+  const rawCurrent = selectedAlbum
+    ? photos.filter((p) => {
+        const matchesTab =
+          activeTab === "pro_studio"
+            ? p.photoType === "pro_studio"
+            : p.photoType === "community";
+        const matchesAlbum =
+          p.albumId === selectedAlbum.id || (!p.albumId && p.eventDate === selectedAlbum.eventDate);
+        const matchesSearch =
+          !searchQuery.trim() ||
+          p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesTab && matchesAlbum && matchesSearch;
+      })
     : [];
+
+  const seenUrlsCurrent = new Set<string>();
+  const currentPhotos = rawCurrent
+    .filter((p) => {
+      const key = p.photoUrl ? (p.photoUrl.length > 200 ? p.photoUrl.slice(0, 200) + "_" + p.title : p.photoUrl) : p.id;
+      if (seenUrlsCurrent.has(key)) return false;
+      seenUrlsCurrent.add(key);
+      return true;
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.createdAt || 0).getTime();
+      const timeB = new Date(b.createdAt || 0).getTime();
+      if (timeA !== timeB && !isNaN(timeA) && !isNaN(timeB)) {
+        return timeA - timeB;
+      }
+      return (a.title || "").localeCompare(b.title || "", undefined, { numeric: true, sensitivity: "base" });
+    });
 
   const arbolUrl =
     settings?.arbolGuanacasteUrl ||
@@ -366,12 +373,19 @@ export default function GaleriaPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {displayedAlbums.map((album) => {
-              // Filtrar fotos que pertenecen estrictamente a este tipo de pestaña
-              const albumPics = photos.filter(
+              // Filtrar fotos que pertenecen estrictamente a este tipo de pestaña y álbum
+              const rawPics = photos.filter(
                 (p) =>
-                  (p.albumId === album.id || p.eventDate === album.eventDate) &&
+                  (p.albumId === album.id || (!p.albumId && p.eventDate === album.eventDate)) &&
                   (activeTab === "pro_studio" ? p.photoType === "pro_studio" : p.photoType === "community")
               );
+              const seenPics = new Set<string>();
+              const albumPics = rawPics.filter((p) => {
+                const key = p.photoUrl ? (p.photoUrl.length > 200 ? p.photoUrl.slice(0, 200) + "_" + p.title : p.photoUrl) : p.id;
+                if (seenPics.has(key)) return false;
+                seenPics.add(key);
+                return true;
+              });
               
               const isTodayAlbum = album.isOpenForUploads;
               const coverPhoto = album.coverPhotoUrl || albumPics[0]?.photoUrl || "/Hero_Basketball/1.jpg";
