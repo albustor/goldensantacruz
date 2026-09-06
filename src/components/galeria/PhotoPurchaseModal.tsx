@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import { X, Phone, ShoppingBag, Sparkles } from "lucide-react";
@@ -10,17 +10,15 @@ interface Props {
 }
 
 export default function PhotoPurchaseModal({ photo, onClose }: Props) {
-  const [selectedProduct, setSelectedProduct] = useState<"digital" | "neveras" | "retablo_canvas">("digital");
+  const [selectedProduct, setSelectedProduct] = useState<"digital" | "retablo_canvas">("digital");
 
   const handleBuyWhatsApp = () => {
     const productName =
-      selectedProduct === "neveras"
-        ? "Imán para Nevera Personalizado (₡3,500)"
-        : selectedProduct === "retablo_canvas"
-        ? "Retablo de Madera o Cuadro Canvas Artístico (Consultar medidas y precio)"
-        : "Fotografía Digital HD - Tarifa Convenio (₡2,500 / Regular ₡4,000)";
+      selectedProduct === "retablo_canvas"
+        ? "Retablo de Madera o Cuadro Canvas Artístico (₡3,500)"
+        : "Fotografía Digital HD (₡3,500)";
 
-    const message = `📸 *SOLICITUD DE FOTOGRAFÍA - CURIOL STUDIO SANTA CRUZ*\n\n¡Hola Jenny / Curiol Studio!\n\nMe interesa encargar la fotografía oficial de mi hijo(a):\n\n• *Título:* ${photo.title}\n• *Fecha:* ${photo.eventDate}\n• *Categoría:* ${photo.category}\n• *Producto Elegido:* ${productName}\n\nPor favor indíquenme el procedimiento de entrega y datos de pago por Sinpe Móvil al 6280-6989. ¡Muchas gracias!`;
+    const message = `📸 *SOLICITUD DE FOTOGRAFÍA - CURIOL STUDIO SANTA CRUZ*\n\n¡Hola Lenny / Curiol Studio!\n\nMe interesa encargar la fotografía oficial de mi hijo(a):\n\n• *Título:* ${photo.title}\n• *Fecha:* ${photo.eventDate}\n• *Categoría:* ${photo.category}\n• *Producto Elegido:* ${productName}\n\nPor favor indíquenme el procedimiento de entrega y datos de pago por Sinpe Móvil al 6280-6989. ¡Muchas gracias!`;
 
     window.open(`https://wa.me/50662806989?text=${encodeURIComponent(message)}`, "_blank");
     onClose();
@@ -57,53 +55,37 @@ export default function PhotoPurchaseModal({ photo, onClose }: Props) {
         </div>
 
         {/* Product selection */}
-        <div className="grid grid-cols-3 gap-3">
-          {/* Digital Convenio */}
+        <div className="grid grid-cols-2 gap-3">
+          {/* Digital HD */}
           <button
             type="button"
             onClick={() => setSelectedProduct("digital")}
-            className={`p-3 rounded-2xl text-center space-y-1 transition-all ${
+            className={`p-4 rounded-2xl text-center space-y-1.5 transition-all ${
               selectedProduct === "digital"
                 ? "bg-golden-500 text-dark-900 border-2 border-golden-400 shadow-lg scale-105"
                 : "bg-dark-800 text-gray-300 border border-gray-700 hover:border-gray-500"
             }`}
           >
-            <span className="text-lg">💾</span>
-            <p className="text-[11px] font-black uppercase">Digital HD</p>
-            <p className="text-xs font-black">₡2,500</p>
-            <span className="text-[9px] text-emerald-800 font-bold block">(Reg. ₡4,000)</span>
-          </button>
-
-          {/* Imán Nevera */}
-          <button
-            type="button"
-            onClick={() => setSelectedProduct("neveras")}
-            className={`p-3 rounded-2xl text-center space-y-1 transition-all ${
-              selectedProduct === "neveras"
-                ? "bg-golden-500 text-dark-900 border-2 border-golden-400 shadow-lg scale-105"
-                : "bg-dark-800 text-gray-300 border border-gray-700 hover:border-gray-500"
-            }`}
-          >
-            <span className="text-lg">🧲</span>
-            <p className="text-[11px] font-black uppercase">Imán Nevera</p>
-            <p className="text-xs font-black">₡3,500</p>
-            <span className="text-[9px] text-gray-400 block">Personalizado</span>
+            <span className="text-2xl">💾</span>
+            <p className="text-xs font-black uppercase">Fotografías Digitales</p>
+            <p className="text-base font-black">₡3,500</p>
+            <span className="text-[10px] text-dark-800 font-bold block">Archivo Original HD</span>
           </button>
 
           {/* Retablo o Canvas */}
           <button
             type="button"
             onClick={() => setSelectedProduct("retablo_canvas")}
-            className={`p-3 rounded-2xl text-center space-y-1 transition-all ${
+            className={`p-4 rounded-2xl text-center space-y-1.5 transition-all ${
               selectedProduct === "retablo_canvas"
                 ? "bg-golden-500 text-dark-900 border-2 border-golden-400 shadow-lg scale-105"
                 : "bg-dark-800 text-gray-300 border border-gray-700 hover:border-gray-500"
             }`}
           >
-            <span className="text-lg">🖼️</span>
-            <p className="text-[11px] font-black uppercase">Retablo / Canvas</p>
-            <p className="text-xs font-black">Consultar</p>
-            <span className="text-[9px] text-gray-400 block">Según Medida</span>
+            <span className="text-2xl">🖼️</span>
+            <p className="text-xs font-black uppercase">Retablos o Canvas</p>
+            <p className="text-base font-black">₡3,500</p>
+            <span className="text-[10px] text-dark-800 font-bold block">Madera o Lienzo Artístico</span>
           </button>
         </div>
 

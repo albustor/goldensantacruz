@@ -93,6 +93,7 @@ export interface GalleryAlbum {
   createdBy: string;
   isLocked?: boolean;
   isOpenForUploads?: boolean;
+  albumType?: "community" | "pro_studio";
 }
 
 export interface Sponsor {

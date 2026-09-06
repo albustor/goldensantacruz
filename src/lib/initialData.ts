@@ -264,12 +264,24 @@ export const INITIAL_MATCHES: Match[] = [
 
 export const INITIAL_ALBUMS: GalleryAlbum[] = [
   {
-    id: "alb-1",
-    title: "Gran Jornada Oficial de Liberia",
+    id: "alb-comunidad-liberia-2026",
+    title: "Álbum Familiar • Gran Jornada de Liberia",
     eventDate: "2026-09-05",
     category: "Intercantonal",
     coverPhotoUrl: "/Hero_Basketball/1.jpg",
-    createdBy: "Curiol Studio",
+    createdBy: "Familias & Papás",
+    albumType: "community",
+    isLocked: false,
+    isOpenForUploads: true,
+  },
+  {
+    id: "alb-curiol-liberia-2026",
+    title: "Galería Oficial Curiol Studio • Gran Jornada de Liberia 2026",
+    eventDate: "2026-09-05",
+    category: "Intercantonal",
+    coverPhotoUrl: "/Hero_Basketball/2.jpg",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
     isLocked: false,
     isOpenForUploads: true,
   },
@@ -279,7 +291,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     eventDate: "2026-08-22",
     category: "Presentación de Uniformes",
     coverPhotoUrl: "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg",
-    createdBy: "Administración / Curiol Studio",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
     isLocked: true,
     isOpenForUploads: false,
   },
@@ -289,7 +302,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     eventDate: "2026-08-20",
     category: "Clínicas de Tecnificación & Tiro",
     coverPhotoUrl: "/Hero_Basketball/2.jpg",
-    createdBy: "Curiol Studio",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
     isLocked: true,
     isOpenForUploads: false,
   }
@@ -315,7 +329,7 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     isApproved: true,
     uploadedAt: "2026-08-22",
     watermarkTag: "Curiol Studio Santa Cruz",
-    priceDigital: 2500,
+    priceDigital: 3500,
     pricePrint: 3500,
   }))
 ];

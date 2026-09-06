@@ -31,28 +31,18 @@ export default function SouvenirStoreBanner() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 shrink-0 w-full lg:w-auto">
-        {/* Digital HD Convenio */}
-        <div className="px-4 py-3 rounded-2xl bg-dark-900 border border-golden-500/40 text-center space-y-0.5">
-          <span className="text-[10px] uppercase font-bold text-emerald-400 block">Convenio Golden</span>
-          <div className="flex items-center justify-center gap-1.5">
-            <span className="text-golden-400 font-black text-base">₡2,500</span>
-            <span className="text-gray-500 line-through text-xs">₡4,000</span>
-          </div>
-          <span className="text-[10px] text-gray-300">Archivo Digital HD</span>
-        </div>
-
-        {/* Imán Nevera */}
-        <div className="px-4 py-3 rounded-2xl bg-dark-900 border border-golden-500/40 text-center space-y-0.5">
-          <span className="text-[10px] uppercase font-bold text-golden-400 block">Souvenir Favorito</span>
-          <span className="text-golden-400 font-black text-base block">₡3,500</span>
-          <span className="text-[10px] text-gray-300">Imán para Nevera</span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0 w-full lg:w-auto">
+        {/* Digital HD */}
+        <div className="px-5 py-3.5 rounded-2xl bg-dark-900 border border-golden-500/40 text-center space-y-0.5 shadow-md">
+          <span className="text-[10px] uppercase font-bold text-emerald-400 block">Formato Oficial</span>
+          <span className="text-golden-400 font-black text-lg block">₡3,500</span>
+          <span className="text-[10px] text-gray-300">Fotografías Digitales HD</span>
         </div>
 
         {/* Retablos o Canvas */}
-        <div className="px-4 py-3 rounded-2xl bg-dark-900 border border-golden-500/40 text-center space-y-0.5">
-          <span className="text-[10px] uppercase font-bold text-amber-300 block">Madera & Canvas</span>
-          <span className="text-golden-400 font-black text-base block">Consultar</span>
+        <div className="px-5 py-3.5 rounded-2xl bg-dark-900 border border-golden-500/40 text-center space-y-0.5 shadow-md">
+          <span className="text-[10px] uppercase font-bold text-amber-300 block">Recuerdo Físico</span>
+          <span className="text-golden-400 font-black text-lg block">₡3,500</span>
           <span className="text-[10px] text-gray-300">Retablos o Canvas</span>
         </div>
       </div>
