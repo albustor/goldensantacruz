@@ -2,11 +2,11 @@
 
 import React from "react";
 import Image from "next/image";
-import { ShoppingBag, Sparkles, MessageCircle, ShieldCheck, HeartHandshake, Megaphone } from "lucide-react";
+import { ShoppingBag, Sparkles, MessageCircle, ShieldCheck, HeartHandshake, Megaphone, Download, FileImage, Printer, Frame } from "lucide-react";
 
 export default function SouvenirStoreBanner() {
   const whatsappCuriol = "https://wa.me/50660602617?text=" + encodeURIComponent(
-    "📸 *CONSULTA DE FOTOGRAFÍAS Y SOUVENIRS - CURIOL STUDIO*\n\n¡Hola Alberto / Curiol Studio!\n\nMe gustaría consultar sobre las fotografías oficiales y recuerdos de Golden Sport Academy Santa Cruz (Digitales HD / Retablos / Canvas a ₡3,500)."
+    "📸 *CONSULTA DE FOTOGRAFÍAS Y SOUVENIRS - CURIOL STUDIO*\n\n¡Hola Alberto / Curiol Studio!\n\nMe gustaría consultar sobre las fotografías oficiales y recuerdos de Golden Sport Academy Santa Cruz (Digitales HD ₡3,500 / Impresas ₡3,500 / Retablos o Canvas a cotizar)."
   );
 
   const whatsappSponsors = "https://wa.me/50660602617?text=" + encodeURIComponent(
@@ -44,29 +44,66 @@ export default function SouvenirStoreBanner() {
             </h2>
 
             <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-              Las fotografías que ves en esta web y redes sociales están configuradas en formato ligero para visualización rápida en pantalla. 
-              <strong> Para impresión física o archivo máster</strong>, Curiol Studio realiza un 
-              <span className="text-golden-400 font-semibold"> proceso profesional de post-producción</span>: 
-              calibración de color, máxima resolución nativa (300+ DPI), ajuste de nitidez y <strong className="text-emerald-400">entrega limpia sin logos ni marcas publicitarias</strong>.
+              La fotografía publicada en redes sociales y en este espacio está utilizada para <strong>internet y web (descarga gratuita con logos)</strong>. 
+              <strong> Para impresión</strong> se realiza un 
+              <span className="text-golden-400 font-semibold"> proceso adicional de ajuste, configuración y tratamiento de color</span>, 
+              utilizando el archivo original en <strong>alta resolución (300+ DPI) y calidad de imprenta</strong>. 
+              La fotografía se prepara de forma diferente y <strong className="text-emerald-400">se entrega limpia sin marcas ni logos</strong>. Todo lo que es descarga o encargo en HD se solicita a <strong>Curiol Studio</strong>.
             </p>
           </div>
 
-          {/* Tarjetas de Precios de Convenio */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 shrink-0 w-full lg:w-auto">
-            {/* Digital HD */}
-            <div className="p-4 rounded-2xl bg-dark-950/80 border border-golden-500/40 text-center space-y-1 shadow-lg hover:border-golden-400 transition-colors">
-              <span className="text-[10px] uppercase font-bold text-emerald-400 block tracking-wider">Formato Digital</span>
-              <span className="text-golden-400 font-black text-2xl block">₡3,500</span>
-              <span className="text-xs font-bold text-white block">Fotografías Digitales HD</span>
-              <span className="text-[10px] text-gray-400 block">Archivo original 300 DPI sin logos</span>
+          {/* Tarjetas de Precios y Formatos de Convenio */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 shrink-0 w-full lg:w-auto">
+            {/* 1. Descarga Web con Logos */}
+            <div className="p-3 rounded-2xl bg-dark-950/80 border border-gray-800 text-center space-y-1 shadow-md flex flex-col justify-between">
+              <div>
+                <Download className="w-4 h-4 mx-auto text-gray-400 mb-1" />
+                <span className="text-[9px] uppercase font-bold text-gray-400 block tracking-wider">Web / Redes</span>
+                <span className="text-white font-black text-lg block">GRATIS</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-gray-300 block">Con Logos</span>
+                <span className="text-[8px] text-gray-500 block">Descarga directa</span>
+              </div>
             </div>
 
-            {/* Retablos o Canvas */}
-            <div className="p-4 rounded-2xl bg-dark-950/80 border border-golden-500/40 text-center space-y-1 shadow-lg hover:border-golden-400 transition-colors">
-              <span className="text-[10px] uppercase font-bold text-amber-300 block tracking-wider">Recuerdo Físico</span>
-              <span className="text-golden-400 font-black text-2xl block">₡3,500</span>
-              <span className="text-xs font-bold text-white block">Retablos o Canvas</span>
-              <span className="text-[10px] text-gray-400 block">Madera o lienzo artístico de alta gama</span>
+            {/* 2. Digital HD Sin Logos */}
+            <div className="p-3 rounded-2xl bg-dark-950/90 border border-golden-500/40 text-center space-y-1 shadow-lg hover:border-golden-400 transition-colors flex flex-col justify-between">
+              <div>
+                <FileImage className="w-4 h-4 mx-auto text-golden-400 mb-1" />
+                <span className="text-[9px] uppercase font-bold text-emerald-400 block tracking-wider">Digital HD</span>
+                <span className="text-golden-400 font-black text-lg block">₡3,500</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-white block">Sin Logos</span>
+                <span className="text-[8px] text-gray-400 block">Máster 300 DPI</span>
+              </div>
+            </div>
+
+            {/* 3. Impresa Profesional Sin Logos */}
+            <div className="p-3 rounded-2xl bg-dark-950/90 border border-golden-500/40 text-center space-y-1 shadow-lg hover:border-golden-400 transition-colors flex flex-col justify-between">
+              <div>
+                <Printer className="w-4 h-4 mx-auto text-amber-400 mb-1" />
+                <span className="text-[9px] uppercase font-bold text-amber-300 block tracking-wider">Impresa</span>
+                <span className="text-golden-400 font-black text-lg block">₡3,500</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-white block">Sin Logos</span>
+                <span className="text-[8px] text-gray-400 block">Papel fotográfico</span>
+              </div>
+            </div>
+
+            {/* 4. Retablos o Canvas */}
+            <div className="p-3 rounded-2xl bg-dark-950/90 border border-golden-500/40 text-center space-y-1 shadow-lg hover:border-golden-400 transition-colors flex flex-col justify-between">
+              <div>
+                <Frame className="w-4 h-4 mx-auto text-emerald-400 mb-1" />
+                <span className="text-[9px] uppercase font-bold text-emerald-300 block tracking-wider">Retablos / Canvas</span>
+                <span className="text-golden-400 font-black text-sm block pt-1">Consultar</span>
+              </div>
+              <div>
+                <span className="text-[10px] font-bold text-white block">Sin Logos</span>
+                <span className="text-[8px] text-gray-400 block">Madera o lienzo</span>
+              </div>
             </div>
           </div>
         </div>
@@ -143,4 +180,5 @@ export default function SouvenirStoreBanner() {
     </div>
   );
 }
+
 

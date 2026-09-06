@@ -663,7 +663,7 @@ export default function GaleriaPage() {
                           className="px-2.5 py-1 rounded-md bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-[10px] uppercase flex items-center gap-1 shadow-sm transition-transform hover:scale-105"
                         >
                           <ShoppingBag className="w-3 h-3" />
-                          <span>Encargar (₡3,500)</span>
+                          <span>Pedir HD / Impresa (₡3,500)</span>
                         </button>
                       ) : (
                         <span className="text-[9px] text-gray-500">

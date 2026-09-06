@@ -146,15 +146,15 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
             </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
-              {/* Botón Descargar JPG para TODAS las fotos */}
+              {/* Botón Descargar Gratis (Con Logos) para TODAS las fotos */}
               <button
                 onClick={() => handleDownloadJpg(photo)}
                 disabled={isDownloading}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                title="Descargar fotografía web en formato JPG"
+                title="Descargar fotografía gratuita en formato web con logos oficiales"
               >
                 <Download className="w-4 h-4" />
-                <span>{isDownloading ? "Descargando..." : "Descargar JPG"}</span>
+                <span>{isDownloading ? "Descargando..." : "Descargar Gratis (Con Logos)"}</span>
               </button>
 
               {/* Botón Compartir WhatsApp */}
@@ -170,14 +170,15 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
                 <span>WhatsApp</span>
               </a>
 
-              {/* Encargar Recuerdo (si es de Curiol Pro) */}
+              {/* Solicitar HD Sin Logos a Curiol Studio */}
               {photo.photoType === "pro_studio" && (
                 <button
                   onClick={() => onOpenBuy(photo)}
                   className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500/30 to-golden-500/30 text-golden-300 border border-golden-500/50 hover:bg-golden-500/40 font-black text-xs uppercase shadow-md transition-all hover:scale-105"
+                  title="Solicitar fotografía en formato original 300 DPI y limpia sin logos a Curiol Studio"
                 >
                   <ShoppingBag className="w-4 h-4 text-golden-400" />
-                  <span>Encargar Alta Calidad (₡3,500)</span>
+                  <span>Solicitar HD Sin Logos (₡3,500)</span>
                 </button>
               )}
 
@@ -205,14 +206,19 @@ export default function PhotoLightboxModal({ photo, onClose, onLike, onOpenBuy, 
 
           {/* Nota de Calidad de Impresión, Convenio y Publicidad */}
           <div className="pt-3 border-t border-gray-800/80 flex flex-col md:flex-row items-center justify-between gap-3 text-[11px] text-gray-400">
-            <div className="text-center md:text-left leading-relaxed">
-              <span className="text-gray-300">💡 <strong>Nota sobre calidad:</strong> La foto visualizada en web incluye logos y compresión para redes. La versión de encargo (₡3,500) se procesa en <strong>alta resolución original 300 DPI y limpia sin logos</strong>. Su compra aporta directamente a la academia.</span>
+            <div className="text-center md:text-left leading-relaxed space-y-1">
+              <p className="text-gray-300">
+                💡 <strong>Información importante:</strong> La fotografía publicada en la web es de <strong>descarga gratuita con logos</strong> para redes sociales e internet (no para impresión).
+              </p>
+              <p className="text-gray-400">
+                Para impresión, se prepara en formato original de <strong>alta resolución (300 DPI)</strong> y se solicita a <strong>Curiol Studio</strong> sin logos: <strong className="text-golden-400">Digital HD: ₡3,500</strong> | <strong className="text-golden-400">Impresa: ₡3,500</strong> | <strong className="text-golden-400">Retablos o Canvas: a consultar</strong>. Todo lo que es descarga o encargo en HD se solicita a Curiol Studio.
+              </p>
             </div>
             <a
               href="https://wa.me/50660602617?text=Hola%20Curiol%20Studio,%20deseo%20apoyar%20al%20equipo%20y%20anunciar%20mi%20marca%20en%20las%20galer%C3%ADas%20oficiales."
               target="_blank"
               rel="noreferrer"
-              className="shrink-0 px-3 py-1.5 rounded-lg bg-dark-950 border border-golden-500/30 text-golden-400 hover:text-golden-300 hover:border-golden-400 transition-colors font-bold flex items-center gap-1.5"
+              className="shrink-0 px-3 py-1.5 rounded-lg bg-dark-950 border border-golden-500/30 text-golden-400 hover:text-golden-300 hover:border-golden-400 transition-colors font-bold flex items-center gap-1.5 text-center"
             >
               <span>📢 Anuncie su marca y apoye al equipo</span>
             </a>
