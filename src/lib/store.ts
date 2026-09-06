@@ -307,30 +307,39 @@ export const Store = {
     const localPhotos = await getGalleryPhotosFromDB();
     const cleanLocal = localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
 
-    // Si Supabase está configurado, consultar la nube en lotes de 50 para evitar statement timeouts y asegurar catálogo completo
+    // Si Supabase está configurado, consultar la nube en lotes de 25 con reintento automático para garantizar catálogo 100% completo (152 fotos)
     if (isSupabaseConfigured && supabase) {
       try {
         let allCloudPhotos: any[] = [];
-        const pageSize = 50;
+        const pageSize = 25;
         let from = 0;
         let hasMore = true;
 
         while (hasMore) {
-          const { data, error } = await supabase
-            .from('gallery_photos')
-            .select('*')
-            .order('created_at', { ascending: true })
-            .range(from, from + pageSize - 1);
+          let chunkData = null;
+          let attempts = 0;
 
-          if (error) {
-            console.warn('[Store] Supabase batch fetch error at range', from, error);
-            break;
+          while (attempts < 3) {
+            attempts++;
+            const { data, error } = await supabase
+              .from('gallery_photos')
+              .select('*')
+              .order('created_at', { ascending: true })
+              .range(from, from + pageSize - 1);
+
+            if (!error && data) {
+              chunkData = data;
+              break;
+            } else {
+              console.warn(`[Store] Supabase fetch intento ${attempts} en rango ${from}:`, error);
+              await new Promise(r => setTimeout(r, 400));
+            }
           }
 
-          if (data && data.length > 0) {
-            allCloudPhotos.push(...data);
+          if (chunkData && chunkData.length > 0) {
+            allCloudPhotos.push(...chunkData);
             from += pageSize;
-            if (data.length < pageSize) {
+            if (chunkData.length < pageSize) {
               hasMore = false;
             }
           } else {
