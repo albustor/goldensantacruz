@@ -1,4 +1,4 @@
-﻿-- ========================================================
+-- ========================================================
 -- GOLDEN SPORT ACADEMY SANTA CRUZ - SUPABASE DATABASE SCHEMA
 -- ========================================================
 
@@ -65,15 +65,21 @@ CREATE TABLE IF NOT EXISTS public.matches (
 
 -- 4. GALLERY PHOTOS TABLE (Shared album by date & event)
 CREATE TABLE IF NOT EXISTS public.gallery_photos (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id TEXT PRIMARY KEY,
+    album_id TEXT DEFAULT 'alb-1',
     event_date DATE NOT NULL,
     title VARCHAR(200) NOT NULL,
     category VARCHAR(50) DEFAULT 'General',
     photo_url TEXT NOT NULL,
     caption TEXT,
     uploader_name VARCHAR(150) DEFAULT 'Padre / Aficionado',
+    uploader_role VARCHAR(50) DEFAULT 'padre',
+    photo_type VARCHAR(50) DEFAULT 'community',
     is_approved BOOLEAN DEFAULT TRUE,
     likes_count INT DEFAULT 0,
+    watermark_tag VARCHAR(150) DEFAULT 'Golden Sport Santa Cruz',
+    price_digital NUMERIC(10, 2),
+    price_print NUMERIC(10, 2),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
@@ -115,8 +121,10 @@ ALTER TABLE public.inquiries_registrations ENABLE ROW LEVEL SECURITY;
 
 -- Allow public read access to matches, approved gallery photos, and active sponsors
 CREATE POLICY "Public Read Matches" ON public.matches FOR SELECT USING (true);
-CREATE POLICY "Public Read Photos" ON public.gallery_photos FOR SELECT USING (is_approved = true);
+CREATE POLICY "Public Read Photos" ON public.gallery_photos FOR SELECT USING (true);
 CREATE POLICY "Public Insert Photos" ON public.gallery_photos FOR INSERT WITH CHECK (true);
+CREATE POLICY "Public Update Photos" ON public.gallery_photos FOR UPDATE USING (true);
+CREATE POLICY "Public Delete Photos" ON public.gallery_photos FOR DELETE USING (true);
 CREATE POLICY "Public Read Sponsors" ON public.sponsors FOR SELECT USING (is_active = true);
 CREATE POLICY "Public Insert Inquiries" ON public.inquiries_registrations FOR INSERT WITH CHECK (true);
 

@@ -296,58 +296,72 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
 ];
 
 export const INITIAL_PHOTOS: GalleryPhoto[] = [
-  {
-    id: "pht-lib-1",
-    photoUrl: "/Hero_Basketball/2.jpg",
-    title: "Mecánica y agarre de balón en U8",
-    caption: "Mano infantil con muñequera en sesión formativa.",
-    category: "Iniciación / Menores de U8 (U6-U8)",
-    uploaderName: "Curiol Studio Oficial",
-    uploaderRole: "staff",
-    photoType: "pro_studio",
-    albumId: "alb-1",
+  // FOTOGRAFÍAS DE LA GRAN JORNADA OFICIAL DE LIBERIA (alb-1) - FOTOS DE PAPÁS Y FAMILIAS
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((num) => {
+    const families = [
+      "Familia Briceño", "Familia Monge", "Carlos Gutiérrez", "Marjorie Leal",
+      "Roberto Zúñiga", "Patricia Ruiz", "Familia Bustos Ortega", "Familia Coronado",
+      "Familia Cerdas", "Familia Álvarez", "Familia Jiménez", "Familia Guevara",
+      "Familia Carrillo", "Familia Mendoza", "Familia Espinoza", "Familia Villegas"
+    ];
+    const uploader = families[(num - 1) % families.length];
+    return {
+      id: `pht-eq-${num}`,
+      photoUrl: `/Fotos_Equipo/${num}.jpg`,
+      title: `Jornada Liberia • Momento #${num}`,
+      caption: `Captura en vivo compartida por ${uploader} durante la gran jornada de baloncesto en Liberia.`,
+      category: num % 2 === 0 ? "Mini-Básquet (U8-U10)" : "Infantil (U12-U14)",
+      uploaderName: uploader,
+      uploaderRole: "madre" as const,
+      photoType: "community" as const,
+      albumId: "alb-1",
+      eventDate: "2026-09-05",
+      likesCount: 10 + (num * 2),
+      isApproved: true,
+      uploadedAt: "2026-09-05",
+      watermarkTag: "Golden Sport Santa Cruz",
+    };
+  }),
+
+  // FOTOGRAFÍAS HERO BASKETBALL & TÉCNICA (alb-1 & alb-3)
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => ({
+    id: `pht-hb-${num}`,
+    photoUrl: `/Hero_Basketball/${num}.jpg`,
+    title: `Acción y Técnica #${num} • Golden Academy`,
+    caption: `Sesión de dinamismo, técnica y pasión deportiva en la duela oficial.`,
+    category: num % 3 === 0 ? "Juvenil (U16-U18)" : num % 2 === 0 ? "Mini-Básquet (U8-U10)" : "Iniciación / Menores de U8 (U6-U8)",
+    uploaderName: num <= 5 ? "Curiol Studio Oficial" : "Familia Monge Soto",
+    uploaderRole: (num <= 5 ? "staff" : "madre") as "staff" | "madre",
+    photoType: (num <= 5 ? "pro_studio" : "community") as "pro_studio" | "community",
+    albumId: num <= 6 ? "alb-1" : "alb-3",
     eventDate: "2026-09-05",
-    likesCount: 18,
+    likesCount: 15 + num,
     isApproved: true,
-    uploadedAt: "2026-09-04",
+    uploadedAt: "2026-09-05",
     watermarkTag: "Curiol Studio Santa Cruz",
-    priceDigital: 2500,
-    pricePrint: 3500,
-  },
+    priceDigital: num <= 5 ? 2500 : undefined,
+    pricePrint: num <= 5 ? 3500 : undefined,
+  })),
+
+  // FOTOGRAFÍA DESTACADA DE PARTIDOS
   {
-    id: "pht-lib-2",
-    photoUrl: "/Hero_Basketball/9.jpg",
-    title: "Unión y trabajo en equipo semillero",
-    caption: "Las cuatro manos de nuestros atletas en señal de compañerismo.",
-    category: "Mini-Básquet (U8-U10)",
-    uploaderName: "Curiol Studio Oficial",
+    id: "pht-partido-wa18",
+    photoUrl: "/partidos/IMG-20260827-WA0018.jpg",
+    title: "Gran Encuentro Amistoso y Formativo",
+    caption: "Momento memorable de nuestros atletas en cancha antes del pitazo inicial.",
+    category: "Intercantonal",
+    uploaderName: "Directiva Golden Sport",
     uploaderRole: "staff",
-    photoType: "pro_studio",
-    albumId: "alb-1",
-    eventDate: "2026-09-05",
-    likesCount: 25,
-    isApproved: true,
-    uploadedAt: "2026-09-04",
-    watermarkTag: "Curiol Studio Santa Cruz",
-    priceDigital: 2500,
-    pricePrint: 3500,
-  },
-  {
-    id: "pht-lib-3",
-    photoUrl: "/Hero_Basketball/7.jpg",
-    title: "Drible dinámico y velocidad",
-    caption: "Control de bote bajo la guía de la entrenadora Lenny Monge.",
-    category: "Infantil (U12-U14)",
-    uploaderName: "Familia Briceño",
-    uploaderRole: "madre",
     photoType: "community",
     albumId: "alb-1",
     eventDate: "2026-09-05",
-    likesCount: 14,
+    likesCount: 32,
     isApproved: true,
-    uploadedAt: "2026-09-04",
+    uploadedAt: "2026-09-05",
+    watermarkTag: "Golden Sport Santa Cruz",
   },
-  // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - PRESENTACIÓN DEL UNIFORME OFICIAL (16 FOTOS)
+
+  // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - PRESENTACIÓN DEL UNIFORME OFICIAL (16 FOTOS, alb-2)
   ...[
     "001", "002", "003", "004", "005", "006", "007", "008",
     "009", "010", "011", "012", "013", "014", "015", "016"

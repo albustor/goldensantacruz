@@ -71,8 +71,18 @@ export async function getGalleryPhotosFromDB(): Promise<GalleryPhoto[]> {
     });
 
     if (photos && photos.length > 0) {
+      // Sincronizar automáticamente cualquier nueva foto de initialData con las fotos existentes
+      const existingIds = new Set(photos.map(p => p.id));
+      const missingInitial = INITIAL_GALLERY_PHOTOS.filter(p => !existingIds.has(p.id));
+      
+      let finalPhotos = photos;
+      if (missingInitial.length > 0) {
+        finalPhotos = [...photos, ...missingInitial];
+        await saveGalleryPhotosToDB(finalPhotos);
+      }
+
       // Ordenar por fecha descendente (más recientes primero)
-      return photos.sort((a, b) => {
+      return finalPhotos.sort((a, b) => {
         const timeA = new Date(a.createdAt || a.uploadedAt || 0).getTime();
         const timeB = new Date(b.createdAt || b.uploadedAt || 0).getTime();
         return timeB - timeA;

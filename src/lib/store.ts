@@ -302,9 +302,51 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.ALBUMS, current.filter(a => a.id !== albumId));
   },
 
-  // GALLERY PHOTOS (Stored in high-capacity IndexedDB to prevent localStorage quota errors)
+  // GALLERY PHOTOS (High-capacity IndexedDB + Cloud Sync with Supabase)
   async getGalleryPhotos(): Promise<GalleryPhoto[]> {
-    return getGalleryPhotosFromDB();
+    const localPhotos = await getGalleryPhotosFromDB();
+
+    // Si Supabase está configurado, sincronizar con la nube
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const { data, error } = await supabase
+          .from('gallery_photos')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (!error && data && data.length > 0) {
+          const cloudPhotos: GalleryPhoto[] = data.map((row: any) => ({
+            id: row.id,
+            albumId: row.album_id || row.albumId || 'alb-1',
+            eventDate: row.event_date || row.eventDate,
+            title: row.title,
+            category: row.category,
+            photoUrl: row.photo_url || row.photoUrl,
+            caption: row.caption || '',
+            uploaderName: row.uploader_name || row.uploaderName || 'Papá Golden',
+            uploaderRole: (row.uploader_role || row.uploaderRole || 'padre') as any,
+            photoType: (row.photo_type || row.photoType || 'community') as any,
+            likesCount: row.likes_count ?? row.likesCount ?? 0,
+            isApproved: row.is_approved ?? row.isApproved ?? true,
+            createdAt: row.created_at || row.createdAt,
+            watermarkTag: row.watermark_tag || row.watermarkTag || 'Golden Sport Santa Cruz',
+            priceDigital: row.price_digital || row.priceDigital,
+            pricePrint: row.price_print || row.pricePrint,
+          }));
+
+          // Unir fotos de la nube con las fotos locales evitando duplicados
+          const cloudIds = new Set(cloudPhotos.map(p => p.id));
+          const uniqueLocal = localPhotos.filter(p => !cloudIds.has(p.id));
+          const merged = [...cloudPhotos, ...uniqueLocal];
+          await saveGalleryPhotosToDB(merged);
+          return merged;
+        }
+      } catch (cloudErr) {
+        console.warn('[Store] Supabase getGalleryPhotos offline o error, usando cache local:', cloudErr);
+      }
+    }
+
+    return localPhotos;
   },
 
   async addGalleryPhoto(photo: Omit<GalleryPhoto, 'id' | 'likesCount' | 'createdAt'>): Promise<GalleryPhoto> {
@@ -315,7 +357,36 @@ export const Store = {
       createdAt: new Date().toISOString(),
       watermarkTag: photo.watermarkTag || "Curiol Studio Santa Cruz",
     };
+    
+    // Guardar inmediatamente en IndexedDB local
     await addGalleryPhotoToDB(newPhoto);
+
+    // Sincronizar en la nube si Supabase está activo
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('gallery_photos').insert([{
+          id: newPhoto.id,
+          album_id: newPhoto.albumId,
+          event_date: newPhoto.eventDate,
+          title: newPhoto.title,
+          category: newPhoto.category,
+          photo_url: newPhoto.photoUrl,
+          caption: newPhoto.caption,
+          uploader_name: newPhoto.uploaderName,
+          uploader_role: newPhoto.uploaderRole,
+          photo_type: newPhoto.photoType,
+          is_approved: newPhoto.isApproved,
+          likes_count: newPhoto.likesCount,
+          watermark_tag: newPhoto.watermarkTag,
+          price_digital: newPhoto.priceDigital,
+          price_print: newPhoto.pricePrint,
+          created_at: newPhoto.createdAt,
+        }]);
+      } catch (err) {
+        console.warn('[Store] No se pudo sincronizar la foto con Supabase en la nube:', err);
+      }
+    }
+
     return newPhoto;
   },
 
@@ -323,10 +394,29 @@ export const Store = {
     const current = await this.getGalleryPhotos();
     const updated = current.map(p => p.id === id ? { ...p, likesCount: p.likesCount + 1 } : p);
     await saveGalleryPhotosToDB(updated);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        const photo = updated.find(p => p.id === id);
+        if (photo) {
+          await supabase.from('gallery_photos').update({ likes_count: photo.likesCount }).eq('id', id);
+        }
+      } catch (e) {
+        console.warn('[Store] Error al sincronizar like con Supabase:', e);
+      }
+    }
   },
 
   async deleteGalleryPhoto(id: string): Promise<void> {
     await deleteGalleryPhotoFromDB(id);
+
+    if (isSupabaseConfigured && supabase) {
+      try {
+        await supabase.from('gallery_photos').delete().eq('id', id);
+      } catch (e) {
+        console.warn('[Store] Error al eliminar foto de Supabase:', e);
+      }
+    }
   },
 
   // SPONSORS
