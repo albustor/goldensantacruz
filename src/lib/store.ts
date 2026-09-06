@@ -307,41 +307,64 @@ export const Store = {
     const localPhotos = await getGalleryPhotosFromDB();
     const cleanLocal = localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
 
-    // Si ya tenemos fotos en cache local, devolverlas de inmediato para carga instantánea (0ms)
-    if (cleanLocal.length > 0) {
-      return cleanLocal;
-    }
-
-    // Si no hay fotos locales y Supabase está configurado, consultar la nube como respaldo inicial
+    // Si Supabase está configurado, consultar la nube en lotes de 50 para evitar statement timeouts y asegurar catálogo completo
     if (isSupabaseConfigured && supabase) {
       try {
-        const { data, error } = await supabase
-          .from('gallery_photos')
-          .select('*')
-          .order('created_at', { ascending: true });
+        let allCloudPhotos: any[] = [];
+        const pageSize = 50;
+        let from = 0;
+        let hasMore = true;
 
-        if (!error && data && data.length > 0) {
-          const cloudPhotos: GalleryPhoto[] = data.map((row: any) => ({
+        while (hasMore) {
+          const { data, error } = await supabase
+            .from('gallery_photos')
+            .select('*')
+            .order('created_at', { ascending: true })
+            .range(from, from + pageSize - 1);
+
+          if (error) {
+            console.warn('[Store] Supabase batch fetch error at range', from, error);
+            break;
+          }
+
+          if (data && data.length > 0) {
+            allCloudPhotos.push(...data);
+            from += pageSize;
+            if (data.length < pageSize) {
+              hasMore = false;
+            }
+          } else {
+            hasMore = false;
+          }
+        }
+
+        if (allCloudPhotos.length > 0) {
+          const cloudPhotos: GalleryPhoto[] = allCloudPhotos.map((row: any) => ({
             id: row.id,
-            albumId: row.album_id || row.albumId || 'alb-1',
-            eventDate: row.event_date || row.eventDate,
-            title: row.title,
-            category: row.category,
+            albumId: row.album_id || row.albumId || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
+            eventDate: row.event_date || row.eventDate || '2026-09-05',
+            title: row.title || 'Fotografía de la Jornada',
+            category: row.category || 'Intercantonal',
             photoUrl: row.photo_url || row.photoUrl,
             caption: row.caption || '',
-            uploaderName: row.uploader_name || row.uploaderName || 'Papá Golden',
-            uploaderRole: (row.uploader_role || row.uploaderRole || 'padre') as any,
-            photoType: (row.photo_type || row.photoType || 'community') as any,
+            uploaderName: row.uploader_name || row.uploaderName || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
+            uploaderRole: (row.uploader_role || row.uploaderRole || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
+            photoType: (row.photo_type || row.photoType || (row.uploader_role === 'staff' || row.uploader_name?.includes('Curiol') ? 'pro_studio' : 'community')) as any,
             likesCount: row.likes_count ?? row.likesCount ?? 0,
             isApproved: row.is_approved ?? row.isApproved ?? true,
             createdAt: row.created_at || row.createdAt,
-            watermarkTag: row.watermark_tag || row.watermarkTag || 'Golden Sport Santa Cruz',
+            watermarkTag: row.watermark_tag || row.watermarkTag || (row.photo_type === 'pro_studio' ? 'Curiol Studio Santa Cruz' : 'Golden Sport Santa Cruz'),
             priceDigital: row.price_digital || row.priceDigital,
             pricePrint: row.price_print || row.pricePrint,
           }));
 
-          await saveGalleryPhotosToDB(cloudPhotos);
-          return cloudPhotos;
+          // Deduplicar y mezclar fotos de la nube con fotos locales pendientes
+          const cloudIds = new Set(cloudPhotos.map(p => p.id));
+          const localOnly = cleanLocal.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-uni-'));
+          
+          const mergedPhotos = [...cloudPhotos, ...localOnly];
+          await saveGalleryPhotosToDB(mergedPhotos);
+          return mergedPhotos;
         }
       } catch (cloudErr) {
         console.warn('[Store] Supabase getGalleryPhotos offline o error:', cloudErr);

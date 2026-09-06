@@ -163,26 +163,37 @@ export default function GaleriaPage() {
   const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
 
   // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa y ordenadas ascendentemente
-  const isLiberiaSelected = selectedAlbum && (selectedAlbum.id === "alb-curiol-liberia-2026" || selectedAlbum.id === "alb-comunidad-liberia-2026" || selectedAlbum.id === "alb-1" || selectedAlbum.title?.toLowerCase().includes("liberia"));
-
   const currentPhotos = selectedAlbum
     ? photos
         .filter((p) => {
-          const isPro = activeTab === "pro_studio";
-          const matchesTab = isPro
-            ? (p.photoType === "pro_studio" || p.uploaderName?.includes("Curiol") || p.uploaderRole === "staff" || (!p.photoType && !p.uploaderRole))
-            : (p.photoType === "community" || p.uploaderRole === "padre" || p.uploaderName?.includes("Papá") || p.uploaderName?.includes("Familia"));
+          const isProTab = activeTab === "pro_studio";
+          const isProPhoto = p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol");
+          const isCommPhoto = p.photoType === "community" || p.uploaderRole === "padre" || (!p.photoType && !p.uploaderRole && !p.uploaderName?.toLowerCase().includes("curiol"));
 
-          const matchesAlbum = isLiberiaSelected
-            ? (p.albumId === selectedAlbum.id || p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === selectedAlbum.eventDate || p.title?.toLowerCase().includes("liberia"))
-            : (p.albumId === selectedAlbum.id || p.eventDate === selectedAlbum.eventDate);
+          const matchesTab = isProTab ? isProPhoto : isCommPhoto;
+          if (!matchesTab) return false;
+
+          let matchesAlbum = false;
+          if (isProTab) {
+            if (selectedAlbum.id === "alb-curiol-liberia-2026" || selectedAlbum.title?.toLowerCase().includes("liberia")) {
+              matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
+            } else {
+              matchesAlbum = p.albumId === selectedAlbum.id;
+            }
+          } else {
+            if (selectedAlbum.id === "alb-comunidad-liberia-2026" || selectedAlbum.title?.toLowerCase().includes("liberia")) {
+              matchesAlbum = p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05";
+            } else {
+              matchesAlbum = p.albumId === selectedAlbum.id;
+            }
+          }
 
           const matchesSearch =
             !searchQuery.trim() ||
             p.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             p.uploaderName?.toLowerCase().includes(searchQuery.toLowerCase());
 
-          return matchesTab && matchesAlbum && matchesSearch;
+          return matchesAlbum && matchesSearch;
         })
         .sort((a, b) => {
           const timeA = new Date(a.createdAt || a.uploadedAt || 0).getTime();
@@ -359,16 +370,29 @@ export default function GaleriaPage() {
 
               // Filtrar fotos que pertenecen estrictamente a este tipo de pestaña y álbum
               const albumPics = photos.filter((p) => {
-                const isPro = activeTab === "pro_studio";
-                const matchesTab = isPro
-                  ? (p.photoType === "pro_studio" || p.uploaderName?.includes("Curiol") || p.uploaderRole === "staff" || (!p.photoType && !p.uploaderRole))
-                  : (p.photoType === "community" || p.uploaderRole === "padre" || p.uploaderName?.includes("Papá") || p.uploaderName?.includes("Familia"));
+                const isProTab = activeTab === "pro_studio";
+                const isProPhoto = p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol");
+                const isCommPhoto = p.photoType === "community" || p.uploaderRole === "padre" || (!p.photoType && !p.uploaderRole && !p.uploaderName?.toLowerCase().includes("curiol"));
 
-                const matchesAlbum = isLiberia
-                  ? (p.albumId === album.id || p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === album.eventDate || p.title?.toLowerCase().includes("liberia"))
-                  : (p.albumId === album.id || p.eventDate === album.eventDate);
+                const matchesTab = isProTab ? isProPhoto : isCommPhoto;
+                if (!matchesTab) return false;
 
-                return matchesTab && matchesAlbum;
+                let matchesAlbum = false;
+                if (isProTab) {
+                  if (album.id === "alb-curiol-liberia-2026" || album.title?.toLowerCase().includes("liberia")) {
+                    matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
+                  } else {
+                    matchesAlbum = p.albumId === album.id;
+                  }
+                } else {
+                  if (album.id === "alb-comunidad-liberia-2026" || album.title?.toLowerCase().includes("liberia")) {
+                    matchesAlbum = p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05";
+                  } else {
+                    matchesAlbum = p.albumId === album.id;
+                  }
+                }
+
+                return matchesAlbum;
               });
               
               const isTodayAlbum = album.isOpenForUploads;
