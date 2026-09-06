@@ -697,7 +697,9 @@ export default function GaleriaPage() {
       {selectedPhotoForView && (
         <PhotoLightboxModal
           photo={selectedPhotoForView}
+          photos={currentPhotos.length > 0 ? currentPhotos : photos}
           onClose={() => setSelectedPhotoForView(null)}
+          onNavigate={(nextPhoto) => setSelectedPhotoForView(nextPhoto)}
           onLike={(e) => handleLike(selectedPhotoForView.id, e)}
           onDelete={(photo) => handleDeletePhoto(photo.id)}
           onOpenBuy={(photo) => {
