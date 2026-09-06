@@ -82,24 +82,8 @@ export default function GaleriaPage() {
   const [selectedPhotoForPurchase, setSelectedPhotoForPurchase] = useState<GalleryPhoto | null>(null);
 
   useEffect(() => {
-    initGallery();
+    loadData();
   }, []);
-
-  const initGallery = async () => {
-    await loadData();
-    await checkUnsynced();
-    try {
-      const res = await Store.syncLocalPhotosToSupabase();
-      if (res.syncedCount > 0) {
-        setSyncSuccessMsg(`¡${res.syncedCount} ${res.syncedCount === 1 ? 'foto se publicó' : 'fotos se publicaron'} automáticamente en la nube! Ya están visibles para todos.`);
-        setTimeout(() => setSyncSuccessMsg(""), 7000);
-        await loadData();
-        await checkUnsynced();
-      }
-    } catch (e) {
-      console.warn("Auto-sync background info:", e);
-    }
-  };
 
   const checkUnsynced = async () => {
     const unsynced = await Store.getUnsyncedLocalPhotos();

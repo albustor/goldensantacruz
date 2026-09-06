@@ -302,11 +302,17 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.ALBUMS, current.filter(a => a.id !== albumId));
   },
 
-  // GALLERY PHOTOS (High-capacity IndexedDB + Cloud Sync with Supabase)
+  // GALLERY PHOTOS (Ultra-fast Cache-First IndexedDB + Background/Manual Cloud Sync)
   async getGalleryPhotos(): Promise<GalleryPhoto[]> {
     const localPhotos = await getGalleryPhotosFromDB();
+    const cleanLocal = localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
 
-    // Si Supabase está configurado, sincronizar con la nube
+    // Si ya tenemos fotos en cache local, devolverlas de inmediato para carga instantánea (0ms)
+    if (cleanLocal.length > 0) {
+      return cleanLocal;
+    }
+
+    // Si no hay fotos locales y Supabase está configurado, consultar la nube como respaldo inicial
     if (isSupabaseConfigured && supabase) {
       try {
         const { data, error } = await supabase
@@ -334,19 +340,15 @@ export const Store = {
             pricePrint: row.price_print || row.pricePrint,
           }));
 
-          // Unir fotos de la nube con las fotos locales evitando duplicados y excluyendo fotos mock
-          const cloudIds = new Set(cloudPhotos.map(p => p.id));
-          const cleanLocal = localPhotos.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
-          const merged = [...cloudPhotos, ...cleanLocal].filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
-          await saveGalleryPhotosToDB(merged);
-          return merged;
+          await saveGalleryPhotosToDB(cloudPhotos);
+          return cloudPhotos;
         }
       } catch (cloudErr) {
-        console.warn('[Store] Supabase getGalleryPhotos offline o error, usando cache local:', cloudErr);
+        console.warn('[Store] Supabase getGalleryPhotos offline o error:', cloudErr);
       }
     }
 
-    return localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
+    return cleanLocal;
   },
 
   async getUnsyncedLocalPhotos(): Promise<GalleryPhoto[]> {
