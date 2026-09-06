@@ -535,6 +535,19 @@ export default function GaleriaPage() {
                     <span>Subir Fotos a este Álbum</span>
                   </button>
                 )}
+
+                {/* Enlace al Punto Nodo en el Árbol de Guanacaste */}
+                {activeTab === "pro_studio" && (
+                  <a
+                    href={arbolUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-5 py-3 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
+                  >
+                    <TreeDeciduous className="w-4 h-4 text-emerald-400" />
+                    <span>Punto Nodo en Árbol de Guanacaste ↗</span>
+                  </a>
+                )}
               </div>
             )}
           </div>
