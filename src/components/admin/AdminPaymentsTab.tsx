@@ -248,7 +248,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
             </span>
           </div>
           <p className="text-xs text-gray-400">
-            Recordatorios empáticos (Niveles 1 a 4), opción de becas y recibos digitales por WhatsApp y Correo.
+            Recordatorios empáticos (Niveles 1 a 4) y recibos digitales por WhatsApp y Correo.
           </p>
         </div>
 
@@ -360,7 +360,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
         <div className="p-4 rounded-2xl bg-dark-800 border border-gray-800 space-y-1">
           <span className="text-[11px] font-bold text-red-400 uppercase">Atrasados ({overdueList.length})</span>
           <p className="text-2xl font-black text-red-400">₡{totalOverdue.toLocaleString("es-CR")}</p>
-          <p className="text-[10px] text-red-300">Ofrecer Beca / Comité de Padres</p>
+          <p className="text-[10px] text-red-300">Coordinación personalizada</p>
         </div>
       </div>
 

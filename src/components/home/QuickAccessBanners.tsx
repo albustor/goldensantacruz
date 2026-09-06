@@ -25,7 +25,7 @@ export default function QuickAccessBanners() {
           Información Clave & <span className="text-golden-500">Acceso Rápido</span>
         </h2>
         <p className="text-xs sm:text-sm text-gray-400 max-w-2xl mx-auto">
-          Acceda de forma transparente a nuestras cuotas de entrenamiento, programa solidario de becas, opciones de pauta publicitaria y la memoria histórica de la academia.
+          Acceda de forma transparente a nuestras cuotas de entrenamiento, galería fotográfica oficial, opciones de pauta publicitaria y la memoria histórica de la academia.
         </p>
       </div>
 
@@ -63,32 +63,32 @@ export default function QuickAccessBanners() {
           </Link>
         </div>
 
-        {/* Card 2: Becas & Padrinos Deportivos */}
+        {/* Card 2: Galería Fotográfica & Recuerdos */}
         <div className="p-6 rounded-3xl bg-gradient-to-b from-dark-800 to-dark-900 border-2 border-golden-500/50 hover:border-golden-400 transition-all flex flex-col justify-between space-y-4 shadow-xl group">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-golden-500/20 text-golden-400 border border-golden-500/30">
-                Fondo Solidario
+                Fotografía Oficial
               </span>
               <div className="w-8 h-8 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center">
-                <Heart className="w-4 h-4" />
+                <Sparkles className="w-4 h-4" />
               </div>
             </div>
             <h3 className="text-lg font-black text-white uppercase group-hover:text-golden-300 transition-colors">
-              Padrinos & Becas
+              Galería Deportiva
             </h3>
             <p className="text-xs font-bold text-golden-400">
-              Beca 100% y Co-pago 60/40
+              Curiol Studio & Familias
             </p>
             <p className="text-xs text-gray-300 leading-relaxed">
-              Apoyo solidario para niños en vulnerabilidad, con contrato de corresponsabilidad y trabajo con el Comité de Padres.
+              Álbumes oficiales en alta definición, recuerdos de partidos y descargas para toda la comunidad de la academia.
             </p>
           </div>
           <Link
-            href="/informacion#padrinos"
+            href="/galeria"
             className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs uppercase flex items-center justify-between shadow-md transition-all"
           >
-            <span>Conocer Programa</span>
+            <span>Ver Galería</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>

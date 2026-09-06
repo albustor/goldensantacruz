@@ -27,7 +27,7 @@ export default async function HomePage() {
       {/* 2. CALENDARIO OFICIAL DE PARTIDOS */}
       <ScheduleSection />
 
-      {/* 2. Banners de Acceso Rápido & Pilares Institucionales (Cuotas, Becas, Pauta, Línea de Tiempo) */}
+      {/* 2. Banners de Acceso Rápido & Pilares Institucionales (Cuotas, Galería, Pauta, Línea de Tiempo) */}
       <QuickAccessBanners />
 
       {/* 3. Pre-Inscripción de Atletas */}

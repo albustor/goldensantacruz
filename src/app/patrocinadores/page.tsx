@@ -178,40 +178,7 @@ export default function PatrocinadoresPage() {
         </div>
       </section>
 
-      {/* 4. BANNER SOLIDARIO: PROGRAMA DE PADRINOS & BECAS DEPORTIVAS */}
-      <section className="rounded-3xl bg-gradient-to-r from-amber-950/40 via-dark-900 to-amber-950/40 border-2 border-golden-500/40 p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-        <div className="space-y-2 text-center md:text-left flex-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-golden-500/20 text-golden-400 text-[11px] font-black uppercase">
-            <Heart className="w-3.5 h-3.5" />
-            <span>Responsabilidad Social & Apadrinamiento</span>
-          </div>
-          <h3 className="text-xl sm:text-2xl font-black text-white uppercase">
-            ¿Deseas apoyar con una <span className="text-golden-400">Beca Deportiva a un Niño(a)</span>?
-          </h3>
-          <p className="text-xs text-gray-300 leading-relaxed max-w-2xl">
-            Además de la pauta comercial, contamos con el <strong>Programa Padrino Golden</strong> para becar mensualidades (100% o 60/40), uniformes y giras a jóvenes en condición vulnerable de Santa Cruz, con un contrato de corresponsabilidad y trabajo comunitario de las familias.
-          </p>
-        </div>
 
-        <div className="flex flex-wrap gap-3 shrink-0">
-          <Link
-            href="/informacion#padrinos"
-            className="px-6 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase flex items-center gap-1.5 shadow-lg transition-transform hover:scale-105"
-          >
-            <span>Ver Programa de Becas</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-          <a
-            href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20apoyar%20como%20Padrino%20con%20una%20Beca%20Deportiva"
-            target="_blank"
-            rel="noreferrer"
-            className="px-5 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-emerald-400 font-bold text-xs uppercase flex items-center gap-1.5 border border-emerald-800/40"
-          >
-            <Phone className="w-3.5 h-3.5" />
-            <span>Consultar por WhatsApp</span>
-          </a>
-        </div>
-      </section>
 
       {/* 5. CONDICIONES CLARAS & ACUERDO PUBLICITARIO */}
       <section className="rounded-3xl bg-dark-900 border border-gray-800 p-6 sm:p-8 space-y-5 shadow-xl">

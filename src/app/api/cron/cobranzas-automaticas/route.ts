@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { sendEvolutionMessage } from "@/lib/evolution";
 import { generatePaymentWhatsAppMessage, getSuggestedReminderLevel, ReminderLevel } from "@/lib/whatsapp";
 import { INITIAL_PLAYERS, INITIAL_PAYMENTS, INITIAL_SETTINGS } from "@/lib/initialData";
@@ -51,7 +51,7 @@ async function handleAutomatedCobranzas(req: NextRequest) {
     // • Día 10: Nivel 1 (Preventivo - 2 días antes del corte del 12)
     // • Día 14: Nivel 2 (Seguimiento - 2 días después del corte)
     // • Día 17: Nivel 3 (Formativo - 5 días después)
-    // • Día 20+: Nivel 4 (Opciones de Beca / Comité y Cierre cordial)
+    // • Día 20+: Nivel 4 (Coordinación Administrativa y Cierre cordial)
     let activeLevel: ReminderLevel = "nivel1_preventivo";
     if (forceLevel) {
       activeLevel = forceLevel;

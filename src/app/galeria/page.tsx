@@ -15,14 +15,11 @@ import {
   TreeDeciduous,
   Search,
   X,
-  CheckCircle2,
   FolderHeart,
   ArrowLeft,
   Lock,
   Unlock,
   ChevronRight,
-  CloudUpload,
-  RefreshCw,
   Trash2,
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
@@ -71,11 +68,6 @@ export default function GaleriaPage() {
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  // Sincronización de fotos locales hacia la nube
-  const [unsyncedCount, setUnsyncedCount] = useState(0);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncSuccessMsg, setSyncSuccessMsg] = useState("");
-
   // Modales
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedPhotoForView, setSelectedPhotoForView] = useState<GalleryPhoto | null>(null);
@@ -84,32 +76,6 @@ export default function GaleriaPage() {
   useEffect(() => {
     loadData();
   }, []);
-
-  const checkUnsynced = async () => {
-    const unsynced = await Store.getUnsyncedLocalPhotos();
-    setUnsyncedCount(unsynced.length);
-  };
-
-  const handleSyncToCloud = async () => {
-    setIsSyncing(true);
-    setSyncSuccessMsg("");
-    try {
-      const res = await Store.syncLocalPhotosToSupabase();
-      if (res.syncedCount > 0) {
-        setSyncSuccessMsg(`¡${res.syncedCount} ${res.syncedCount === 1 ? 'foto publicada' : 'fotos publicadas'} con éxito en la nube! Ya están visibles para todos.`);
-        setTimeout(() => setSyncSuccessMsg(""), 7000);
-      } else {
-        setSyncSuccessMsg("Todas las fotos ya están 100% sincronizadas en la nube.");
-        setTimeout(() => setSyncSuccessMsg(""), 4000);
-      }
-      await loadData();
-      await checkUnsynced();
-    } catch (e) {
-      console.error("Error sincronizando fotos a la nube:", e);
-    } finally {
-      setIsSyncing(false);
-    }
-  };
 
   const loadData = async () => {
     const [aData, pData, sData] = await Promise.all([
@@ -226,54 +192,6 @@ export default function GaleriaPage() {
         </h1>
       </div>
 
-      {/* MENSAJE DE ÉXITO DE SINCRONIZACIÓN */}
-      {syncSuccessMsg && (
-        <div className="max-w-2xl mx-auto p-4 rounded-2xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 text-xs font-bold flex items-center gap-3 shadow-xl animate-fadeIn">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span>{syncSuccessMsg}</span>
-        </div>
-      )}
-
-      {/* BANNER DE SINCRONIZACIÓN DE FOTOS DE HOY A LA NUBE */}
-      {unsyncedCount > 0 && (
-        <div className="max-w-3xl mx-auto p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-golden-950/60 via-dark-900 to-golden-950/60 border-2 border-golden-500 shadow-2xl shadow-golden-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 animate-pulse">
-          <div className="flex items-center gap-3 text-center sm:text-left">
-            <div className="w-12 h-12 rounded-2xl bg-golden-500/20 border border-golden-500/40 flex items-center justify-center text-golden-400 shrink-0">
-              <CloudUpload className="w-6 h-6" />
-            </div>
-            <div>
-              <span className="text-[10px] font-black uppercase text-golden-400 tracking-wider block">
-                Sincronización en la Nube
-              </span>
-              <h3 className="text-sm sm:text-base font-black text-white">
-                Tienes {unsyncedCount} {unsyncedCount === 1 ? 'fotografía guardada' : 'fotografías guardadas'} en este celular
-              </h3>
-              <p className="text-[11px] text-gray-300">
-                Toca el botón para publicarlas en la nube y que se vean en el celular de Leni y todos los papás.
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={handleSyncToCloud}
-            disabled={isSyncing}
-            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 shrink-0 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-          >
-            {isSyncing ? (
-              <>
-                <RefreshCw className="w-4 h-4 animate-spin" />
-                <span>Publicando a la Nube...</span>
-              </>
-            ) : (
-              <>
-                <CloudUpload className="w-4 h-4" />
-                <span>Publicar {unsyncedCount} a la Nube</span>
-              </>
-            )}
-          </button>
-        </div>
-      )}
-
       {/* 2. SELECTOR PRINCIPAL DE PESTAÑAS */}
       <div className="flex justify-center">
         <div className="inline-flex p-1.5 rounded-2xl bg-dark-900 border border-gray-800 shadow-xl max-w-xl w-full">
@@ -349,16 +267,7 @@ export default function GaleriaPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleSyncToCloud}
-                disabled={isSyncing}
-                className="px-3.5 py-1.5 rounded-xl bg-golden-500/20 hover:bg-golden-500/30 text-golden-300 border border-golden-500/40 text-xs font-bold uppercase flex items-center gap-1.5 transition-colors disabled:opacity-50"
-                title="Sincronizar fotos guardadas en este teléfono con la nube"
-              >
-                <CloudUpload className={`w-4 h-4 ${isSyncing ? "animate-bounce" : ""}`} />
-                <span>{isSyncing ? "Sincronizando..." : "☁️ Sincronizar con la Nube"}</span>
-              </button>
-              <span className="text-xs text-golden-400 font-bold hidden sm:inline">
+              <span className="text-xs text-golden-400 font-bold">
                 {displayedAlbums.length} {displayedAlbums.length === 1 ? 'álbum registrado' : 'álbumes registrados'}
               </span>
             </div>
