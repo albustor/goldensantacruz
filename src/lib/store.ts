@@ -334,10 +334,10 @@ export const Store = {
             pricePrint: row.price_print || row.pricePrint,
           }));
 
-          // Unir fotos de la nube con las fotos locales evitando duplicados
+          // Unir fotos de la nube con las fotos locales evitando duplicados y excluyendo fotos mock
           const cloudIds = new Set(cloudPhotos.map(p => p.id));
-          const uniqueLocal = localPhotos.filter(p => !cloudIds.has(p.id));
-          const merged = [...cloudPhotos, ...uniqueLocal];
+          const cleanLocal = localPhotos.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
+          const merged = [...cloudPhotos, ...cleanLocal].filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
           await saveGalleryPhotosToDB(merged);
           return merged;
         }
@@ -346,7 +346,7 @@ export const Store = {
       }
     }
 
-    return localPhotos;
+    return localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
   },
 
   async getUnsyncedLocalPhotos(): Promise<GalleryPhoto[]> {
