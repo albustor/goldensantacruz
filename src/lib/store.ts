@@ -349,6 +349,63 @@ export const Store = {
     return localPhotos;
   },
 
+  async getUnsyncedLocalPhotos(): Promise<GalleryPhoto[]> {
+    if (!isSupabaseConfigured || !supabase) return [];
+    try {
+      const localPhotos = await getGalleryPhotosFromDB();
+      const { data: cloudRows, error } = await supabase.from('gallery_photos').select('id');
+      if (error) return [];
+      const cloudIds = new Set((cloudRows || []).map((r: any) => r.id));
+      return localPhotos.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-uni-'));
+    } catch (e) {
+      return [];
+    }
+  },
+
+  async syncLocalPhotosToSupabase(): Promise<{ syncedCount: number; errors: number }> {
+    if (!isSupabaseConfigured || !supabase) {
+      return { syncedCount: 0, errors: 0 };
+    }
+
+    const localPhotos = await getGalleryPhotosFromDB();
+    const { data: cloudRows } = await supabase.from('gallery_photos').select('id');
+    const cloudIds = new Set((cloudRows || []).map((r: any) => r.id));
+
+    // Filtrar fotos que estén en este teléfono y falten en Supabase
+    const toUpload = localPhotos.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-uni-'));
+    let syncedCount = 0;
+    let errors = 0;
+
+    for (const p of toUpload) {
+      try {
+        const { error } = await supabase.from('gallery_photos').insert([{
+          id: p.id,
+          album_id: p.albumId || 'alb-1',
+          event_date: p.eventDate || new Date().toISOString().split('T')[0],
+          title: p.title || 'Foto de la Jornada',
+          category: p.category || 'General',
+          photo_url: p.photoUrl,
+          caption: p.caption || '',
+          uploader_name: p.uploaderName || 'Papá Golden',
+          uploader_role: p.uploaderRole || 'padre',
+          photo_type: p.photoType || 'community',
+          is_approved: true,
+          likes_count: p.likesCount || 0,
+          watermark_tag: p.watermarkTag || 'Golden Sport Santa Cruz',
+          price_digital: p.priceDigital,
+          price_print: p.pricePrint,
+          created_at: p.createdAt || new Date().toISOString(),
+        }]);
+        if (!error) syncedCount++;
+        else errors++;
+      } catch (e) {
+        errors++;
+      }
+    }
+
+    return { syncedCount, errors };
+  },
+
   async addGalleryPhoto(photo: Omit<GalleryPhoto, 'id' | 'likesCount' | 'createdAt'>): Promise<GalleryPhoto> {
     const newPhoto: GalleryPhoto = {
       ...photo,
