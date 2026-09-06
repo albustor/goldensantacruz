@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { 
   Trophy, 
   Calendar as CalendarIcon, 
@@ -12,12 +11,11 @@ import {
   Share2, 
   Filter, 
   CheckCircle2, 
-  Flame, 
   ChevronRight, 
   Camera, 
-  Ticket, 
   Sparkles, 
-  Download 
+  Dumbbell,
+  Phone
 } from "lucide-react";
 import { Match } from "@/types";
 import { Store } from "@/lib/store";
@@ -75,103 +73,156 @@ export default function CalendarioPage() {
           <span>Temporada Oficial Guanacaste 2026</span>
         </div>
         <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight">
-          Calendario de <span className="text-transparent bg-clip-text bg-gradient-to-r from-golden-300 via-golden-400 to-amber-500">Partidos & Fogueos</span>
+          Horarios & <span className="text-transparent bg-clip-text bg-gradient-to-r from-golden-300 via-golden-400 to-amber-500">Entrenamientos Oficiales</span>
         </h1>
         <p className="text-sm sm:text-base text-gray-300 max-w-2xl mx-auto">
-          Programación oficial de encuentros, clásicos provinciales, sedes y marcadores en vivo de <strong>Golden Sport Academy Santa Cruz</strong>.
+          Programación semanal de entrenamientos, clínicas de tecnificación y agenda deportiva de <strong>Golden Sport Academy Santa Cruz</strong>.
         </p>
       </div>
 
-      {/* AFICHE OFICIAL DESTACADO - JORNADA DE PARTIDOS 5 DE SEPTIEMBRE */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-dark-900 via-dark-800 to-dark-900 border-2 border-golden-500/50 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-        {/* Imagen del Afiche */}
-        <div className="lg:col-span-5 flex justify-center">
-          <div className="relative w-full max-w-xs sm:max-w-sm rounded-2xl overflow-hidden border-2 border-golden-500 shadow-2xl group">
-            <Image
-              src="/partidos/IMG-20260827-WA0018.jpg"
-              alt="Jornada de Partidos 5 de Septiembre - Gimnasio Municipal de Liberia"
-              width={400}
-              height={580}
-              className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-500"
-              priority
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-dark-950/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
-              <a
-                href="/partidos/IMG-20260827-WA0018.jpg"
-                download="Jornada_Partidos_Golden_Sport.jpg"
-                className="px-4 py-2 rounded-xl bg-golden-500 text-dark-950 font-black text-xs uppercase flex items-center gap-1.5 shadow-lg"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Descargar Afiche HD</span>
-              </a>
+      {/* SECCIÓN PRINCIPAL: HORARIO OFICIAL DE ENTRENAMIENTOS SEMANALES */}
+      <div className="rounded-3xl bg-gradient-to-r from-dark-900 via-dark-800 to-dark-900 border-2 border-golden-500/50 p-6 sm:p-10 shadow-2xl space-y-8">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-gray-800">
+          <div className="space-y-2 text-center lg:text-left">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-golden-500/20 text-golden-400 text-xs font-black uppercase border border-golden-500/30">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Sede Central Santa Bárbara</span>
             </div>
+            <h2 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
+              Cronograma Semanal de Clases & Entrenamientos
+            </h2>
+            <p className="text-xs sm:text-sm text-gray-300">
+              Dirigido por la entrenadora <strong>Lenny Monge</strong> • Certificación FECOBA
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <a
+              href="https://wa.me/50662806989?text=Hola%20Coach%20Lenny%20Monge,%20deseo%20consultar%20sobre%20los%20horarios%20de%20entrenamiento"
+              target="_blank"
+              rel="noreferrer"
+              className="px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
+            >
+              <span>Consultar Inscripción</span>
+              <ChevronRight className="w-4 h-4" />
+            </a>
           </div>
         </div>
 
-        {/* Datos Clave de la Jornada */}
-        <div className="lg:col-span-7 space-y-5 text-center lg:text-left">
-          <div className="inline-flex flex-wrap items-center justify-center lg:justify-start gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500 text-dark-950 text-xs font-black uppercase">
-              <Flame className="w-3.5 h-3.5" />
-              <span>Próxima Jornada Intercantonal</span>
-            </span>
-            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 text-xs font-bold uppercase">
-              <Ticket className="w-3.5 h-3.5" />
-              <span>Entrada Gratuita</span>
-            </span>
-          </div>
-
-          <div className="space-y-1">
-            <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
-              Gran Jornada de Partidos
-            </h2>
-            <div className="text-xl sm:text-2xl font-black text-golden-400 tracking-wider">
-              ¡EL BALONCESTO NOS UNE!
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            <div className="p-3.5 rounded-2xl bg-dark-950/70 border border-golden-500/30 space-y-1">
-              <span className="text-[11px] text-gray-400 font-bold uppercase">Fecha</span>
-              <div className="text-sm font-black text-white flex items-center gap-1.5">
-                <CalendarIcon className="w-4 h-4 text-golden-500" />
-                <span>Sábado 5 de Septiembre, 2026</span>
+        {/* Las 3 Sesiones Oficiales */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          
+          {/* Martes */}
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-golden-500/20 text-golden-300 border border-golden-500/40">
+                Tarde / Noche
+              </span>
+              <div className="w-8 h-8 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center">
+                <CalendarIcon className="w-4 h-4" />
               </div>
             </div>
 
-            <div className="p-3.5 rounded-2xl bg-dark-950/70 border border-golden-500/30 space-y-1">
-              <span className="text-[11px] text-gray-400 font-bold uppercase">Lugar / Sede</span>
-              <div className="text-sm font-black text-white flex items-center gap-1.5">
-                <MapPin className="w-4 h-4 text-golden-500" />
-                <span>Gimnasio Municipal de Liberia</span>
+            <div>
+              <h3 className="text-2xl font-black text-white uppercase">Martes</h3>
+              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
+                <Clock className="w-4 h-4 text-golden-400" />
+                <span>6:00 PM - 7:30 PM</span>
               </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
+              <strong className="text-xs text-white block uppercase">Fundamentos & Control de Balón</strong>
+              <p className="text-[11px] text-gray-300 leading-relaxed">
+                Técnica individual, bote, paradas, pivotes y desplazamientos defensivos.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
+              <span className="flex items-center gap-1 text-gray-300">
+                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+                <span>Santa Bárbara</span>
+              </span>
+              <span className="text-emerald-400 font-bold text-[10px] uppercase">
+                ● Activo
+              </span>
             </div>
           </div>
 
-          <p className="text-xs sm:text-sm text-gray-300 leading-relaxed">
-            Nuestros equipos de <strong>Golden Sport Academy Santa Cruz</strong> se trasladan a Liberia para una fecha completa de partidos desde las <strong>8:00 AM hasta las 2:00 PM</strong> frente a <strong>Golden Sport Academy Liberia</strong> y <strong>Parajeles</strong>. ¡Ven a apoyar a nuestros atletas!
-          </p>
+          {/* Jueves */}
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                Tarde / Noche
+              </span>
+              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
+            </div>
 
-          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-            <a
-              href="https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia"
-              target="_blank"
-              rel="noreferrer"
-              className="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-black text-xs uppercase flex items-center gap-2 shadow-lg transition-transform hover:scale-105"
-            >
-              <Navigation className="w-4 h-4" />
-              <span>Cómo llegar en Maps</span>
-            </a>
-            <a
-              href="https://waze.com/ul?q=Gimnasio+Municipal+Liberia"
-              target="_blank"
-              rel="noreferrer"
-              className="px-5 py-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 font-bold text-xs uppercase flex items-center gap-2 border border-golden-500/30 transition-colors"
-            >
-              <Navigation className="w-4 h-4" />
-              <span>Abrir en Waze</span>
-            </a>
+            <div>
+              <h3 className="text-2xl font-black text-white uppercase">Jueves</h3>
+              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
+                <Clock className="w-4 h-4 text-golden-400" />
+                <span>6:00 PM - 7:30 PM</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
+              <strong className="text-xs text-white block uppercase">Tiro & Táctica Ofensiva</strong>
+              <p className="text-[11px] text-gray-300 leading-relaxed">
+                Mecánica de lanzamiento, juego en transición, cortes y toma de decisiones.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
+              <span className="flex items-center gap-1 text-gray-300">
+                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+                <span>Santa Bárbara</span>
+              </span>
+              <span className="text-emerald-400 font-bold text-[10px] uppercase">
+                ● Activo
+              </span>
+            </div>
           </div>
+
+          {/* Sábados */}
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                Mañana
+              </span>
+              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-2xl font-black text-white uppercase">Sábados</h3>
+              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
+                <Clock className="w-4 h-4 text-golden-400" />
+                <span>8:00 AM - 9:30 AM</span>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
+              <strong className="text-xs text-white block uppercase">Jornada Formativa & Juego Real</strong>
+              <p className="text-[11px] text-gray-300 leading-relaxed">
+                Partidos simulados, clínicas de tecnificación, acondicionamiento y juego en equipo.
+              </p>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
+              <span className="flex items-center gap-1 text-gray-300">
+                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+                <span>Santa Bárbara</span>
+              </span>
+              <span className="text-emerald-400 font-bold text-[10px] uppercase">
+                ● Activo
+              </span>
+            </div>
+          </div>
+
         </div>
       </div>
 
