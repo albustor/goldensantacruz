@@ -21,24 +21,18 @@ export default function ScheduleSection() {
       time: "6:00 PM - 7:30 PM",
       shift: "Tarde / Noche",
       badgeColor: "bg-golden-500/20 text-golden-300 border-golden-500/40",
-      focus: "Fundamentos Técnicos & Drible",
-      desc: "Desarrollo de habilidades individuales, manejo de balón y postura defensiva."
     },
     {
       day: "Jueves",
       time: "6:00 PM - 7:30 PM",
       shift: "Tarde / Noche",
       badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/40",
-      focus: "Táctica de Juego & Tiro",
-      desc: "Mecánica de lanzamiento, juego en equipo, toma de decisiones y sistemas ofensivos."
     },
     {
       day: "Sábados",
       time: "8:00 AM - 9:30 AM",
       shift: "Mañana",
       badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40",
-      focus: "Jornada Formativa & Fogueos Internos",
-      desc: "Aplicación práctica en partidos simulados, clínicas de tecnificación y acondicionamiento físico."
     },
   ];
 
@@ -98,48 +92,42 @@ export default function ScheduleSection() {
           </div>
         </div>
 
-        {/* Grid de las 3 Sesiones Semanales */}
+        {/* Grid de las 3 Sesiones Semanales (Solo Días y Horas) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {trainingDays.map((session, idx) => (
             <div
               key={idx}
               className="p-6 rounded-3xl bg-dark-950/70 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 flex flex-col justify-between shadow-xl group"
             >
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${session.badgeColor}`}>
+                  <span className={`text-[11px] font-black uppercase px-3 py-1 rounded-full border ${session.badgeColor}`}>
                     {session.shift}
                   </span>
-                  <div className="w-8 h-8 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/30">
                     <Calendar className="w-4 h-4" />
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-black text-white uppercase group-hover:text-golden-300 transition-colors">
+                  <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight group-hover:text-golden-300 transition-colors">
                     {session.day}
                   </h3>
-                  <div className="flex items-center gap-1.5 text-golden-400 font-bold text-sm pt-1">
-                    <Clock className="w-4 h-4 text-golden-400" />
+                  <div className="flex items-center gap-2 text-golden-400 font-extrabold text-lg pt-2">
+                    <Clock className="w-5 h-5 text-golden-400 shrink-0" />
                     <span>{session.time}</span>
                   </div>
                 </div>
-
-                <div className="p-3 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
-                  <strong className="text-xs text-white block uppercase">{session.focus}</strong>
-                  <p className="text-[11px] text-gray-300 leading-relaxed">
-                    {session.desc}
-                  </p>
-                </div>
               </div>
 
-              <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
-                <span className="flex items-center gap-1 text-gray-300">
-                  <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+              <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+                <span className="flex items-center gap-1.5 text-gray-300 font-medium">
+                  <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
                   <span>Santa Bárbara</span>
                 </span>
-                <span className="text-emerald-400 font-bold text-[10px] uppercase">
-                  ● Activo Semanal
+                <span className="text-emerald-400 font-bold text-[11px] uppercase flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span>Activo</span>
                 </span>
               </div>
             </div>

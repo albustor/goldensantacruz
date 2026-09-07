@@ -109,116 +109,104 @@ export default function CalendarioPage() {
           </div>
         </div>
 
-        {/* Las 3 Sesiones Oficiales */}
+        {/* Las 3 Sesiones Oficiales (Solo Días y Horas) */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           
           {/* Martes */}
-          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-golden-500/20 text-golden-300 border border-golden-500/40">
-                Tarde / Noche
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center">
-                <CalendarIcon className="w-4 h-4" />
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase px-3 py-1 rounded-full bg-golden-500/20 text-golden-300 border border-golden-500/40">
+                  Tarde / Noche
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/30">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Martes</h3>
+                <div className="flex items-center gap-2 text-golden-400 font-extrabold text-lg pt-2">
+                  <Clock className="w-5 h-5 text-golden-400 shrink-0" />
+                  <span>6:00 PM - 7:30 PM</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-black text-white uppercase">Martes</h3>
-              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
-                <Clock className="w-4 h-4 text-golden-400" />
-                <span>6:00 PM - 7:30 PM</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
-              <strong className="text-xs text-white block uppercase">Fundamentos & Control de Balón</strong>
-              <p className="text-[11px] text-gray-300 leading-relaxed">
-                Técnica individual, bote, paradas, pivotes y desplazamientos defensivos.
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
-              <span className="flex items-center gap-1 text-gray-300">
-                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+            <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+              <span className="flex items-center gap-1.5 text-gray-300 font-medium">
+                <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
                 <span>Santa Bárbara</span>
               </span>
-              <span className="text-emerald-400 font-bold text-[10px] uppercase">
-                ● Activo
+              <span className="text-emerald-400 font-bold text-[11px] uppercase flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Activo</span>
               </span>
             </div>
           </div>
 
           {/* Jueves */}
-          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
-                Tarde / Noche
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
-                <CalendarIcon className="w-4 h-4" />
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                  Tarde / Noche
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center border border-amber-500/30">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Jueves</h3>
+                <div className="flex items-center gap-2 text-golden-400 font-extrabold text-lg pt-2">
+                  <Clock className="w-5 h-5 text-golden-400 shrink-0" />
+                  <span>6:00 PM - 7:30 PM</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-black text-white uppercase">Jueves</h3>
-              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
-                <Clock className="w-4 h-4 text-golden-400" />
-                <span>6:00 PM - 7:30 PM</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
-              <strong className="text-xs text-white block uppercase">Tiro & Táctica Ofensiva</strong>
-              <p className="text-[11px] text-gray-300 leading-relaxed">
-                Mecánica de lanzamiento, juego en transición, cortes y toma de decisiones.
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
-              <span className="flex items-center gap-1 text-gray-300">
-                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+            <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+              <span className="flex items-center gap-1.5 text-gray-300 font-medium">
+                <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
                 <span>Santa Bárbara</span>
               </span>
-              <span className="text-emerald-400 font-bold text-[10px] uppercase">
-                ● Activo
+              <span className="text-emerald-400 font-bold text-[11px] uppercase flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Activo</span>
               </span>
             </div>
           </div>
 
           {/* Sábados */}
-          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                Mañana
-              </span>
-              <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <CalendarIcon className="w-4 h-4" />
+          <div className="p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 hover:border-golden-400 transition-all space-y-4 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  Mañana
+                </span>
+                <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+              </div>
+
+              <div>
+                <h3 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">Sábados</h3>
+                <div className="flex items-center gap-2 text-golden-400 font-extrabold text-lg pt-2">
+                  <Clock className="w-5 h-5 text-golden-400 shrink-0" />
+                  <span>8:00 AM - 9:30 AM</span>
+                </div>
               </div>
             </div>
 
-            <div>
-              <h3 className="text-2xl font-black text-white uppercase">Sábados</h3>
-              <div className="flex items-center gap-1.5 text-golden-400 font-black text-base pt-1">
-                <Clock className="w-4 h-4 text-golden-400" />
-                <span>8:00 AM - 9:30 AM</span>
-              </div>
-            </div>
-
-            <div className="p-3.5 rounded-2xl bg-dark-900 border border-gray-800 space-y-1">
-              <strong className="text-xs text-white block uppercase">Jornada Formativa & Juego Real</strong>
-              <p className="text-[11px] text-gray-300 leading-relaxed">
-                Partidos simulados, clínicas de tecnificación, acondicionamiento y juego en equipo.
-              </p>
-            </div>
-
-            <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[11px] text-gray-400">
-              <span className="flex items-center gap-1 text-gray-300">
-                <MapPin className="w-3.5 h-3.5 text-golden-500 shrink-0" />
+            <div className="pt-4 border-t border-gray-800/80 flex items-center justify-between text-xs text-gray-400">
+              <span className="flex items-center gap-1.5 text-gray-300 font-medium">
+                <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
                 <span>Santa Bárbara</span>
               </span>
-              <span className="text-emerald-400 font-bold text-[10px] uppercase">
-                ● Activo
+              <span className="text-emerald-400 font-bold text-[11px] uppercase flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Activo</span>
               </span>
             </div>
           </div>
