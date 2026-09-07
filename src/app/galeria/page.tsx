@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
+import { INITIAL_ALBUMS } from "@/lib/initialData";
 import PhotoUploadModal from "@/components/galeria/PhotoUploadModal";
 import PhotoLightboxModal from "@/components/galeria/PhotoLightboxModal";
 import PhotoPurchaseModal from "@/components/galeria/PhotoPurchaseModal";
@@ -61,7 +62,7 @@ function formatShortDate(dateStr: string): string {
 }
 
 export default function GaleriaPage() {
-  const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
+  const [albums, setAlbums] = useState<GalleryAlbum[]>(INITIAL_ALBUMS);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community");
@@ -78,14 +79,20 @@ export default function GaleriaPage() {
   }, []);
 
   const loadData = async () => {
-    const [aData, pData, sData] = await Promise.all([
-      Store.getAlbums(),
-      Store.getGalleryPhotos(),
-      Promise.resolve(Store.getSettings()),
-    ]);
-    setAlbums(aData);
-    setPhotos(pData.filter((p) => p.isApproved));
-    setSettings(sData as unknown as SystemSettings);
+    try {
+      const [aData, pData, sData] = await Promise.all([
+        Store.getAlbums(),
+        Store.getGalleryPhotos(),
+        Promise.resolve(Store.getSettings()),
+      ]);
+      const validAlbums = Array.isArray(aData) && aData.length > 0 ? aData : INITIAL_ALBUMS;
+      setAlbums(validAlbums);
+      setPhotos(pData.filter((p) => p.isApproved));
+      setSettings(sData as unknown as SystemSettings);
+    } catch (err) {
+      console.error("Error al cargar datos de galería:", err);
+      setAlbums(INITIAL_ALBUMS);
+    }
   };
 
   const handleLike = async (photoId: string, e?: React.MouseEvent) => {
@@ -111,9 +118,12 @@ export default function GaleriaPage() {
   // SEPARACIÓN ESTRICTA DE ÁLBUMES SEGÚN PESTAÑA:
   // Pestaña "community": Únicamente álbumes de familias/colectivos
   // Pestaña "pro_studio": Únicamente álbumes oficiales Curiol Studio
-  const displayedAlbums = albums.filter((a) => {
+  const effectiveAlbums = (albums && albums.length > 0) ? albums : INITIAL_ALBUMS;
+
+  const displayedAlbums = effectiveAlbums.filter((a) => {
     const isCommunity = 
       a.albumType === "community" || 
+      a.id.includes("comunidad") ||
       a.createdBy?.toLowerCase().includes("papá") || 
       a.createdBy?.toLowerCase().includes("familia") || 
       a.title?.toLowerCase().includes("familiar") || 
@@ -126,7 +136,7 @@ export default function GaleriaPage() {
     }
   });
 
-  const selectedAlbum = albums.find((a) => a.id === selectedAlbumId);
+  const selectedAlbum = effectiveAlbums.find((a) => a.id === selectedAlbumId);
 
   // Fotos del álbum seleccionado: estrictamente filtradas por el tipo de pestaña activa y ordenadas ascendentemente
   const currentPhotos = selectedAlbum

@@ -235,7 +235,25 @@ export const Store = {
 
   // ALBUMS
   async getAlbums(): Promise<GalleryAlbum[]> {
-    return getFromStorage<GalleryAlbum[]>(STORAGE_KEYS.ALBUMS, INITIAL_ALBUMS);
+    const stored = getFromStorage<GalleryAlbum[]>(STORAGE_KEYS.ALBUMS, INITIAL_ALBUMS);
+    if (!stored || !Array.isArray(stored) || stored.length === 0) {
+      saveToStorage(STORAGE_KEYS.ALBUMS, INITIAL_ALBUMS);
+      return INITIAL_ALBUMS;
+    }
+    // Asegurar que los álbumes esenciales siempre existan
+    const existingIds = new Set(stored.map(a => a.id));
+    let hasAll = true;
+    const merged = [...stored];
+    for (const initAlb of INITIAL_ALBUMS) {
+      if (!existingIds.has(initAlb.id)) {
+        merged.push(initAlb);
+        hasAll = false;
+      }
+    }
+    if (!hasAll) {
+      saveToStorage(STORAGE_KEYS.ALBUMS, merged);
+    }
+    return merged;
   },
 
   async getOrCreateDailyAlbum(
