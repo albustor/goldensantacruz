@@ -324,15 +324,22 @@ export const Store = {
   async loadGalleryPhotosProgressive(
     onUpdate: (photos: GalleryPhoto[], progress?: { loaded: number; total: number; isDone: boolean }) => void
   ): Promise<GalleryPhoto[]> {
-    // 1. Cargar caché local de IndexedDB inmediatamente (0ms)
+    // 1. Cargar caché local de IndexedDB inmediatamente (0ms) filtrando cualquier foto residual de pruebas
     const localPhotos = await getGalleryPhotosFromDB();
     const cleanLocal = localPhotos.filter(
-      p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-')
+      p => !p.id.startsWith('pht-eq-') && 
+           !p.id.startsWith('pht-hb-') && 
+           !p.id.startsWith('pht-lib-') && 
+           !p.id.startsWith('pht-partido-') &&
+           !p.title?.toLowerCase().includes('foto de alberto') &&
+           !p.id.startsWith('gal-178862') &&
+           !p.id.startsWith('gal-178863') &&
+           !p.id.startsWith('gal-178864')
     );
 
     if (cleanLocal.length > 0) {
-      onUpdate(cleanLocal, { loaded: cleanLocal.length, total: Math.max(cleanLocal.length, 175), isDone: cleanLocal.length >= 170 });
-      if (cleanLocal.length >= 170) {
+      onUpdate(cleanLocal, { loaded: cleanLocal.length, total: Math.max(cleanLocal.length, 152), isDone: cleanLocal.length >= 152 });
+      if (cleanLocal.length >= 152) {
         return cleanLocal;
       }
     }
@@ -343,16 +350,24 @@ export const Store = {
     }
 
     try {
-      // 2. Consulta ultra-rápida de metadatos (< 800ms) para conocer inmediatamente el conteo real (152 y 23 fotos)
+      // 2. Consulta ultra-rápida de metadatos (< 800ms) para sincronizar exactamente los registros vigentes en la nube (152 fotos de Curiol Studio)
       const { data: metaRows, error: metaErr } = await supabase
         .from('gallery_photos')
         .select('id, album_id, event_date, title, category, caption, uploader_name, uploader_role, photo_type, likes_count, is_approved, created_at, watermark_tag, price_digital, price_print')
         .order('created_at', { ascending: true });
 
       const currentPhotosMap = new Map<string, GalleryPhoto>();
-      cleanLocal.forEach(p => currentPhotosMap.set(p.id, p));
 
       if (!metaErr && metaRows && metaRows.length > 0) {
+        const cloudIdSet = new Set(metaRows.map((r: any) => r.id));
+
+        // Mantener solo fotos locales que existan en la nube
+        cleanLocal.forEach(p => {
+          if (cloudIdSet.has(p.id)) {
+            currentPhotosMap.set(p.id, p);
+          }
+        });
+
         metaRows.forEach((row: any) => {
           if (!currentPhotosMap.has(row.id)) {
             currentPhotosMap.set(row.id, {
@@ -376,7 +391,7 @@ export const Store = {
           }
         });
 
-        // Notificar metadatos para que en < 1s los badges de álbumes reflejen 152 y 23
+        // Notificar metadatos limpios de inmediato
         const metaPhotoList = Array.from(currentPhotosMap.values());
         onUpdate(metaPhotoList, { loaded: cleanLocal.length, total: metaPhotoList.length, isDone: false });
       }

@@ -313,7 +313,7 @@ export default function GaleriaPage() {
               });
               
               // Conteo instantáneo 0ms sin retraso visual
-              const defaultCount = album.id === "alb-curiol-liberia-2026" ? 152 : album.id === "alb-comunidad-liberia-2026" ? 23 : (album.photoCount || 0);
+              const defaultCount = album.id === "alb-curiol-liberia-2026" ? 152 : album.id === "alb-comunidad-liberia-2026" ? 0 : (album.photoCount || 0);
               const photoCount = albumPics.length > 0 ? albumPics.length : defaultCount;
 
               const isTodayAlbum = album.isOpenForUploads;
@@ -460,7 +460,7 @@ export default function GaleriaPage() {
                       📅 {formatFullDate(selectedAlbum.eventDate)}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-md bg-dark-950 text-golden-300 text-[10px] font-black border border-golden-500/40">
-                      📸 {currentPhotos.length > 0 ? currentPhotos.length : (selectedAlbum.id === "alb-curiol-liberia-2026" ? 152 : selectedAlbum.id === "alb-comunidad-liberia-2026" ? 23 : 0)} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
+                      📸 {currentPhotos.length > 0 ? currentPhotos.length : (selectedAlbum.id === "alb-curiol-liberia-2026" ? 152 : 0)} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
                     </span>
                   </div>
 
