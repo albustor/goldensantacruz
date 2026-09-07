@@ -94,6 +94,7 @@ export interface GalleryAlbum {
   isLocked?: boolean;
   isOpenForUploads?: boolean;
   albumType?: "community" | "pro_studio";
+  photoCount?: number;
 }
 
 export interface Sponsor {

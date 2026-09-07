@@ -255,34 +255,7 @@ export default function GaleriaPage() {
         </div>
       )}
 
-      {/* 3. BANNER PRO STUDIO / TIENDA DE RECUERDOS */}
-      {activeTab === "pro_studio" && (
-        <div className="space-y-4">
-          <div className="p-4 rounded-2xl bg-dark-900 border border-golden-500/30 text-xs text-gray-300 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 text-center sm:text-left">
-              <div className="w-10 h-10 rounded-2xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
-                <Image src="/curiol-studio-transparent.png" alt="Curiol Studio" width={36} height={36} className="object-contain" />
-              </div>
-              <div>
-                <strong className="text-white block uppercase text-xs">Fotografía Profesional por Curiol Studio</strong>
-                <span>Cobertura en partidos oficiales. Encarga recuerdos impresos (retablos en madera o cuadros canvas).</span>
-              </div>
-            </div>
-            <a
-              href={arbolUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase flex items-center gap-1.5 shrink-0 transition-colors"
-            >
-              <TreeDeciduous className="w-3.5 h-3.5" />
-              <span>Árbol de Guanacaste ↗</span>
-            </a>
-          </div>
-          <SouvenirStoreBanner />
-        </div>
-      )}
-
-      {/* 4. LISTADO DE ÁLBUMES ESPECÍFICOS SEGÚN LA PESTAÑA */}
+      {/* 3. LISTADO DE ÁLBUMES ESPECÍFICOS SEGÚN LA PESTAÑA (DIRECTAMENTE ARRIBA) */}
       {!selectedAlbumId ? (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
@@ -339,6 +312,10 @@ export default function GaleriaPage() {
                 return matchesAlbum;
               });
               
+              // Conteo instantáneo 0ms sin retraso visual
+              const defaultCount = album.id === "alb-curiol-liberia-2026" ? 152 : album.id === "alb-comunidad-liberia-2026" ? 23 : (album.photoCount || 0);
+              const photoCount = albumPics.length > 0 ? albumPics.length : defaultCount;
+
               const isTodayAlbum = album.isOpenForUploads;
               const coverPhoto = album.coverPhotoUrl || albumPics[0]?.photoUrl || "/Hero_Basketball/1.jpg";
               const recentUploads = albumPics.slice(0, 3);
@@ -377,9 +354,9 @@ export default function GaleriaPage() {
                       )}
                     </div>
 
-                    {/* Badge Cantidad de Fotos Filtradas */}
+                    {/* Badge Cantidad de Fotos Instantáneo */}
                     <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-golden-300 text-[10px] font-black border border-white/20">
-                      📸 {albumPics.length} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
+                      📸 {photoCount} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
                     </div>
 
                     {/* Miniaturas en vivo si hay fotos */}
@@ -393,9 +370,9 @@ export default function GaleriaPage() {
                             <img src={p.photoUrl} alt="" className="w-full h-full object-cover" />
                           </div>
                         ))}
-                        {albumPics.length > 3 && (
+                        {photoCount > 3 && (
                           <div className="w-8 h-8 rounded-full border-2 border-dark-950 bg-golden-500 text-dark-950 text-[9px] font-black flex items-center justify-center shadow-md">
-                            +{albumPics.length - 3}
+                            +{photoCount - 3}
                           </div>
                         )}
                       </div>
@@ -449,6 +426,11 @@ export default function GaleriaPage() {
               );
             })}
           </div>
+
+          {/* BANNER MINIMALISTA DE CURIOL STUDIO Y CONVENIO AL PIE DE LOS ÁLBUMES */}
+          {activeTab === "pro_studio" && (
+            <SouvenirStoreBanner arbolUrl={arbolUrl} />
+          )}
         </div>
       ) : (
         /* 5. VISTA DETALLADA DENTRO DEL ÁLBUM SELECCIONADO */
@@ -478,7 +460,7 @@ export default function GaleriaPage() {
                       📅 {formatFullDate(selectedAlbum.eventDate)}
                     </span>
                     <span className="px-2.5 py-0.5 rounded-md bg-dark-950 text-golden-300 text-[10px] font-black border border-golden-500/40">
-                      📸 {currentPhotos.length} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
+                      📸 {currentPhotos.length > 0 ? currentPhotos.length : (selectedAlbum.id === "alb-curiol-liberia-2026" ? 152 : selectedAlbum.id === "alb-comunidad-liberia-2026" ? 23 : 0)} {activeTab === "community" ? "fotos de familias" : "fotos oficiales"}
                     </span>
                   </div>
 
