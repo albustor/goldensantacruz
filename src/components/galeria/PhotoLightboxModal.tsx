@@ -202,7 +202,39 @@ export default function PhotoLightboxModal({
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const handleDownloadJpg = async (p: GalleryPhoto) => {
+  const convertToJpegBlob = (url: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(
+            (blob) => resolve(blob),
+            "image/jpeg",
+            0.95
+          );
+        } catch (e) {
+          console.warn("[Lightbox] Error convirtiendo a JPEG:", e);
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  };
+
+  const handleSaveToGallery = async (p: GalleryPhoto) => {
     setIsDownloading(true);
     try {
       const cleanTitle = (p.title || "foto_golden_sport")
@@ -212,47 +244,64 @@ export default function PhotoLightboxModal({
         .toLowerCase();
       const filename = `${cleanTitle}.jpg`;
 
-      const img = new window.Image();
-      img.crossOrigin = "anonymous";
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          fallbackDownload(p.photoUrl, filename);
-          setIsDownloading(false);
-          return;
+      // 1. Convertir la foto a Blob JPEG compatible universalmente
+      const blob = await convertToJpegBlob(p.photoUrl);
+
+      if (!blob) {
+        fallbackDirectDownload(p.photoUrl, filename);
+        setIsDownloading(false);
+        return;
+      }
+
+      // Detección de iOS (iPhone / iPad) y Android
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      // 2. En iOS (iPhone): La ÚNICA forma estándar de guardar directamente en el Carrete / Fotos es Web Share API con File
+      if (isIOS && typeof navigator !== "undefined" && navigator.canShare) {
+        try {
+          const file = new File([blob], filename, { type: "image/jpeg", lastModified: Date.now() });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: p.title || "Golden Sport Academy",
+            });
+            setIsDownloading(false);
+            return;
+          }
+        } catch (shareErr: any) {
+          if (shareErr?.name === "AbortError") {
+            setIsDownloading(false);
+            return;
+          }
         }
+      }
 
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(img, 0, 0);
-
-        const jpgDataUrl = canvas.toDataURL("image/jpeg", 0.92);
-        fallbackDownload(jpgDataUrl, filename);
-        setIsDownloading(false);
-      };
-
-      img.onerror = () => {
-        fallbackDownload(p.photoUrl, filename);
-        setIsDownloading(false);
-      };
-
-      img.src = p.photoUrl;
+      // 3. En Android y Desktop: Descargar como Blob JPEG para que el MediaScanner de Android la registre automáticamente en la Galería / Google Fotos
+      const blobUrl = URL.createObjectURL(blob);
+      fallbackDirectDownload(blobUrl, filename);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      setIsDownloading(false);
     } catch (err) {
-      console.error("Error al descargar foto en JPG:", err);
+      console.error("Error al guardar foto en galería:", err);
+      fallbackDirectDownload(p.photoUrl, "foto_golden_sport.jpg");
       setIsDownloading(false);
     }
   };
 
-  const fallbackDownload = (url: string, filename: string) => {
+  const fallbackDirectDownload = (url: string, filename: string) => {
     const a = document.createElement("a");
     a.href = url;
     a.download = filename;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+    }, 250);
   };
 
   return (
@@ -428,15 +477,15 @@ export default function PhotoLightboxModal({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
-              {/* Botón Descargar Gratis (Con Logos) para TODAS las fotos */}
+              {/* Botón Guardar en Fotos / Galería para iPhone y Android */}
               <button
-                onClick={() => handleDownloadJpg(photo)}
+                onClick={() => handleSaveToGallery(photo)}
                 disabled={isDownloading}
                 className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
-                title="Descargar fotografía gratuita en formato web con logos oficiales"
+                title="Guardar directamente en la galería de fotos de tu teléfono (iPhone / Android) o descargar en tu dispositivo"
               >
                 <Download className="w-4 h-4" />
-                <span>{isDownloading ? "Descargando..." : "Descargar Gratis (Con Logos)"}</span>
+                <span>{isDownloading ? "Guardando..." : "Guardar en Fotos / Galería"}</span>
               </button>
 
               {/* Botón Compartir WhatsApp */}
