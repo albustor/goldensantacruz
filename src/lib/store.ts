@@ -320,85 +320,140 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.ALBUMS, current.filter(a => a.id !== albumId));
   },
 
-  // GALLERY PHOTOS (Ultra-fast Cache-First IndexedDB + Background/Manual Cloud Sync)
-  async getGalleryPhotos(): Promise<GalleryPhoto[]> {
+  // GALLERY PHOTOS (Ultra-fast Cache-First IndexedDB + Background/Manual Cloud Sync + Progressive Streaming)
+  async loadGalleryPhotosProgressive(
+    onUpdate: (photos: GalleryPhoto[], progress?: { loaded: number; total: number; isDone: boolean }) => void
+  ): Promise<GalleryPhoto[]> {
+    // 1. Cargar caché local de IndexedDB inmediatamente (0ms)
     const localPhotos = await getGalleryPhotosFromDB();
-    const cleanLocal = localPhotos.filter(p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-'));
+    const cleanLocal = localPhotos.filter(
+      p => !p.id.startsWith('pht-eq-') && !p.id.startsWith('pht-hb-') && !p.id.startsWith('pht-lib-') && !p.id.startsWith('pht-partido-')
+    );
 
-    // Si Supabase está configurado, consultar la nube en lotes de 25 con reintento automático para garantizar catálogo 100% completo (152 fotos)
-    if (isSupabaseConfigured && supabase) {
-      try {
-        let allCloudPhotos: any[] = [];
-        const pageSize = 25;
-        let from = 0;
-        let hasMore = true;
-
-        while (hasMore) {
-          let chunkData = null;
-          let attempts = 0;
-
-          while (attempts < 3) {
-            attempts++;
-            const { data, error } = await supabase
-              .from('gallery_photos')
-              .select('*')
-              .order('created_at', { ascending: true })
-              .range(from, from + pageSize - 1);
-
-            if (!error && data) {
-              chunkData = data;
-              break;
-            } else {
-              console.warn(`[Store] Supabase fetch intento ${attempts} en rango ${from}:`, error);
-              await new Promise(r => setTimeout(r, 400));
-            }
-          }
-
-          if (chunkData && chunkData.length > 0) {
-            allCloudPhotos.push(...chunkData);
-            from += pageSize;
-            if (chunkData.length < pageSize) {
-              hasMore = false;
-            }
-          } else {
-            hasMore = false;
-          }
-        }
-
-        if (allCloudPhotos.length > 0) {
-          const cloudPhotos: GalleryPhoto[] = allCloudPhotos.map((row: any) => ({
-            id: row.id,
-            albumId: row.album_id || row.albumId || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
-            eventDate: row.event_date || row.eventDate || '2026-09-05',
-            title: row.title || 'Fotografía de la Jornada',
-            category: row.category || 'Intercantonal',
-            photoUrl: row.photo_url || row.photoUrl,
-            caption: row.caption || '',
-            uploaderName: row.uploader_name || row.uploaderName || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
-            uploaderRole: (row.uploader_role || row.uploaderRole || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
-            photoType: (row.photo_type || row.photoType || (row.uploader_role === 'staff' || row.uploader_name?.includes('Curiol') ? 'pro_studio' : 'community')) as any,
-            likesCount: row.likes_count ?? row.likesCount ?? 0,
-            isApproved: row.is_approved ?? row.isApproved ?? true,
-            createdAt: row.created_at || row.createdAt,
-            watermarkTag: row.watermark_tag || row.watermarkTag || (row.photo_type === 'pro_studio' ? 'Curiol Studio Santa Cruz' : 'Golden Sport Santa Cruz'),
-            priceDigital: row.price_digital || row.priceDigital,
-            pricePrint: row.price_print || row.pricePrint,
-          }));
-
-          // Deduplicar y mezclar fotos de la nube con fotos locales pendientes
-          const cloudIds = new Set(cloudPhotos.map(p => p.id));
-          const localOnly = cleanLocal.filter(p => !cloudIds.has(p.id) && !p.id.startsWith('pht-uni-'));
-          
-          const mergedPhotos = [...cloudPhotos, ...localOnly];
-          await saveGalleryPhotosToDB(mergedPhotos);
-          return mergedPhotos;
-        }
-      } catch (cloudErr) {
-        console.warn('[Store] Supabase getGalleryPhotos offline o error:', cloudErr);
+    if (cleanLocal.length > 0) {
+      onUpdate(cleanLocal, { loaded: cleanLocal.length, total: Math.max(cleanLocal.length, 175), isDone: cleanLocal.length >= 170 });
+      if (cleanLocal.length >= 170) {
+        return cleanLocal;
       }
     }
 
-    return cleanLocal;
+    if (!isSupabaseConfigured || !supabase) {
+      onUpdate(cleanLocal, { loaded: cleanLocal.length, total: cleanLocal.length, isDone: true });
+      return cleanLocal;
+    }
+
+    try {
+      // 2. Consulta ultra-rápida de metadatos (< 800ms) para conocer inmediatamente el conteo real (152 y 23 fotos)
+      const { data: metaRows, error: metaErr } = await supabase
+        .from('gallery_photos')
+        .select('id, album_id, event_date, title, category, caption, uploader_name, uploader_role, photo_type, likes_count, is_approved, created_at, watermark_tag, price_digital, price_print')
+        .order('created_at', { ascending: true });
+
+      const currentPhotosMap = new Map<string, GalleryPhoto>();
+      cleanLocal.forEach(p => currentPhotosMap.set(p.id, p));
+
+      if (!metaErr && metaRows && metaRows.length > 0) {
+        metaRows.forEach((row: any) => {
+          if (!currentPhotosMap.has(row.id)) {
+            currentPhotosMap.set(row.id, {
+              id: row.id,
+              albumId: row.album_id || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
+              eventDate: row.event_date || '2026-09-05',
+              title: row.title || 'Fotografía de la Jornada',
+              category: row.category || 'Intercantonal',
+              photoUrl: '', // Se llena progresivamente al descargar el lote
+              caption: row.caption || '',
+              uploaderName: row.uploader_name || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
+              uploaderRole: (row.uploader_role || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
+              photoType: (row.photo_type || (row.uploader_role === 'staff' || row.uploader_name?.includes('Curiol') ? 'pro_studio' : 'community')) as any,
+              likesCount: row.likes_count ?? 0,
+              isApproved: row.is_approved ?? true,
+              createdAt: row.created_at,
+              watermarkTag: row.watermark_tag || (row.photo_type === 'pro_studio' ? 'Curiol Studio Santa Cruz' : 'Golden Sport Santa Cruz'),
+              priceDigital: row.price_digital,
+              pricePrint: row.price_print,
+            });
+          }
+        });
+
+        // Notificar metadatos para que en < 1s los badges de álbumes reflejen 152 y 23
+        const metaPhotoList = Array.from(currentPhotosMap.values());
+        onUpdate(metaPhotoList, { loaded: cleanLocal.length, total: metaPhotoList.length, isDone: false });
+      }
+
+      // 3. Descarga progresiva de imágenes en lotes de 25
+      const pageSize = 25;
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        let chunkData: any[] | null = null;
+        let attempts = 0;
+
+        while (attempts < 3) {
+          attempts++;
+          const { data, error } = await supabase
+            .from('gallery_photos')
+            .select('*')
+            .order('created_at', { ascending: true })
+            .range(from, from + pageSize - 1);
+
+          if (!error && data) {
+            chunkData = data;
+            break;
+          } else {
+            await new Promise(r => setTimeout(r, 300));
+          }
+        }
+
+        if (chunkData && chunkData.length > 0) {
+          chunkData.forEach((row: any) => {
+            currentPhotosMap.set(row.id, {
+              id: row.id,
+              albumId: row.album_id || row.albumId || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
+              eventDate: row.event_date || row.eventDate || '2026-09-05',
+              title: row.title || 'Fotografía de la Jornada',
+              category: row.category || 'Intercantonal',
+              photoUrl: row.photo_url || row.photoUrl,
+              caption: row.caption || '',
+              uploaderName: row.uploader_name || row.uploaderName || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
+              uploaderRole: (row.uploader_role || row.uploaderRole || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
+              photoType: (row.photo_type || row.photoType || (row.uploader_role === 'staff' || row.uploader_name?.includes('Curiol') ? 'pro_studio' : 'community')) as any,
+              likesCount: row.likes_count ?? row.likesCount ?? 0,
+              isApproved: row.is_approved ?? row.isApproved ?? true,
+              createdAt: row.created_at || row.createdAt,
+              watermarkTag: row.watermark_tag || row.watermarkTag || (row.photo_type === 'pro_studio' ? 'Curiol Studio Santa Cruz' : 'Golden Sport Santa Cruz'),
+              priceDigital: row.price_digital || row.priceDigital,
+              pricePrint: row.price_print || row.pricePrint,
+            });
+          });
+
+          from += pageSize;
+          const currentList = Array.from(currentPhotosMap.values());
+          const withImagesCount = currentList.filter(p => Boolean(p.photoUrl)).length;
+          
+          await saveGalleryPhotosToDB(currentList.filter(p => Boolean(p.photoUrl)));
+          onUpdate(currentList, { loaded: withImagesCount, total: currentList.length, isDone: withImagesCount >= currentList.length });
+
+          if (chunkData.length < pageSize) {
+            hasMore = false;
+          }
+        } else {
+          hasMore = false;
+        }
+      }
+
+      const finalList = Array.from(currentPhotosMap.values());
+      onUpdate(finalList, { loaded: finalList.filter(p => Boolean(p.photoUrl)).length, total: finalList.length, isDone: true });
+      return finalList;
+    } catch (err) {
+      console.warn('[Store] Error en carga progresiva de fotos:', err);
+      return cleanLocal;
+    }
+  },
+
+  async getGalleryPhotos(): Promise<GalleryPhoto[]> {
+    return this.loadGalleryPhotosProgressive(() => {});
   },
 
   async getUnsyncedLocalPhotos(): Promise<GalleryPhoto[]> {

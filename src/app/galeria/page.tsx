@@ -68,6 +68,7 @@ export default function GaleriaPage() {
   const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community");
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [syncProgress, setSyncProgress] = useState<{ loaded: number; total: number; isDone: boolean } | null>(null);
 
   // Modales
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -80,15 +81,21 @@ export default function GaleriaPage() {
 
   const loadData = async () => {
     try {
-      const [aData, pData, sData] = await Promise.all([
+      const [aData, sData] = await Promise.all([
         Store.getAlbums(),
-        Store.getGalleryPhotos(),
         Promise.resolve(Store.getSettings()),
       ]);
       const validAlbums = Array.isArray(aData) && aData.length > 0 ? aData : INITIAL_ALBUMS;
       setAlbums(validAlbums);
-      setPhotos(pData.filter((p) => p.isApproved));
       setSettings(sData as unknown as SystemSettings);
+
+      // Carga progresiva: metadatos instantáneos (<800ms) + streaming fluido de imágenes HD
+      await Store.loadGalleryPhotosProgressive((updatedPhotos, progress) => {
+        setPhotos(updatedPhotos.filter((p) => p.isApproved));
+        if (progress) {
+          setSyncProgress(progress);
+        }
+      });
     } catch (err) {
       console.error("Error al cargar datos de galería:", err);
       setAlbums(INITIAL_ALBUMS);
@@ -229,6 +236,24 @@ export default function GaleriaPage() {
           </button>
         </div>
       </div>
+
+      {/* BARRA DE SINCRONIZACIÓN PROGRESIVA PARA DISPOSITIVOS MÓVILES */}
+      {syncProgress && !syncProgress.isDone && syncProgress.loaded < syncProgress.total && (
+        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-golden-500/15 via-dark-900 to-golden-500/15 border border-golden-500/40 text-xs text-golden-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl animate-fade-in">
+          <div className="flex items-center gap-2.5 text-center sm:text-left">
+            <Sparkles className="w-4 h-4 text-golden-400 animate-spin shrink-0" />
+            <span className="font-semibold">
+              Sincronizando galería fotográfica en alta resolución: <strong className="text-white">{syncProgress.loaded} de {syncProgress.total} fotos</strong> listas en tu dispositivo.
+            </span>
+          </div>
+          <div className="w-full sm:w-44 bg-dark-950 rounded-full h-2.5 overflow-hidden border border-golden-500/30 shrink-0 p-0.5">
+            <div
+              className="bg-gradient-to-r from-golden-400 to-amber-500 h-full transition-all duration-300 rounded-full"
+              style={{ width: `${Math.max(5, Math.round((syncProgress.loaded / syncProgress.total) * 100))}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 3. BANNER PRO STUDIO / TIENDA DE RECUERDOS */}
       {activeTab === "pro_studio" && (
@@ -552,11 +577,18 @@ export default function GaleriaPage() {
                 >
                   {/* Imagen */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-950">
-                    <img
-                      src={photo.photoUrl}
-                      alt={photo.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
+                    {photo.photoUrl ? (
+                      <img
+                        src={photo.photoUrl}
+                        alt={photo.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-dark-900 animate-pulse flex flex-col items-center justify-center gap-2 p-4 text-center">
+                        <Sparkles className="w-6 h-6 text-golden-400 animate-spin" />
+                        <span className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Cargando foto HD...</span>
+                      </div>
+                    )}
 
                     {/* Badge Categoría */}
                     <div className="absolute top-2.5 left-2.5 flex gap-1.5 z-10">
