@@ -88,6 +88,14 @@ export function getSuggestedReminderLevel(payment: PaymentRecord): ReminderLevel
   return "nivel4_beca_comite";
 }
 
+const SPONSORSHIP_FOOTER = 
+  `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+  `🤖 _Sistema oficial de notificaciones operado mediante la plataforma tecnológica de Curiol Studio, patrocinador oficial de Golden Sport Academy Santa Cruz._`;
+
+const RECEIPT_SPONSORSHIP_FOOTER = 
+  `━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+  `🧾 _Comprobante digital emitido automáticamente por la plataforma tecnológica de Curiol Studio para Golden Sport Academy Santa Cruz._`;
+
 /**
  * Genera el mensaje estructurado y empático para WhatsApp según el nivel seleccionado.
  */
@@ -98,13 +106,16 @@ export function generatePaymentWhatsAppMessage(
 ): string {
   const actualLevel = level || getSuggestedReminderLevel(payment);
   const formattedAmount = `₡${payment.amount.toLocaleString('es-CR')}`;
+  const coachPhoneDigits = (settings.coachPhone || settings.sinpePhone || "62806989").replace(/\D/g, '');
+  const coachPhoneClean = coachPhoneDigits.length === 8 ? `506${coachPhoneDigits}` : coachPhoneDigits;
+  const coachDisplayPhone = settings.coachPhone || settings.sinpePhone || "62806989";
 
   switch (actualLevel) {
     case "nivel1_preventivo":
-      return `🏀 *Recordatorio Amistoso de Cuota - Golden Sport Academy Santa Cruz*\n\n` +
+      return `🏀 *RECORDATORIO OFICIAL DE CUOTA - GOLDEN SPORT ACADEMY SANTA CRUZ*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
-        `Esperamos que se encuentre muy bien. Le saludamos con mucho aprecio de parte de la directiva y entrenadores de Golden Sport Academy Santa Cruz.\n\n` +
-        `Le recordamos amablemente que este próximo *12 de ${payment.month}* corresponde la fecha de corte de la mensualidad de básquetbol de *${payment.playerName}*.\n\n` +
+        `Esperamos que se encuentre muy bien. Le saludamos cordialmente de parte de la directiva y cuerpo técnico de Golden Sport Academy Santa Cruz.\n\n` +
+        `Le recordamos amablemente que este próximo *12 de ${payment.month}* corresponde la fecha de corte de la cuota mensual de formación de *${payment.playerName}*.\n\n` +
         `📌 *Detalle de Pago:*\n` +
         `• Atleta: *${payment.playerName}*\n` +
         `• Periodo: *${payment.month} ${payment.year}*\n` +
@@ -112,12 +123,14 @@ export function generatePaymentWhatsAppMessage(
         `• Monto mensual: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (A nombre de: ${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Una vez realizada la transferencia, le agradecemos enviarnos el comprobante a este número (*${settings.sinpePhone}*) para actualizar la ficha deportiva.\n\n` +
+        `📲 *Envío de Comprobante / Consultas:*\n` +
+        `Una vez realizado el Sinpe, por favor remita su comprobante directamente al chat de la Profe Lenny al número *${coachDisplayPhone}* (o toque aquí: https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya realizó su pago antes de recibir este mensaje automatizado, por favor omita esta comunicación. De lo contrario, le agradecemos la debida atención)._\n\n` +
-        `¡Agradecemos enormemente su compromiso con el semillero dorado! 💛🖤 #FamiliaGolden`;
+        `¡Agradecemos enormemente su compromiso con el semillero dorado! 💛🖤 #FamiliaGolden\n\n` +
+        SPONSORSHIP_FOOTER;
 
     case "nivel2_seguimiento":
-      return `🏀 *Seguimiento de Mensualidad - Golden Sport Academy Santa Cruz*\n\n` +
+      return `🏀 *SEGUIMIENTO DE CUOTA - GOLDEN SPORT ACADEMY SANTA CRUZ*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
         `Esperamos que todo marche excelente en su hogar. Le contactamos de la administración de Golden Sport Academy.\n\n` +
         `Revisando nuestros registros, notamos que la cuota de básquetbol de *${payment.playerName}* del mes de *${payment.month}* (fecha límite 12 de ${payment.month}) aún se encuentra pendiente. Deseamos consultar si tuvo algún inconveniente con la plataforma de Sinpe Móvil o si requiere algún apoyo con los datos bancarios.\n\n` +
@@ -127,12 +140,14 @@ export function generatePaymentWhatsAppMessage(
         `• Monto: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Por favor envíenos el comprobante a este número cuando le sea posible para mantener al día el expediente deportivo.\n\n` +
+        `📲 *Envío de Comprobante / Coordinación:*\n` +
+        `Por favor envíenos el comprobante al chat de la Profe Lenny (*${coachDisplayPhone}* o https://wa.me/${coachPhoneClean}) para mantener al día el expediente deportivo.\n\n` +
         `_(Si ya efectuó su pago previamente, favor hacer caso omiso a este recordatorio automático. De lo contrario, agradecemos su amable gestión)._\n\n` +
-        `¡Muchas gracias por su valioso apoyo y comprensión! 💛🖤`;
+        `¡Muchas gracias por su valioso apoyo y comprensión! 💛🖤 #FamiliaGolden\n\n` +
+        SPONSORSHIP_FOOTER;
 
     case "nivel3_formativo":
-      return `🌟 *Continuidad Deportiva y Formativa - Golden Sport Academy Santa Cruz*\n\n` +
+      return `🌟 *CONTINUIDAD DEPORTIVA Y FORMATIVA - GOLDEN SPORT ACADEMY*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
         `Reciba un cordial saludo de parte de Golden Sport Academy Santa Cruz.\n\n` +
         `Para nuestra academia, el desarrollo deportivo y formativo de *${payment.playerName}* en la cancha es fundamental. Su disciplina y entusiasmo en cada entrenamiento nos llenan de satisfacción.\n\n` +
@@ -142,12 +157,14 @@ export function generatePaymentWhatsAppMessage(
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a este chat.\n\n` +
+        `📲 *Coordinación Directa:*\n` +
+        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante al WhatsApp de la Profe Lenny al *${coachDisplayPhone}* (https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya realizó su pago antes de este envío automatizado, le rogamos omitir este aviso. De lo contrario, agradecemos su pronta atención)._\n\n` +
-        `¡Seguimos adelante con su proceso formativo! 🏀🔥`;
+        `¡Seguimos adelante con su proceso formativo! 🏀🔥 #FamiliaGolden\n\n` +
+        SPONSORSHIP_FOOTER;
 
     case "nivel4_beca_comite":
-      return `🤝 *Mensaje de Apoyo, Coordinación y Continuidad - Golden Sport Academy Santa Cruz*\n\n` +
+      return `🤝 *COORDINACIÓN ADMINISTRATIVA Y CONTINUIDAD - GOLDEN SPORT ACADEMY*\n\n` +
         `Estimado(a) *${payment.guardianName}*,\n\n` +
         `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, respeto y consideración de parte de la directiva y cuerpo técnico de Golden Sport Academy.\n\n` +
         `Observamos que la cuota de *${payment.month}* de *${payment.playerName}* presenta un atraso de varios días. Entendemos plenamente que como familias todos podemos atravesar momentos imprevistos o situaciones complejas.\n\n` +
@@ -156,10 +173,11 @@ export function generatePaymentWhatsAppMessage(
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN BCR: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al *${settings.coachPhone || settings.sinpePhone}*.\n\n` +
+        `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al *${coachDisplayPhone}* (https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya formalizó su pago previamente, por favor omita este aviso automático)._\n\n` +
         `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento a usted y a su familia por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto y cariño que en esta etapa no podrá continuar, deseándole siempre el mayor de los éxitos a *${payment.playerName}* y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
-        `¡Un cordial saludo y bendiciones! 💛🖤`;
+        `¡Un cordial saludo y bendiciones! 💛🖤\n\n` +
+        SPONSORSHIP_FOOTER;
   }
 }
 
@@ -173,6 +191,7 @@ export function generatePaymentEmailContent(
 ): { subject: string; body: string } {
   const actualLevel = level || getSuggestedReminderLevel(payment);
   const formattedAmount = `₡${payment.amount.toLocaleString('es-CR')}`;
+  const coachDisplayPhone = settings.coachPhone || settings.sinpePhone || "62806989";
 
   let subject = "";
   let body = "";
@@ -181,7 +200,7 @@ export function generatePaymentEmailContent(
     case "nivel1_preventivo":
       subject = `Recordatorio de Cuota Mensual - ${payment.playerName} (Golden Sport Academy)`;
       body = `Estimado(a) ${payment.guardianName},\n\n` +
-        `Esperamos que se encuentre muy bien. Le saludamos con mucho aprecio de parte de la directiva de Golden Sport Academy Santa Cruz.\n\n` +
+        `Esperamos que se encuentre muy bien. Le saludamos cordialmente de parte de la directiva de Golden Sport Academy Santa Cruz.\n\n` +
         `Le recordamos amablemente que este próximo 12 de ${payment.month} corresponde la fecha de corte de la mensualidad de básquetbol de ${payment.playerName}.\n\n` +
         `Detalle de Pago:\n` +
         `• Atleta: ${payment.playerName}\n` +
@@ -189,9 +208,10 @@ export function generatePaymentEmailContent(
         `• Monto mensual: ${formattedAmount}\n` +
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos enviarnos el comprobante de pago cuando realice la transferencia.\n\n` +
+        `Agradecemos enviar el comprobante de pago al WhatsApp de la Profe Lenny (${coachDisplayPhone}) cuando realice la transferencia.\n\n` +
         `(Si ya realizó su pago previamente, por favor omita este mensaje automatizado. De lo contrario, le agradecemos la debida atención).\n\n` +
-        `Atentamente,\nDirectiva y Cuerpo Técnico\nGolden Sport Academy Santa Cruz`;
+        `Atentamente,\nDirectiva y Cuerpo Técnico\nGolden Sport Academy Santa Cruz\n\n` +
+        `---\nSistema oficial de notificaciones operado por la plataforma tecnológica de Curiol Studio, patrocinador oficial de Golden Sport Academy.`;
       break;
 
     case "nivel2_seguimiento":
@@ -202,9 +222,10 @@ export function generatePaymentEmailContent(
         `• Monto: ${formattedAmount}\n` +
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos remitirnos el comprobante para actualizar el expediente deportivo.\n\n` +
+        `Agradecemos remitirnos el comprobante al WhatsApp (${coachDisplayPhone}) para actualizar el expediente deportivo.\n\n` +
         `(Si ya efectuó su pago con anterioridad, favor hacer caso omiso a esta notificación automática).\n\n` +
-        `Atentamente,\nAdministración Golden Sport Academy`;
+        `Atentamente,\nAdministración Golden Sport Academy\n\n` +
+        `---\nSistema oficial de notificaciones operado por la plataforma tecnológica de Curiol Studio.`;
       break;
 
     case "nivel3_formativo":
@@ -215,9 +236,10 @@ export function generatePaymentEmailContent(
         `• Monto pendiente: ${formattedAmount}\n` +
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a nuestro número oficial ${settings.sinpePhone}.\n\n` +
+        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante al número oficial ${coachDisplayPhone}.\n\n` +
         `(Si ya realizó su pago antes de recibir este correo automatizado, por favor omita esta comunicación).\n\n` +
-        `Atentamente,\nCuerpo Técnico y Directiva\nGolden Sport Academy Santa Cruz`;
+        `Atentamente,\nCuerpo Técnico y Directiva\nGolden Sport Academy Santa Cruz\n\n` +
+        `---\nPlataforma tecnológica provista por Curiol Studio.`;
       break;
 
     case "nivel4_beca_comite":
@@ -225,9 +247,10 @@ export function generatePaymentEmailContent(
       body = `Estimado(a) ${payment.guardianName},\n\n` +
         `Esperamos que se encuentre bien. Nos comunicamos con usted con total apertura, respeto y consideración de parte de la directiva de Golden Sport Academy.\n\n` +
         `Observamos que la cuota de ${payment.month} de ${payment.playerName} presenta un atraso de varios días. Entendemos plenamente que todas las familias podemos experimentar momentos difíciles o imprevistos.\n\n` +
-        `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al teléfono ${settings.coachPhone || settings.sinpePhone}.\n\n` +
+        `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al teléfono ${coachDisplayPhone}.\n\n` +
         `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto que en esta etapa no podrá continuar, deseándole el mayor de los éxitos a ${payment.playerName} y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
-        `Atentamente,\nDirección General\nGolden Sport Academy Santa Cruz`;
+        `Atentamente,\nDirección General\nGolden Sport Academy Santa Cruz\n\n` +
+        `---\nPlataforma tecnológica provista por Curiol Studio.`;
       break;
   }
 
@@ -277,7 +300,8 @@ export function generatePaymentReceiptWhatsApp(
     `• Referencia Sinpe: *${ref}*\n` +
     `• Fecha de Registro: *${today}*\n` +
     `• Academia: *Golden Sport Academy Santa Cruz*\n\n` +
-    `¡Muchas gracias por su puntualidad y por creer en el talento y la formación de su hijo(a)! 🏀⭐💛🖤 #PuraGarraGolden`;
+    `¡Muchas gracias por su puntualidad y por creer en el talento y la formación de su hijo(a)! 🏀⭐💛🖤 #PuraGarraGolden\n\n` +
+    RECEIPT_SPONSORSHIP_FOOTER;
 }
 
 export function createPaymentReceiptWhatsAppLink(
