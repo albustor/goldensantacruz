@@ -147,6 +147,16 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
     onRefresh();
   };
 
+  const handleTogglePaymentStatus = async (payment: PaymentRecord) => {
+    const isCurrentlyPaid = payment.status === "pagado";
+    const newStatus = isCurrentlyPaid ? "pendiente" : "pagado";
+    const ref = newStatus === "pagado" 
+      ? (payment.sinpeReference || `SINPE-MANUAL-${Math.floor(100000 + Math.random() * 900000)}`) 
+      : undefined;
+    await Store.updatePaymentStatus(payment.id, newStatus, ref);
+    onRefresh();
+  };
+
   const handleOpenNotifyModal = (payment: PaymentRecord) => {
     const suggested = getSuggestedReminderLevel(payment);
     setSelectedLevel(suggested);
@@ -479,23 +489,29 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                       </td>
 
                       <td className="py-3 px-4 space-y-1">
-                        <div>
+                        <button
+                          type="button"
+                          onClick={() => handleTogglePaymentStatus(p)}
+                          title="Haz clic para alternar estado inmediatamente (Al Día ⟷ Pendiente)"
+                          className="text-left group cursor-pointer transition-transform active:scale-95 block"
+                        >
                           {isPaid ? (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" />
-                              Al Día
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 inline-flex items-center gap-1 group-hover:bg-emerald-500/40 group-hover:border-emerald-400 transition-all shadow-sm">
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              <span>Al Día (Tocar: cambiar)</span>
                             </span>
                           ) : isOverdue ? (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center gap-1">
-                              <AlertCircle className="w-3 h-3" />
-                              Vencido
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 inline-flex items-center gap-1 group-hover:bg-red-500/40 group-hover:border-red-400 transition-all shadow-sm">
+                              <AlertCircle className="w-3 h-3 text-red-400" />
+                              <span>Vencido (Tocar: Al Día)</span>
                             </span>
                           ) : (
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center gap-1">
-                              Pendiente
+                            <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 inline-flex items-center gap-1 group-hover:bg-amber-500/40 group-hover:border-amber-400 transition-all shadow-sm">
+                              <Clock className="w-3 h-3 text-amber-400" />
+                              <span>Pendiente (Tocar: Al Día)</span>
                             </span>
                           )}
-                        </div>
+                        </button>
                         {!isPaid && levelInfo && (
                           <div>
                             <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${levelInfo.badgeColor}`}>
@@ -529,15 +545,23 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                             </a>
 
                             <button
-                              onClick={() => setPayingRecord(p)}
+                              onClick={() => handleTogglePaymentStatus(p)}
                               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs shadow-md transition-all"
+                              title="Marcar como pagado en 1 clic"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
-                              Registrar Pago
+                              Marcar Pagado (1 Clic)
                             </button>
                           </>
                         ) : (
                           <div className="inline-flex items-center gap-2">
+                            <button
+                              onClick={() => handleTogglePaymentStatus(p)}
+                              className="px-2.5 py-1.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-amber-400 text-xs font-bold border border-amber-500/30 transition-all hover:bg-amber-500/10"
+                              title="Cambiar estado a pendiente en 1 clic"
+                            >
+                              Marcar Pendiente
+                            </button>
                             <a
                               href={createPaymentReceiptWhatsAppLink(p, settings, p.sinpeReference)}
                               target="_blank"
@@ -548,9 +572,6 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                               <Receipt className="w-3.5 h-3.5" />
                               <span>Reenviar Recibo WA</span>
                             </a>
-                            <span className="text-[11px] text-gray-400 italic">
-                              Pagado
-                            </span>
                           </div>
                         )}
                       </td>
