@@ -10,6 +10,7 @@ interface OCRResult {
   monto: number;
   fecha: string;
   banco: string;
+  titularEmisor?: string;
   valido: boolean;
   rawText?: string;
 }
@@ -17,7 +18,7 @@ interface OCRResult {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { playerId, imageBase64, manualReference, month, year } = body;
+    const { playerId, payerName, imageBase64, manualReference, month, year } = body;
 
     if (!playerId) {
       return NextResponse.json(
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
       monto: player.monthlyFee || settings.monthlyFeeDefault || 10000,
       fecha: new Date().toISOString().split("T")[0],
       banco: "SINPE Móvil",
+      titularEmisor: payerName || player.guardianName,
       valido: true,
     };
 
@@ -61,6 +63,7 @@ Extrae y responde ÚNICAMENTE un JSON con los siguientes campos estrictos (sin t
   "monto": 10000 (el monto transferido en número entero o flotante, sin símbolos de colones ni comas),
   "fecha": "YYYY-MM-DD (fecha del comprobante o fecha de hoy si no se aprecia)",
   "banco": "nombre del banco detectado (ej: BCR, BAC Credomatic, Banco Nacional, Banco Popular, Coopealianza, etc.)",
+  "titularEmisor": "nombre de la persona que envió o realizó la transferencia si es visible en el voucher",
   "valido": true (o false si la imagen NO es un comprobante de pago)
 }`;
 
@@ -102,6 +105,7 @@ Extrae y responde ÚNICAMENTE un JSON con los siguientes campos estrictos (sin t
                 monto: Number(parsed.monto) || ocrData.monto,
                 fecha: parsed.fecha || ocrData.fecha,
                 banco: parsed.banco || "SINPE Móvil",
+                titularEmisor: parsed.titularEmisor || payerName || player.guardianName,
                 valido: parsed.valido !== false,
                 rawText: rawResponseText,
               };
@@ -114,6 +118,8 @@ Extrae y responde ÚNICAMENTE un JSON con los siguientes campos estrictos (sin t
         console.warn("[OCR] Error en llamada a Gemini Vision:", geminiErr);
       }
     }
+
+    const finalPayerName = payerName || ocrData.titularEmisor || player.guardianName;
 
     // 2. Buscar o crear el registro de pago correspondiente en la base de datos
     const payments = await Store.getPayments();
@@ -147,8 +153,9 @@ Extrae y responde ÚNICAMENTE un JSON con los siguientes campos estrictos (sin t
     const coachNotificationMessage =
       `🏀 *NUEVO COMPROBANTE SINPE REPORTADO - GOLDEN SPORT ACADEMY*\n\n` +
       `Hola Profe Lenny, un padre de familia acaba de subir su comprobante de pago:\n\n` +
-      `👤 *Atleta:* ${player.fullName}\n` +
-      `👨‍👩‍👧 *Tutor:* ${player.guardianName} (${player.guardianPhone})\n` +
+      `👤 *Atleta / Integrante:* ${player.fullName} (${player.category})\n` +
+      `💳 *Persona que Realizó el Pago:* ${finalPayerName}\n` +
+      `👨‍👩‍👧 *Tutor Registrado:* ${player.guardianName} (${player.guardianPhone})\n` +
       `📅 *Periodo:* ${currentMonth} ${currentYear}\n` +
       `💰 *Monto Reportado:* ${formattedAmount}\n` +
       `🏦 *Entidad / Canal:* ${ocrData.banco}\n` +
@@ -173,7 +180,9 @@ Extrae y responde ÚNICAMENTE un JSON con los siguientes campos estrictos (sin t
         receiptNumber: receiptId,
         playerId: player.id,
         playerName: player.fullName,
+        category: player.category,
         guardianName: player.guardianName,
+        payerName: finalPayerName,
         guardianPhone: player.guardianPhone,
         month: currentMonth,
         year: currentYear,

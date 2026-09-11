@@ -30,7 +30,9 @@ interface ReceiptData {
   receiptNumber: string;
   playerId: string;
   playerName: string;
+  category?: string;
   guardianName: string;
+  payerName: string;
   guardianPhone: string;
   month: string;
   year: number;
@@ -49,6 +51,7 @@ function ComprobanteContent() {
   const [players, setPlayers] = useState<Player[]>(INITIAL_PLAYERS.filter((p) => p.isActive));
   const [settings, setSettings] = useState<SystemSettings>(INITIAL_SETTINGS);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string>(paramPlayerId || "");
+  const [payerName, setPayerName] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("Septiembre");
   const [selectedYear, setSelectedYear] = useState<number>(2026);
@@ -88,6 +91,12 @@ function ComprobanteContent() {
   }, [paramPlayerId]);
 
   const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
+
+  useEffect(() => {
+    if (selectedPlayer && !payerName) {
+      setPayerName(selectedPlayer.guardianName);
+    }
+  }, [selectedPlayer]);
 
   // Handle File Selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,6 +147,7 @@ function ComprobanteContent() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           playerId: selectedPlayerId,
+          payerName: payerName.trim() || selectedPlayer?.guardianName,
           imageBase64: imageBase64,
           manualReference: manualReference,
           month: selectedMonth,
@@ -239,14 +249,24 @@ function ComprobanteContent() {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 <div>
-                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Atleta</span>
+                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Atleta / Integrante</span>
                   <p className="font-bold text-white text-sm">{receipt.playerName}</p>
+                  {receipt.category && (
+                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-golden-500/10 text-golden-400 border border-golden-500/20">
+                      {receipt.category}
+                    </span>
+                  )}
                 </div>
                 <div>
-                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Tutor</span>
-                  <p className="font-medium text-gray-200">{receipt.guardianName}</p>
+                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Persona que Realizó el Pago</span>
+                  <p className="font-bold text-emerald-400 text-sm">{receipt.payerName || receipt.guardianName}</p>
+                  <span className="text-[10px] text-gray-400 block">Titular de la cuenta SINPE</span>
+                </div>
+                <div>
+                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Tutor Registrado</span>
+                  <p className="font-medium text-gray-200">{receipt.guardianName} ({receipt.guardianPhone})</p>
                 </div>
                 <div>
                   <span className="text-gray-400 block text-[10px] uppercase font-bold">Periodo</span>
@@ -257,8 +277,8 @@ function ComprobanteContent() {
                   <p className="font-black text-white text-sm">₡{receipt.amount.toLocaleString("es-CR")}</p>
                 </div>
                 <div>
-                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Ref. SINPE</span>
-                  <p className="font-mono text-emerald-400 font-bold">{receipt.sinpeReference}</p>
+                  <span className="text-gray-400 block text-[10px] uppercase font-bold">Ref. SINPE / Canal</span>
+                  <p className="font-mono text-emerald-400 font-bold">{receipt.sinpeReference} ({receipt.bank})</p>
                 </div>
                 <div>
                   <span className="text-gray-400 block text-[10px] uppercase font-bold">Fecha Depósito</span>
@@ -378,11 +398,30 @@ function ComprobanteContent() {
               )}
             </div>
 
-            {/* Paso 2: Periodo */}
+            {/* Paso 2: Persona que realizó la transacción (Depositante / Titular) */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-black uppercase text-golden-400 flex items-center justify-between">
+                <span>2. Persona que Realizó el SINPE (Depositante / Titular):</span>
+                <span className="text-[10px] text-gray-400 font-normal">Identificación del pago</span>
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Nombre completo de quien transfirió el dinero..."
+                value={payerName}
+                onChange={(e) => setPayerName(e.target.value)}
+                className="w-full bg-dark-950 border border-gray-800 rounded-xl px-3.5 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-golden-400"
+              />
+              <p className="text-[11px] text-gray-400">
+                💡 Si el SINPE lo hizo otra persona (mamá, papá, tío, abuelo), indica aquí su nombre para que la Profe Lenny lo coteje de inmediato en su banca.
+              </p>
+            </div>
+
+            {/* Paso 3: Periodo */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase text-golden-400 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4" />
-                2. Periodo de la Cuota:
+                3. Periodo de la Cuota:
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <select
@@ -407,11 +446,11 @@ function ComprobanteContent() {
               </div>
             </div>
 
-            {/* Paso 3: Subida de Comprobante */}
+            {/* Paso 4: Subida de Comprobante */}
             <div className="space-y-2">
               <label className="block text-xs font-black uppercase text-golden-400 flex items-center gap-1.5">
                 <Camera className="w-4 h-4" />
-                3. Captura o Foto del SINPE Móvil:
+                4. Captura o Foto del SINPE Móvil:
               </label>
 
               {!imagePreview ? (
