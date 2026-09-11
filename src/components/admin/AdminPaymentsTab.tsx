@@ -177,14 +177,20 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
           settings: settings,
         }),
       });
-      const data = await res.json();
+      let data: any = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        data = { error: `Servidor no devolvió respuesta JSON válida (Código HTTP ${res.status})` };
+      }
+
       if (res.ok && data.success) {
         setEvolutionStatus("success");
       } else {
-        setEvolutionStatus(`error: ${data.error || "No se pudo enviar"}`);
+        setEvolutionStatus(`error: ${data.error || "No se pudo enviar el mensaje por WhatsApp"}`);
       }
     } catch (err: any) {
-      setEvolutionStatus(`error: ${err.message}`);
+      setEvolutionStatus(`error: ${err.message || "Error de conexión"}`);
     } finally {
       setIsSendingEvolution(false);
     }

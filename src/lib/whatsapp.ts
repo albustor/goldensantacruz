@@ -113,6 +113,7 @@ export function generatePaymentWhatsAppMessage(
         `• Sinpe Móvil: *${settings.sinpePhone}* (A nombre de: ${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Una vez realizada la transferencia, le agradecemos enviarnos el comprobante a este número (*${settings.sinpePhone}*) para actualizar la ficha deportiva.\n\n` +
+        `_(Si ya realizó su pago antes de recibir este mensaje automatizado, por favor omita esta comunicación. De lo contrario, le agradecemos la debida atención)._\n\n` +
         `¡Agradecemos enormemente su compromiso con el semillero dorado! 💛🖤 #FamiliaGolden`;
 
     case "nivel2_seguimiento":
@@ -127,6 +128,7 @@ export function generatePaymentWhatsAppMessage(
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Por favor envíenos el comprobante a este número cuando le sea posible para mantener al día el expediente deportivo.\n\n` +
+        `_(Si ya efectuó su pago previamente, favor hacer caso omiso a este recordatorio automático. De lo contrario, agradecemos su amable gestión)._\n\n` +
         `¡Muchas gracias por su valioso apoyo y comprensión! 💛🖤`;
 
     case "nivel3_formativo":
@@ -140,7 +142,9 @@ export function generatePaymentWhatsAppMessage(
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a este chat. ¡Seguimos adelante con su proceso formativo! 🏀🔥`;
+        `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a este chat.\n\n` +
+        `_(Si ya realizó su pago antes de este envío automatizado, le rogamos omitir este aviso. De lo contrario, agradecemos su pronta atención)._\n\n` +
+        `¡Seguimos adelante con su proceso formativo! 🏀🔥`;
 
     case "nivel4_beca_comite":
       return `🤝 *Mensaje de Apoyo, Coordinación y Continuidad - Golden Sport Academy Santa Cruz*\n\n` +
@@ -153,6 +157,7 @@ export function generatePaymentWhatsAppMessage(
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN BCR: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al *${settings.coachPhone || settings.sinpePhone}*.\n\n` +
+        `_(Si ya formalizó su pago previamente, por favor omita este aviso automático)._\n\n` +
         `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento a usted y a su familia por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto y cariño que en esta etapa no podrá continuar, deseándole siempre el mayor de los éxitos a *${payment.playerName}* y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +
         `¡Un cordial saludo y bendiciones! 💛🖤`;
   }
@@ -185,6 +190,7 @@ export function generatePaymentEmailContent(
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Agradecemos enviarnos el comprobante de pago cuando realice la transferencia.\n\n` +
+        `(Si ya realizó su pago previamente, por favor omita este mensaje automatizado. De lo contrario, le agradecemos la debida atención).\n\n` +
         `Atentamente,\nDirectiva y Cuerpo Técnico\nGolden Sport Academy Santa Cruz`;
       break;
 
@@ -197,6 +203,7 @@ export function generatePaymentEmailContent(
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Agradecemos remitirnos el comprobante para actualizar el expediente deportivo.\n\n` +
+        `(Si ya efectuó su pago con anterioridad, favor hacer caso omiso a esta notificación automática).\n\n` +
         `Atentamente,\nAdministración Golden Sport Academy`;
       break;
 
@@ -209,6 +216,7 @@ export function generatePaymentEmailContent(
         `• Sinpe Móvil: ${settings.sinpePhone} (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
         `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante a nuestro número oficial ${settings.sinpePhone}.\n\n` +
+        `(Si ya realizó su pago antes de recibir este correo automatizado, por favor omita esta comunicación).\n\n` +
         `Atentamente,\nCuerpo Técnico y Directiva\nGolden Sport Academy Santa Cruz`;
       break;
 
