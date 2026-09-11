@@ -420,6 +420,13 @@ export default function GaleriaPage() {
                           ● Abierto para papás
                         </span>
                       )}
+
+                      {activeTab === "pro_studio" && (
+                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+                          <TreeDeciduous className="w-3 h-3 text-emerald-400" />
+                          <span>Hito Árbol Guanacaste</span>
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

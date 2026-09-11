@@ -474,6 +474,16 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
 
+                    <a
+                      href="https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-2 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-bold text-xs flex items-center gap-1 border border-emerald-500/30"
+                      title="Ver nodo / hito en el Árbol de Guanacaste"
+                    >
+                      <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
+                    </a>
+
                     <button
                       onClick={() => handleDeleteAlbum(album.id, album.title)}
                       className="p-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/30 text-red-400 text-xs"
