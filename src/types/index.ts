@@ -14,6 +14,17 @@ export interface Player {
   jerseyNumber?: number;
   position?: string;
   medicalNotes?: string;
+  address?: string;
+  school?: string;
+  age?: string | number;
+  photoAuthorized?: boolean;
+  photoAuthNotes?: string;
+  tshirtSize?: string;
+  bloodType?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  idCardNumber?: string;
+  dominantHand?: string;
   registrationDate: string;
   monthlyFee: number;
   paymentStatus: PaymentStatus;

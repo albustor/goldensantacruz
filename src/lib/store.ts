@@ -40,8 +40,8 @@ export interface DirectivaAudioNote {
 }
 
 const STORAGE_KEYS = {
-  PLAYERS: 'golden_players_v6',
-  PAYMENTS: 'golden_payments_v6',
+  PLAYERS: 'golden_players_v7',
+  PAYMENTS: 'golden_payments_v7',
   MATCHES: 'golden_matches_v6',
   ALBUMS: 'golden_albums_v7',
   GALLERY: 'golden_gallery_v7',

@@ -237,6 +237,29 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   return (
     <div className="space-y-8 animate-fadeIn">
       
+      {/* ⚠️ ALERTA OBLIGATORIA: ATLETAS SIN AUTORIZACIÓN FOTOGRÁFICA */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-red-950/90 via-rose-950/80 to-red-950/90 border-2 border-red-500/70 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-red-500/20 border border-red-500/50 flex items-center justify-center text-red-400 shrink-0">
+            <span className="text-lg">🚫</span>
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase text-red-400 tracking-wider block">
+              Control Estricto de Privacidad & Consentimiento
+            </span>
+            <h4 className="text-sm font-black text-white uppercase">
+              2 Atletas No Deben Aparecer en Fotografías ni Videos
+            </h4>
+            <p className="text-xs text-rose-200">
+              Verificar antes de publicar en redes sociales o galerías: <strong>David Galagarza Villarreal</strong> y <strong>Lucía Padilla Gutiérrez</strong>.
+            </p>
+          </div>
+        </div>
+        <span className="px-3 py-1 rounded-xl bg-red-600 text-white text-[10px] font-black uppercase shadow shrink-0">
+          Protección Activa
+        </span>
+      </div>
+
       {/* BANNER DE VINCULACIÓN AL ÁRBOL DE GUANACASTE */}
       <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-dark-800 to-dark-800 border-2 border-emerald-500/50 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-4">
