@@ -65,10 +65,15 @@ async function handleAutomatedCobranzas(req: NextRequest) {
       activeLevel = "nivel4_beca_comite";
     }
 
-    // Filtrar cobros pendientes
-    const pendingRecords = payments.filter(
-      p => p.status === "pendiente" || p.status === "atrasado"
-    );
+    // Filtrar cobros pendientes que NO tengan prórroga vigente ni exención activa
+    const todayStr = now.toISOString().split("T")[0];
+    const pendingRecords = payments.filter((p) => {
+      if (p.status !== "pendiente" && p.status !== "atrasado") return false;
+      if (p.isExemptFromSweep) return false;
+      // Si tiene fecha de prórroga y aún no se ha cumplido la fecha, se omite el recordatorio
+      if (p.extensionDate && p.extensionDate >= todayStr) return false;
+      return true;
+    });
 
     for (const payment of pendingRecords) {
       const recipientPhone = testPhone ? testPhone : payment.guardianPhone;

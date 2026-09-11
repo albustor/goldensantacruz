@@ -71,6 +71,12 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
   // Modal de comprobante / recibo enviado
   const [receiptRecord, setReceiptRecord] = useState<PaymentRecord | null>(null);
 
+  // Modal de prórroga / convenio
+  const [extensionModalRecord, setExtensionModalRecord] = useState<PaymentRecord | null>(null);
+  const [extensionDateInput, setExtensionDateInput] = useState<string>("2026-09-15");
+  const [extensionReasonInput, setExtensionReasonInput] = useState<string>("Acuerdo con Lenny: Pago en quincena");
+  const [extensionExemptInput, setExtensionExemptInput] = useState<boolean>(true);
+
   const months = [
     "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
     "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
@@ -89,8 +95,10 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
       p.playerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.guardianName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.guardianPhone.includes(searchTerm);
-    const matchStatus = statusFilter === "all" || p.status === statusFilter;
-    return matchSearch && matchStatus;
+    if (!matchSearch) return false;
+    if (statusFilter === "all") return true;
+    if (statusFilter === "prorroga") return Boolean(p.extensionDate);
+    return p.status === statusFilter;
   });
 
   // KPI calculations
@@ -98,6 +106,7 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
   const paidList = filtered.filter((p) => p.status === "pagado");
   const pendingList = filtered.filter((p) => p.status === "pendiente");
   const overdueList = filtered.filter((p) => p.status === "atrasado");
+  const extensionList = (currentMonthPayments.length > 0 ? currentMonthPayments : payments).filter((p) => Boolean(p.extensionDate));
 
   const totalPaid = paidList.reduce((acc, curr) => acc + curr.amount, 0);
   const totalPending = pendingList.reduce((acc, curr) => acc + curr.amount, 0);
@@ -154,6 +163,33 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
       ? (payment.sinpeReference || `SINPE-MANUAL-${Math.floor(100000 + Math.random() * 900000)}`) 
       : undefined;
     await Store.updatePaymentStatus(payment.id, newStatus, ref);
+    onRefresh();
+  };
+
+  const handleOpenExtensionModal = (payment: PaymentRecord) => {
+    setExtensionModalRecord(payment);
+    setExtensionDateInput(payment.extensionDate || "2026-09-15");
+    setExtensionReasonInput(payment.extensionReason || "Acuerdo con Lenny: Pago en quincena");
+    setExtensionExemptInput(payment.isExemptFromSweep !== undefined ? payment.isExemptFromSweep : true);
+  };
+
+  const handleSaveExtension = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!extensionModalRecord) return;
+    await Store.updatePaymentExtension(
+      extensionModalRecord.id,
+      extensionDateInput,
+      extensionReasonInput.trim(),
+      extensionExemptInput
+    );
+    setExtensionModalRecord(null);
+    onRefresh();
+  };
+
+  const handleRemoveExtension = async () => {
+    if (!extensionModalRecord) return;
+    await Store.updatePaymentExtension(extensionModalRecord.id, undefined, undefined, false);
+    setExtensionModalRecord(null);
     onRefresh();
   };
 
@@ -426,6 +462,14 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
           >
             Vencidos ({overdueList.length})
           </button>
+          <button
+            onClick={() => setStatusFilter("prorroga")}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+              statusFilter === "prorroga" ? "bg-purple-600 text-white" : "bg-dark-900 text-purple-400 border border-purple-500/30"
+            }`}
+          >
+            ⏳ Prórrogas ({extensionList.length})
+          </button>
         </div>
       </div>
 
@@ -512,7 +556,14 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                             </span>
                           )}
                         </button>
-                        {!isPaid && levelInfo && (
+                        {p.extensionDate && (
+                          <div className="pt-0.5">
+                            <span className="px-2 py-0.5 rounded text-[9px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 inline-flex items-center gap-1" title={p.extensionReason || "Prórroga acordada con Lenny"}>
+                              <span>⏳ Prórroga: {p.extensionDate}</span>
+                            </span>
+                          </div>
+                        )}
+                        {!isPaid && levelInfo && !p.extensionDate && (
                           <div>
                             <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase border ${levelInfo.badgeColor}`}>
                               {levelInfo.shortLabel}
@@ -524,6 +575,15 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                       <td className="py-3 px-4 text-right space-x-2">
                         {!isPaid ? (
                           <>
+                            <button
+                              onClick={() => handleOpenExtensionModal(p)}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-purple-950/60 hover:bg-purple-900/80 text-purple-300 font-bold text-xs border border-purple-500/40 shadow-md transition-all"
+                              title="Definir o editar prórroga de pago acordada"
+                            >
+                              <Clock className="w-3.5 h-3.5 text-purple-400" />
+                              <span>{p.extensionDate ? "Editar Prórroga" : "Prórroga"}</span>
+                            </button>
+
                             <button
                               onClick={() => handleOpenNotifyModal(p)}
                               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-dark-700 hover:bg-dark-600 text-golden-300 font-bold text-xs border border-golden-500/40 shadow-md transition-all"
@@ -920,6 +980,105 @@ export default function AdminPaymentsTab({ payments, players, settings, onRefres
                     Solo Guardar Pago
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL PRÓRROGA / CONVENIO DE PAGO */}
+      {extensionModalRecord && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-dark-900 border-2 border-purple-500/50 rounded-3xl p-6 space-y-5 shadow-2xl relative">
+            <button
+              onClick={() => setExtensionModalRecord(null)}
+              className="absolute top-5 right-5 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="space-y-1">
+              <span className="text-xs font-black text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+                <Clock className="w-4 h-4" />
+                Convenio / Prórroga de Pago
+              </span>
+              <h3 className="text-lg font-black text-white uppercase">
+                {extensionModalRecord.playerName}
+              </h3>
+              <p className="text-xs text-gray-400">
+                Tutor: {extensionModalRecord.guardianName} ({extensionModalRecord.guardianPhone})
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveExtension} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase mb-1">
+                  Nueva Fecha Límite de Prórroga *
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={extensionDateInput}
+                  onChange={(e) => setExtensionDateInput(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs focus:border-purple-500 [color-scheme:dark]"
+                />
+                <p className="text-[11px] text-gray-500 mt-1">
+                  Hasta esta fecha, el sistema no enviará recordatorios automáticos de cobro.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-300 uppercase mb-1">
+                  Motivo o Acuerdo con Lenny *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={extensionReasonInput}
+                  onChange={(e) => setExtensionReasonInput(e.target.value)}
+                  placeholder="Ej. Acuerdo con Lenny: Pago en quincena"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-dark-800 border border-gray-700 text-white text-xs focus:border-purple-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 p-3 rounded-xl bg-dark-950 border border-purple-500/30">
+                <input
+                  type="checkbox"
+                  id="exemptCheck"
+                  checked={extensionExemptInput}
+                  onChange={(e) => setExtensionExemptInput(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 rounded bg-dark-800 border-gray-700 focus:ring-purple-500"
+                />
+                <label htmlFor="exemptCheck" className="text-xs text-gray-300 font-semibold cursor-pointer">
+                  Excluir del barrido automático de cobros
+                </label>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs uppercase tracking-wider shadow-lg transition-all"
+                >
+                  Guardar Prórroga
+                </button>
+
+                {extensionModalRecord.extensionDate && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveExtension}
+                    className="w-full py-2 rounded-xl bg-red-950/40 hover:bg-red-900/60 text-red-400 font-bold text-xs border border-red-500/30 transition-all"
+                  >
+                    Eliminar Prórroga (Restablecer)
+                  </button>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setExtensionModalRecord(null)}
+                  className="w-full py-2 rounded-xl bg-dark-800 text-gray-400 hover:text-white text-xs font-bold"
+                >
+                  Cancelar
+                </button>
               </div>
             </form>
           </div>

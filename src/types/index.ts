@@ -51,6 +51,10 @@ export interface PaymentRecord {
   sinpeReference?: string;
   receiptUrl?: string;
   dueDate: string;
+  // Campos de Prórroga / Convenio Especial
+  extensionDate?: string;
+  extensionReason?: string;
+  isExemptFromSweep?: boolean;
 }
 
 export interface Match {

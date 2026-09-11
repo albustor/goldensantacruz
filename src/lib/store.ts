@@ -156,6 +156,22 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.PAYMENTS, updated);
   },
 
+  async updatePaymentExtension(id: string, extensionDate?: string, extensionReason?: string, isExemptFromSweep?: boolean): Promise<void> {
+    const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    const updated = current.map(p => {
+      if (p.id === id) {
+        return {
+          ...p,
+          extensionDate,
+          extensionReason,
+          isExemptFromSweep: isExemptFromSweep ?? Boolean(extensionDate),
+        };
+      }
+      return p;
+    });
+    saveToStorage(STORAGE_KEYS.PAYMENTS, updated);
+  },
+
   async markPaymentPaid(id: string, method: 'Sinpe Móvil' | 'Transferencia' | 'Efectivo', notes?: string): Promise<void> {
     const current = getFromStorage<PaymentRecord[]>(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
     const updated = current.map(p => {
