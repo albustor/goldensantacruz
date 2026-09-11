@@ -2,6 +2,14 @@
   "name": "golden-sport-academy",
   "version": "1.0.0",
   "private": true,
+  "curiolHub": {
+    "name": "Golden Sport Academy",
+    "category": "Proyectos",
+    "status": "terminado",
+    "color": "amber",
+    "icon": "ph-basketball",
+    "description": "Academia deportiva oficial de baloncesto Santa Cruz Guanacaste"
+  },
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
