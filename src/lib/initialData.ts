@@ -596,7 +596,7 @@ export const INITIAL_PAYMENTS: PaymentRecord[] = [
     month: "Septiembre",
     year: 2026,
     amount: 10000,
-    status: "atrasado",
+    status: "pendiente",
     dueDate: "2026-09-12",
   },
   {

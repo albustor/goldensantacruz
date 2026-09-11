@@ -110,6 +110,8 @@ export function generatePaymentWhatsAppMessage(
   const coachPhoneClean = coachPhoneDigits.length === 8 ? `506${coachPhoneDigits}` : coachPhoneDigits;
   const coachDisplayPhone = settings.coachPhone || settings.sinpePhone || "62806989";
 
+  const reportUrl = `https://www.goldensantacruz.com/comprobante?atleta=${payment.playerId}`;
+
   switch (actualLevel) {
     case "nivel1_preventivo":
       return `🏀 *RECORDATORIO OFICIAL DE CUOTA - GOLDEN SPORT ACADEMY SANTA CRUZ*\n\n` +
@@ -123,8 +125,11 @@ export function generatePaymentWhatsAppMessage(
         `• Monto mensual: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (A nombre de: ${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
-        `📲 *Envío de Comprobante / Consultas:*\n` +
-        `Una vez realizado el Sinpe, por favor remita su comprobante directamente al chat de la Profe Lenny al número *${coachDisplayPhone}* (o toque aquí: https://wa.me/${coachPhoneClean}).\n\n` +
+        `⚡ *Registro Inmediato de Comprobante:*\n` +
+        `Si ya realizaste tu SINPE, sube tu captura aquí en 10 segundos para recibir tu recibo oficial y quedar al día automáticamente:\n` +
+        `👉 ${reportUrl}\n\n` +
+        `📲 *Consultas o Chat Directo:*\n` +
+        `O bien, remita su comprobante al chat de la Profe Lenny al *${coachDisplayPhone}* (https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya realizó su pago antes de recibir este mensaje automatizado, por favor omita esta comunicación. De lo contrario, le agradecemos la debida atención)._\n\n` +
         `¡Agradecemos enormemente su compromiso con el semillero dorado! 💛🖤 #FamiliaGolden\n\n` +
         SPONSORSHIP_FOOTER;
@@ -140,8 +145,11 @@ export function generatePaymentWhatsAppMessage(
         `• Monto: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
+        `⚡ *Registro Inmediato de Comprobante:*\n` +
+        `Reporta tu captura de SINPE aquí para recibir tu recibo digital oficial:\n` +
+        `👉 ${reportUrl}\n\n` +
         `📲 *Envío de Comprobante / Coordinación:*\n` +
-        `Por favor envíenos el comprobante al chat de la Profe Lenny (*${coachDisplayPhone}* o https://wa.me/${coachPhoneClean}) para mantener al día el expediente deportivo.\n\n` +
+        `O envíanos el comprobante al chat de la Profe Lenny (*${coachDisplayPhone}* o https://wa.me/${coachPhoneClean}) para mantener al día el expediente deportivo.\n\n` +
         `_(Si ya efectuó su pago previamente, favor hacer caso omiso a este recordatorio automático. De lo contrario, agradecemos su amable gestión)._\n\n` +
         `¡Muchas gracias por su valioso apoyo y comprensión! 💛🖤 #FamiliaGolden\n\n` +
         SPONSORSHIP_FOOTER;
@@ -157,6 +165,8 @@ export function generatePaymentWhatsAppMessage(
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN: ${settings.ibanAccount} (${settings.bankName})\n\n` +
+        `⚡ *Registro Rápido de Comprobante:*\n` +
+        `👉 ${reportUrl}\n\n` +
         `📲 *Coordinación Directa:*\n` +
         `Agradecemos de corazón su valioso esfuerzo para ponernos al día. Por favor remítanos el comprobante al WhatsApp de la Profe Lenny al *${coachDisplayPhone}* (https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya realizó su pago antes de este envío automatizado, le rogamos omitir este aviso. De lo contrario, agradecemos su pronta atención)._\n\n` +
@@ -173,6 +183,8 @@ export function generatePaymentWhatsAppMessage(
         `• Monto pendiente: *${formattedAmount}*\n` +
         `• Sinpe Móvil: *${settings.sinpePhone}* (${settings.sinpeOwner})\n` +
         `• Cuenta IBAN BCR: ${settings.ibanAccount} (${settings.bankName})\n\n` +
+        `⚡ *Reporte de Comprobante:*\n` +
+        `👉 ${reportUrl}\n\n` +
         `Si desea coordinar la regularización de la cuota o conversar sobre la situación de ${payment.playerName}, por favor comuníquese directamente con la entrenadora Lenny al *${coachDisplayPhone}* (https://wa.me/${coachPhoneClean}).\n\n` +
         `_(Si ya formalizó su pago previamente, por favor omita este aviso automático)._\n\n` +
         `En caso de que en este momento no sea factible continuar con el proceso en la academia, queremos expresarle nuestro sincero agradecimiento a usted y a su familia por haber sido parte de Golden Sport Academy. Le indicamos con todo el respeto y cariño que en esta etapa no podrá continuar, deseándole siempre el mayor de los éxitos a *${payment.playerName}* y con la esperanza de que en algún momento a futuro pueda volver a reincorporarse con nosotros.\n\n` +

@@ -16,7 +16,8 @@ import {
   Award,
   Code,
   Globe,
-  ExternalLink
+  ExternalLink,
+  FileCheck
 } from "lucide-react";
 
 export default function Footer() {
@@ -98,6 +99,15 @@ export default function Footer() {
               <span className="text-[10px] text-gray-400 block">
                 Sinpe Móvil Oficial & Inscripciones
               </span>
+              <div className="pt-2">
+                <Link
+                  href="/comprobante"
+                  className="w-full px-3 py-1.5 rounded-lg bg-golden-500/20 hover:bg-golden-500/30 text-golden-400 font-bold text-[11px] border border-golden-500/40 inline-flex items-center justify-center gap-1.5 transition-colors"
+                >
+                  <FileCheck className="w-3 h-3" />
+                  <span>Reportar Comprobante SINPE</span>
+                </Link>
+              </div>
             </div>
           </div>
 
