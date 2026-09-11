@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   Camera,
   Upload,
@@ -61,7 +62,11 @@ function formatShortDate(dateStr: string): string {
   return dateStr;
 }
 
-export default function GaleriaPage() {
+function GaleriaContent() {
+  const searchParams = useSearchParams();
+  const urlAlbum = searchParams.get("album");
+  const urlTab = searchParams.get("tab");
+
   const [albums, setAlbums] = useState<GalleryAlbum[]>(INITIAL_ALBUMS);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
@@ -74,6 +79,21 @@ export default function GaleriaPage() {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedPhotoForView, setSelectedPhotoForView] = useState<GalleryPhoto | null>(null);
   const [selectedPhotoForPurchase, setSelectedPhotoForPurchase] = useState<GalleryPhoto | null>(null);
+
+  // Soporte de Deep-Link directo desde el Árbol de Guanacaste
+  useEffect(() => {
+    if (urlTab === "pro_studio" || urlTab === "community") {
+      setActiveTab(urlTab);
+    }
+    if (urlAlbum) {
+      if (urlAlbum === "liberia" || urlAlbum.includes("liberia")) {
+        setSelectedAlbumId("alb-curiol-liberia-2026");
+        setActiveTab("pro_studio");
+      } else {
+        setSelectedAlbumId(urlAlbum);
+      }
+    }
+  }, [urlAlbum, urlTab]);
 
   useEffect(() => {
     loadData();
@@ -693,5 +713,20 @@ export default function GaleriaPage() {
         />
       )}
     </div>
+  );
+}
+
+export default function GaleriaPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-dark-950 flex flex-col items-center justify-center space-y-4">
+        <Sparkles className="w-8 h-8 text-golden-400 animate-spin" />
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+          Cargando Galería Golden Sport Academy...
+        </p>
+      </div>
+    }>
+      <GaleriaContent />
+    </Suspense>
   );
 }
