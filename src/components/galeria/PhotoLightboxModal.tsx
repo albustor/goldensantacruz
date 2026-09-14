@@ -15,6 +15,7 @@ import {
   ZoomOut,
   RotateCcw,
   Maximize2,
+  CheckCircle2,
 } from "lucide-react";
 import { GalleryPhoto } from "@/types";
 
@@ -38,6 +39,7 @@ export default function PhotoLightboxModal({
   onNavigate,
 }: Props) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [toastSaved, setToastSaved] = useState(false);
 
   // Estados para Zoom y Pan (Pinch-to-zoom)
   const [scale, setScale] = useState(1);
@@ -282,10 +284,14 @@ export default function PhotoLightboxModal({
       fallbackDirectDownload(blobUrl, filename);
       setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
       setIsDownloading(false);
+      setToastSaved(true);
+      setTimeout(() => setToastSaved(false), 3000);
     } catch (err) {
       console.error("Error al guardar foto en galería:", err);
       fallbackDirectDownload(p.photoUrl, "foto_golden_sport.jpg");
       setIsDownloading(false);
+      setToastSaved(true);
+      setTimeout(() => setToastSaved(false), 3000);
     }
   };
 
@@ -311,11 +317,19 @@ export default function PhotoLightboxModal({
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="max-w-5xl w-full bg-dark-900 border-2 border-golden-500/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh]"
+        className="max-w-5xl w-full bg-dark-900 border-2 border-golden-500/50 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[95vh] relative"
       >
+        {/* Toast Notificación flotante de Guardado */}
+        {toastSaved && (
+          <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-2xl bg-emerald-600 text-white font-black text-xs sm:text-sm uppercase tracking-wide shadow-2xl flex items-center gap-2 animate-bounce border-2 border-white/30">
+            <CheckCircle2 className="w-5 h-5 text-white" />
+            <span>¡Foto guardada exitosamente en tu teléfono!</span>
+          </div>
+        )}
+
         {/* Cabecera del Visor con Contador de Fotos */}
         <div className="p-3.5 sm:p-4 border-b border-gray-800 flex items-center justify-between shrink-0">
-          <div className="space-y-0.5 max-w-[70%]">
+          <div className="space-y-0.5 max-w-[60%]">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-golden-400">
                 {photo.eventDate} • {photo.category}
@@ -332,6 +346,17 @@ export default function PhotoLightboxModal({
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Botón Rápido Guardar en Cabecera */}
+            <button
+              onClick={() => handleSaveToGallery(photo)}
+              disabled={isDownloading}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-md active:scale-95 disabled:opacity-50"
+              title="Guardar foto en tu teléfono"
+            >
+              <Download className="w-3.5 h-3.5 text-white" />
+              <span>{isDownloading ? "Guardando..." : "Guardar"}</span>
+            </button>
+
             {/* Controles de Zoom en Cabecera */}
             <div className="hidden sm:flex items-center bg-dark-950 border border-gray-800 rounded-xl p-0.5 text-gray-300">
               <button
@@ -381,51 +406,48 @@ export default function PhotoLightboxModal({
           onMouseLeave={handleMouseUp}
           onDoubleClick={handleDoubleTapOrClick}
         >
-          {/* Imagen Transformable por Zoom y Pan */}
+          {/* Imagen Principal con Zoom y Pan */}
           <div
             style={{
-              transform: `translate3d(${position.x}px, ${position.y}px, 0) scale(${scale})`,
-              transition: isDragging ? "none" : "transform 0.2s ease-out",
+              transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+              transition: isDragging ? "none" : "transform 0.2s cubic-bezier(0.2, 0, 0, 1)",
             }}
-            className="w-full h-full flex items-center justify-center will-change-transform"
+            className="w-full h-full flex items-center justify-center select-none"
           >
             <img
               src={photo.photoUrl}
               alt={photo.title}
-              className="max-h-[62vh] max-w-full w-auto object-contain mx-auto pointer-events-none"
               draggable={false}
+              className="max-w-full max-h-full object-contain pointer-events-none select-none"
             />
           </div>
 
-          {/* BOTONES FLOTANTES DE NAVEGACIÓN (ANTERIOR / SIGUIENTE) */}
+          {/* Flecha Anterior */}
           {hasMultiple && (
-            <>
-              {/* Botón Anterior */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handlePrev();
-                }}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/75 hover:bg-golden-500 text-white hover:text-dark-950 border border-golden-500/50 shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20"
-                title="Fotografía Anterior (Flecha Izquierda ←)"
-              >
-                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-              </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handlePrev();
+              }}
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 transition-transform active:scale-90 z-20"
+              title="Foto anterior (Flecha Izquierda)"
+            >
+              <ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
+          )}
 
-              {/* Botón Siguiente */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleNext();
-                }}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-black/75 hover:bg-golden-500 text-white hover:text-dark-950 border border-golden-500/50 shadow-2xl flex items-center justify-center transition-all hover:scale-110 active:scale-95 z-20"
-                title="Siguiente Fotografía (Flecha Derecha →)"
-              >
-                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-              </button>
-            </>
+          {/* Flecha Siguiente */}
+          {hasMultiple && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleNext();
+              }}
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2.5 sm:p-3 rounded-full bg-black/60 hover:bg-black/90 text-white backdrop-blur-md border border-white/20 transition-transform active:scale-90 z-20"
+              title="Foto siguiente (Flecha Derecha)"
+            >
+              <ChevronRight className="w-5 h-5 sm:w-6 sm:h-6" />
+            </button>
           )}
 
           {/* Indicador de ayuda para Zoom en Pantallas Táctiles */}
@@ -435,19 +457,14 @@ export default function PhotoLightboxModal({
             <span className="sm:hidden">Pellizca con dos dedos para zoom</span>
           </div>
 
-          {/* MARCA DE AGUA OFICIAL: CURIOL STUDIO & GOLDEN SPORT ACADEMY */}
-          <div className="absolute top-3 right-3 pointer-events-none flex items-center gap-2 bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-2xl border border-white/20 shadow-xl">
+          {/* Marca de Agua en la Esquina Superior Derecha */}
+          <div className="absolute top-3 right-3 pointer-events-none flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 shadow-lg">
             <img
               src="/curiol-studio-transparent.png"
               alt="Curiol Studio"
-              className="h-5 w-5 sm:h-6 sm:w-6 rounded-full object-contain drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+              className="h-5 w-5 rounded-full object-contain drop-shadow"
             />
             <span className="text-gray-400 text-xs font-thin">|</span>
-            <img
-              src="/logo.png"
-              alt="Golden Sport Academy Santa Cruz"
-              className="w-4 h-4 sm:w-5 sm:h-5 object-contain brightness-0 invert opacity-90"
-            />
             <div className="flex flex-col text-left leading-none">
               <span className="text-[7px] sm:text-[8px] font-black tracking-widest text-white/95 uppercase">
                 GOLDEN SPORT ACADEMY
@@ -476,16 +493,16 @@ export default function PhotoLightboxModal({
               </p>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-end">
-              {/* Botón Guardar en Fotos / Galería para iPhone y Android */}
+            <div className="flex items-center gap-2.5 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
+              {/* Botón Principal Gigante Guardar en Fotos / Galería */}
               <button
                 onClick={() => handleSaveToGallery(photo)}
                 disabled={isDownloading}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase shadow-md transition-transform hover:scale-105 active:scale-95 disabled:opacity-50"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-400 hover:to-teal-400 text-white font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl shadow-emerald-950/60 transition-transform hover:scale-105 active:scale-95 disabled:opacity-50 border border-emerald-400/40"
                 title="Guardar directamente en la galería de fotos de tu teléfono (iPhone / Android) o descargar en tu dispositivo"
               >
-                <Download className="w-4 h-4" />
-                <span>{isDownloading ? "Guardando..." : "Guardar en Fotos / Galería"}</span>
+                <Download className="w-5 h-5 text-white shrink-0" />
+                <span>{isDownloading ? "Guardando en tu teléfono..." : "📥 Guardar en Fotos / Galería (Gratis)"}</span>
               </button>
 
               {/* Botón Compartir WhatsApp */}

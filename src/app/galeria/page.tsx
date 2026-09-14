@@ -22,6 +22,8 @@ import {
   Unlock,
   ChevronRight,
   Trash2,
+  Download,
+  CheckCircle2,
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
@@ -70,10 +72,115 @@ function GaleriaContent() {
   const [albums, setAlbums] = useState<GalleryAlbum[]>(INITIAL_ALBUMS);
   const [photos, setPhotos] = useState<GalleryPhoto[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
-  const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("community");
+  const [activeTab, setActiveTab] = useState<"community" | "pro_studio">("pro_studio");
   const [selectedAlbumId, setSelectedAlbumId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [syncProgress, setSyncProgress] = useState<{ loaded: number; total: number; isDone: boolean } | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const convertToJpegBlob = (url: string): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(null);
+            return;
+          }
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.95);
+        } catch (e) {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  };
+
+  const handleSavePhotoDirectly = async (photo: GalleryPhoto, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setDownloadingId(photo.id);
+    try {
+      const cleanTitle = (photo.title || "foto_golden_sport")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-zA-Z0-9_\-]/g, "_")
+        .toLowerCase();
+      const filename = `${cleanTitle}.jpg`;
+
+      const blob = await convertToJpegBlob(photo.photoUrl);
+
+      if (!blob) {
+        fallbackDirectDownload(photo.photoUrl, filename);
+        setDownloadingId(null);
+        showToast("✅ ¡Foto descargada!");
+        return;
+      }
+
+      const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+
+      if (isIOS && typeof navigator !== "undefined" && navigator.canShare) {
+        try {
+          const file = new File([blob], filename, { type: "image/jpeg", lastModified: Date.now() });
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              files: [file],
+              title: photo.title || "Golden Sport Academy",
+            });
+            setDownloadingId(null);
+            showToast("✅ ¡Foto guardada en tu carrete!");
+            return;
+          }
+        } catch (shareErr: any) {
+          if (shareErr?.name === "AbortError") {
+            setDownloadingId(null);
+            return;
+          }
+        }
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      fallbackDirectDownload(blobUrl, filename);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 15000);
+      setDownloadingId(null);
+      showToast("✅ ¡Foto guardada en tu galería!");
+    } catch (err) {
+      console.error("Error al guardar foto:", err);
+      fallbackDirectDownload(photo.photoUrl, "foto_golden_sport.jpg");
+      setDownloadingId(null);
+      showToast("✅ ¡Foto descargada!");
+    }
+  };
+
+  const fallbackDirectDownload = (url: string, filename: string) => {
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+    }, 250);
+  };
 
   // Modales
   const [isUploadOpen, setIsUploadOpen] = useState(false);
@@ -230,30 +337,38 @@ function GaleriaContent() {
       </div>
 
       {/* 2. SELECTOR PRINCIPAL DE PESTAÑAS */}
-      <div className="flex justify-center">
-        <div className="inline-flex p-1.5 rounded-2xl bg-dark-900 border border-gray-800 shadow-xl max-w-xl w-full">
+      <div className="flex flex-col items-center gap-3">
+        <div className="inline-flex p-1.5 rounded-2xl bg-dark-900 border-2 border-golden-500/40 shadow-2xl max-w-xl w-full">
+          <button
+            onClick={() => { setActiveTab("pro_studio"); setSelectedAlbumId(null); }}
+            className={`flex-1 py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+              activeTab === "pro_studio"
+                ? "bg-gradient-to-r from-golden-400 to-amber-500 text-dark-950 shadow-lg scale-[1.02]"
+                : "text-gray-400 hover:text-white hover:bg-dark-800"
+            }`}
+          >
+            <Sparkles className="w-4 h-4 text-dark-950" />
+            <span>🏀 Fotos Oficiales de Partidos (152)</span>
+          </button>
           <button
             onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+            className={`flex-1 py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
               activeTab === "community"
-                ? "bg-golden-500 text-dark-950 shadow-md"
+                ? "bg-gradient-to-r from-golden-400 to-amber-500 text-dark-950 shadow-lg scale-[1.02]"
                 : "text-gray-400 hover:text-white hover:bg-dark-800"
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>Fotos de Familias & Papás</span>
+            <span>👨‍👩‍👧 Fotos de Familias (Comunidad)</span>
           </button>
-          <button
-            onClick={() => { setActiveTab("pro_studio"); setSelectedAlbumId(null); }}
-            className={`flex-1 py-3 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-              activeTab === "pro_studio"
-                ? "bg-golden-500 text-dark-950 shadow-md"
-                : "text-gray-400 hover:text-white hover:bg-dark-800"
-            }`}
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Curiol Studio Pro</span>
-          </button>
+        </div>
+
+        {/* Guía Visual Amigable para Papás */}
+        <div className="w-full max-w-xl p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-dark-900 to-emerald-950/70 border border-emerald-500/40 text-xs text-emerald-300 flex items-center gap-3 shadow-lg">
+          <span className="text-xl shrink-0">💡</span>
+          <p className="text-[11px] sm:text-xs text-gray-200 leading-snug">
+            <strong className="text-emerald-400 font-black uppercase">¿Cómo guardar las fotos gratis?</strong> Toca el botón verde <strong className="text-white bg-emerald-700/80 px-2 py-0.5 rounded font-black inline-flex items-center gap-1">📥 Guardar en mi Teléfono</strong> en cualquier foto para guardarla directamente en tu galería o carrete.
+          </p>
         </div>
       </div>
 
@@ -285,13 +400,13 @@ function GaleriaContent() {
                 <span>
                   {activeTab === "community"
                     ? "Álbumes Colectivos de Familias"
-                    : "Álbumes Oficiales Curiol Studio"}
+                    : "Álbumes Oficiales de Partidos"}
                 </span>
               </h2>
               <p className="text-xs text-gray-400">
                 {activeTab === "community"
                   ? "Selecciona un álbum familiar para ver o subir fotos de las gradas."
-                  : "Galería oficial de partidos y eventos especiales cubiertos por Curiol Studio."}
+                  : "Cobertura fotográfica oficial en alta definición para jugadores y familias."}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -417,7 +532,7 @@ function GaleriaContent() {
                         {album.description ||
                           (activeTab === "community"
                             ? `Fotos familiares y recuerdos subidos por papás del encuentro del ${formatShortDate(album.eventDate)}.`
-                            : `Cobertura fotográfica oficial en alta definición realizada por Curiol Studio.`)}
+                            : `Cobertura fotográfica oficial en alta definición realizada para Golden Sport Academy.`)}
                       </p>
                     </div>
 
@@ -425,7 +540,7 @@ function GaleriaContent() {
                     <div className="pt-2 border-t border-gray-800 flex items-center justify-between">
                       {isTodayAlbum ? (
                         <span className="text-xs font-black text-golden-400 uppercase flex items-center gap-1.5 group-hover:underline">
-                          <span>{activeTab === "community" ? "Entrar & Subir Fotos" : "Ver Galería Oficial"}</span>
+                          <span>{activeTab === "community" ? "Entrar & Subir Fotos" : "Ver 152 Fotos Oficiales"}</span>
                           <ChevronRight className="w-4 h-4" />
                         </span>
                       ) : (
@@ -469,7 +584,7 @@ function GaleriaContent() {
                 setSelectedAlbumId(null);
                 setSearchQuery("");
               }}
-              className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-dark-900 hover:bg-dark-800 text-gray-300 hover:text-white text-xs font-bold uppercase border border-gray-800 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-dark-900 hover:bg-dark-800 text-gray-300 hover:text-white text-xs font-bold uppercase border border-gray-800 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 text-golden-400" />
               <span>← Volver a los Álbumes</span>
@@ -498,33 +613,35 @@ function GaleriaContent() {
                   <p className="text-xs text-gray-300 max-w-xl">
                     {activeTab === "community"
                       ? "Álbum familiar colectivo. Las fotos que subas aquí se guardan con perfil familiar para compartir con la comunidad."
-                      : "Galería oficial de partidos y eventos especiales cubiertos por Curiol Studio."}
+                      : "Galería oficial de partidos y eventos especiales. Toca el botón verde en cualquier foto para guardarla gratis en tu teléfono."}
                   </p>
                 </div>
 
-                {/* Acción de Subida para Papás */}
-                {selectedAlbum.isOpenForUploads && activeTab === "community" && (
-                  <button
-                    onClick={() => setIsUploadOpen(true)}
-                    className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center gap-2.5 shrink-0 transition-transform hover:scale-105 active:scale-95"
-                  >
-                    <Upload className="w-5 h-5" />
-                    <span>Subir Fotos a este Álbum</span>
-                  </button>
-                )}
+                {/* Acciones del Banner */}
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  {selectedAlbum.isOpenForUploads && activeTab === "community" && (
+                    <button
+                      onClick={() => setIsUploadOpen(true)}
+                      className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-golden-400 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs sm:text-sm uppercase tracking-wider shadow-xl flex items-center gap-2.5 shrink-0 transition-transform hover:scale-105 active:scale-95"
+                    >
+                      <Upload className="w-5 h-5" />
+                      <span>Subir Fotos a este Álbum</span>
+                    </button>
+                  )}
 
-                {/* Enlace al Punto Nodo en el Árbol de Guanacaste */}
-                {activeTab === "pro_studio" && (
-                  <a
-                    href={arbolUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-5 py-3 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
-                  >
-                    <TreeDeciduous className="w-4 h-4 text-emerald-400" />
-                    <span>Punto Nodo en Árbol de Guanacaste ↗</span>
-                  </a>
-                )}
+                  {/* Enlace al Punto Nodo en el Árbol de Guanacaste */}
+                  {activeTab === "pro_studio" && (
+                    <a
+                      href={arbolUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-3 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
+                    >
+                      <TreeDeciduous className="w-4 h-4 text-emerald-400" />
+                      <span>Punto Nodo en Árbol de Guanacaste ↗</span>
+                    </a>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -535,7 +652,7 @@ function GaleriaContent() {
               <Search className="w-3.5 h-3.5 text-golden-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Buscar por título o familiar..."
+                placeholder="Buscar por título o número de foto..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-7 py-2 rounded-xl bg-dark-800 border border-gray-700 text-white placeholder-gray-400 text-xs focus:outline-none focus:border-golden-500"
@@ -549,8 +666,8 @@ function GaleriaContent() {
                 </button>
               )}
             </div>
-            <span className="text-xs text-gray-400">
-              {currentPhotos.length} fotos encontradas
+            <span className="text-xs text-golden-400 font-bold">
+              {currentPhotos.length} fotos listas
             </span>
           </div>
 
@@ -577,12 +694,12 @@ function GaleriaContent() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
               {currentPhotos.map((photo) => (
                 <div
                   key={photo.id}
                   onClick={() => setSelectedPhotoForView(photo)}
-                  className="group rounded-2xl overflow-hidden bg-dark-900 border border-gray-800 hover:border-golden-500/60 shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer flex flex-col justify-between"
+                  className="group rounded-3xl overflow-hidden bg-dark-900 border-2 border-gray-800 hover:border-golden-500/80 shadow-xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer flex flex-col justify-between"
                 >
                   {/* Imagen */}
                   <div className="relative aspect-[4/3] w-full overflow-hidden bg-dark-950">
@@ -601,13 +718,13 @@ function GaleriaContent() {
 
                     {/* Badge Categoría */}
                     <div className="absolute top-2.5 left-2.5 flex gap-1.5 z-10">
-                      <span className="px-2 py-0.5 rounded-md bg-dark-950/85 backdrop-blur-md text-white text-[9px] font-black uppercase border border-white/20">
+                      <span className="px-2.5 py-1 rounded-lg bg-dark-950/85 backdrop-blur-md text-white text-[10px] font-black uppercase border border-white/20">
                         {photo.category}
                       </span>
                     </div>
 
                     {/* Marca de Agua */}
-                    <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1.5 bg-black/50 backdrop-blur-[3px] px-2.5 py-1 rounded-xl border border-white/20 shadow-md">
+                    <div className="absolute top-2.5 right-2.5 z-10 pointer-events-none flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/20 shadow-md">
                       <img
                         src="/curiol-studio-transparent.png"
                         alt="Curiol Studio"
@@ -625,25 +742,25 @@ function GaleriaContent() {
                     </div>
 
                     {/* Autoría */}
-                    <div className="absolute bottom-2 left-2 z-10 px-2 py-0.5 rounded-md bg-dark-950/85 backdrop-blur-sm text-[8px] font-bold text-golden-300 uppercase tracking-wider border border-golden-500/30">
+                    <div className="absolute bottom-2.5 left-2.5 z-10 px-2 py-0.5 rounded-md bg-dark-950/90 backdrop-blur-sm text-[9px] font-bold text-golden-300 uppercase tracking-wider border border-golden-500/30">
                       📸 {photo.photoType === "pro_studio" ? "Curiol Studio Pro" : `Familia: ${photo.uploaderName}`}
                     </div>
 
                     {/* Like Button */}
                     <button
                       onClick={(e) => handleLike(photo.id, e)}
-                      className="absolute bottom-2 right-2 z-10 px-2 py-0.5 rounded-full bg-dark-950/85 backdrop-blur-md text-red-400 hover:text-red-300 text-[11px] font-bold flex items-center gap-1 border border-white/20 transition-transform active:scale-125 shadow-md"
+                      className="absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-dark-950/90 backdrop-blur-md text-red-400 hover:text-red-300 text-xs font-bold flex items-center gap-1 border border-white/20 transition-transform active:scale-125 shadow-md"
                       title="Me gusta"
                     >
-                      <Heart className="w-3 h-3 fill-red-400" />
+                      <Heart className="w-3.5 h-3.5 fill-red-400" />
                       <span>{photo.likesCount}</span>
                     </button>
                   </div>
 
-                  {/* Info */}
-                  <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
-                    <div className="space-y-0.5">
-                      <h3 className="font-black text-xs sm:text-sm text-white group-hover:text-golden-400 transition-colors line-clamp-1">
+                  {/* Info + BOTÓN GIGANTE Y DIRECTO DE GUARDAR EN TELÉFONO */}
+                  <div className="p-4 space-y-3 flex-1 flex flex-col justify-between bg-dark-900">
+                    <div className="space-y-1">
+                      <h3 className="font-black text-sm text-white group-hover:text-golden-400 transition-colors line-clamp-1">
                         {photo.title}
                       </h3>
                       {photo.caption && (
@@ -653,15 +770,18 @@ function GaleriaContent() {
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-gray-800 flex items-center justify-between text-[10px] text-gray-400">
-                      <span className="flex items-center gap-1">
-                        <User className="w-3 h-3 text-golden-500" />
-                        <span className="truncate max-w-[140px]">{photo.uploaderName}</span>
-                      </span>
-
-                      <span className="text-[10px] text-gray-400 font-semibold">
-                        📅 {formatShortDate(photo.eventDate || "")}
-                      </span>
+                    {/* BOTÓN GIGANTE DE DESCARGA DIRECTA A 1 CLIC */}
+                    <div className="pt-2 border-t border-gray-800">
+                      <button
+                        type="button"
+                        onClick={(e) => handleSavePhotoDirectly(photo, e)}
+                        disabled={downloadingId === photo.id}
+                        className="w-full py-3 px-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl shadow-emerald-950/60 transition-all transform active:scale-95 disabled:opacity-60 border border-emerald-400/30"
+                        title="Guardar directamente en la galería de fotos de tu teléfono"
+                      >
+                        <Download className="w-4 h-4 text-white shrink-0" />
+                        <span>{downloadingId === photo.id ? "Guardando en tu teléfono..." : "📥 Guardar en mi Teléfono"}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -675,6 +795,14 @@ function GaleriaContent() {
               <SouvenirStoreBanner />
             </div>
           )}
+        </div>
+      )}
+
+      {/* FLOATING TOAST DE CONFIRMACIÓN */}
+      {toastMessage && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-6 py-3.5 rounded-2xl bg-emerald-600 text-white font-black text-xs sm:text-sm uppercase tracking-wide shadow-2xl shadow-black/80 flex items-center gap-2.5 animate-bounce border-2 border-white/20">
+          <CheckCircle2 className="w-5 h-5 text-white" />
+          <span>{toastMessage}</span>
         </div>
       )}
 
