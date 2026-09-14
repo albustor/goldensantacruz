@@ -7,13 +7,14 @@
     "category": "Proyectos",
     "status": "terminado",
     "color": "amber",
+    "port": 3010,
     "icon": "ph-basketball",
     "description": "Academia deportiva oficial de baloncesto Santa Cruz Guanacaste"
   },
   "scripts": {
-    "dev": "next dev -p 3000",
+    "dev": "next dev -p 3010",
     "build": "next build",
-    "start": "next start -p 3000",
+    "start": "next start -p 3010",
     "lint": "next lint"
   },
   "dependencies": {
