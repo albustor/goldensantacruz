@@ -882,7 +882,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: true,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Liberia vs Parajeles en categoría U10.",
   },
   {
@@ -894,7 +894,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: true,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Liberia vs Parajeles (U12 Mixto).",
   },
   {
@@ -906,7 +906,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: true,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Liberia vs Parajeles (U14 Masculino).",
   },
   {
@@ -918,7 +918,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: false,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Santa Cruz vs Parajeles en U12 Mixto ⭐",
   },
   {
@@ -930,7 +930,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: false,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Liberia vs Golden Sport Academy Santa Cruz (U12 Femenino) ⭐",
   },
   {
@@ -942,7 +942,7 @@ export const INITIAL_MATCHES: Match[] = [
     location: "Gimnasio Municipal de Liberia",
     locationUrl: "https://maps.google.com/?q=Gimnasio+Municipal+de+Liberia",
     isHome: false,
-    status: "upcoming",
+    status: "finished",
     summary: "Golden Sport Academy Liberia vs Golden Sport Academy Santa Cruz (U12 Mixto) ⭐",
   }
 ];
@@ -964,9 +964,31 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     title: "Galería Oficial Curiol Studio • Gran Jornada de Liberia 2026",
     eventDate: "2026-09-05",
     category: "Intercantonal",
-    coverPhotoUrl: "/Hero_Basketball/2.jpg",
+    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
     createdBy: "Curiol Studio Oficial",
     albumType: "pro_studio",
+    isLocked: false,
+    isOpenForUploads: true,
+  },
+  {
+    id: "alb-1789690146392",
+    title: "Visita de Julio \"Yiyo\" • Evento Especial",
+    eventDate: "2026-09-18",
+    category: "Eventos Especiales",
+    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
+    isLocked: false,
+    isOpenForUploads: true,
+  },
+  {
+    id: "alb-comunidad-yiyo-2026",
+    title: "Álbum Familiar • Visita de Julio \"Yiyo\"",
+    eventDate: "2026-09-18",
+    category: "Eventos Especiales",
+    coverPhotoUrl: "/Hero_Basketball/2.jpg",
+    createdBy: "Familias & Papás",
+    albumType: "community",
     isLocked: false,
     isOpenForUploads: true,
   },
@@ -980,21 +1002,28 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     albumType: "pro_studio",
     isLocked: true,
     isOpenForUploads: false,
-  },
-  {
-    id: "alb-3",
-    title: "Clínicas de Tecnificación & Tiro",
-    eventDate: "2026-08-20",
-    category: "Clínicas de Tecnificación & Tiro",
-    coverPhotoUrl: "/Hero_Basketball/2.jpg",
-    createdBy: "Curiol Studio Oficial",
-    albumType: "pro_studio",
-    isLocked: true,
-    isOpenForUploads: false,
   }
 ];
 
 export const INITIAL_PHOTOS: GalleryPhoto[] = [
+  // FOTOGRAFÍAS COMUNITARIAS Y FAMILIARES - GRAN JORNADA DE LIBERIA (10 FOTOS, alb-comunidad-liberia-2026)
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => ({
+    id: `pht-com-lib-${num}`,
+    photoUrl: `/Hero_Basketball/${num}.jpg`,
+    title: `Recuerdo Familiar #${num} • Gradas de Liberia`,
+    caption: `Fotografía tomada y compartida por las familias y papás de Golden Sport Academy en el Gimnasio Municipal de Liberia.`,
+    category: "Intercantonal" as PlayerCategory,
+    uploaderName: num % 2 === 0 ? "Familia Golden Sport" : "Papás en Gradas",
+    uploaderRole: "padre" as const,
+    photoType: "community" as const,
+    albumId: "alb-comunidad-liberia-2026",
+    eventDate: "2026-09-05",
+    likesCount: 8 + (num % 7),
+    isApproved: true,
+    uploadedAt: "2026-09-05",
+    watermarkTag: "Golden Sport Santa Cruz",
+  })),
+
   // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - PRESENTACIÓN DEL UNIFORME OFICIAL (16 FOTOS, alb-2)
   ...[
     "001", "002", "003", "004", "005", "006", "007", "008",

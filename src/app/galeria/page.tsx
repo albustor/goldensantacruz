@@ -250,12 +250,27 @@ function GaleriaContent() {
   };
 
   // SEPARACIÓN ESTRICTA DE ÁLBUMES SEGÚN PESTAÑA:
-  // Pestaña "community": Únicamente álbumes de familias/colectivos
-  // Pestaña "pro_studio": Únicamente álbumes oficiales Curiol Studio
+  // Pestaña "community": Álbumes de familias/colectivos y eventos con fotos comunitarias
+  // Pestaña "pro_studio": Álbumes oficiales Curiol Studio
   const effectiveAlbums = (albums && albums.length > 0) ? albums : INITIAL_ALBUMS;
 
   const displayedAlbums = effectiveAlbums.filter((a) => {
-    const isCommunity = 
+    const isLiberia = a.id === "alb-curiol-liberia-2026" || a.id === "alb-comunidad-liberia-2026" || a.id === "alb-1" || a.title?.toLowerCase().includes("liberia");
+    const isYiyo = a.id === "alb-1789690146392" || a.id.includes("yiyo") || a.title?.toLowerCase().includes("yiyo");
+
+    const hasCommunityPhotos = photos.some(p => {
+      const matchAlb = p.albumId === a.id || (isLiberia && (p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1")) || (isYiyo && p.albumId === "alb-1789690146392");
+      const isComm = p.photoType === "community" || p.uploaderRole === "padre" || (!p.photoType && !p.uploaderRole && !p.uploaderName?.toLowerCase().includes("curiol"));
+      return matchAlb && isComm;
+    });
+
+    const hasProPhotos = photos.some(p => {
+      const matchAlb = p.albumId === a.id || (isLiberia && (p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-1")) || (isYiyo && p.albumId === "alb-1789690146392");
+      const isPro = p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol");
+      return matchAlb && isPro;
+    });
+
+    const isCommunityType = 
       a.albumType === "community" || 
       a.id.includes("comunidad") ||
       a.createdBy?.toLowerCase().includes("papá") || 
@@ -264,9 +279,9 @@ function GaleriaContent() {
       a.title?.toLowerCase().includes("colectivo");
 
     if (activeTab === "community") {
-      return isCommunity;
+      return isCommunityType || hasCommunityPhotos;
     } else {
-      return !isCommunity;
+      return (!isCommunityType && a.albumType !== "community") || hasProPhotos;
     }
   });
 
@@ -284,18 +299,15 @@ function GaleriaContent() {
           if (!matchesTab) return false;
 
           let matchesAlbum = false;
-          if (isProTab) {
-            if (selectedAlbum.id === "alb-curiol-liberia-2026" || selectedAlbum.title?.toLowerCase().includes("liberia")) {
-              matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
-            } else {
-              matchesAlbum = p.albumId === selectedAlbum.id;
-            }
+          const isLiberia = selectedAlbum.id === "alb-curiol-liberia-2026" || selectedAlbum.id === "alb-comunidad-liberia-2026" || selectedAlbum.id === "alb-1" || selectedAlbum.title?.toLowerCase().includes("liberia");
+          const isYiyo = selectedAlbum.id === "alb-1789690146392" || selectedAlbum.id.includes("yiyo") || selectedAlbum.title?.toLowerCase().includes("yiyo");
+
+          if (isLiberia) {
+            matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
+          } else if (isYiyo) {
+            matchesAlbum = p.albumId === "alb-1789690146392" || p.albumId === "alb-comunidad-yiyo-2026" || p.eventDate === "2026-09-18" || p.title?.toLowerCase().includes("yiyo");
           } else {
-            if (selectedAlbum.id === "alb-comunidad-liberia-2026" || selectedAlbum.title?.toLowerCase().includes("liberia")) {
-              matchesAlbum = p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05";
-            } else {
-              matchesAlbum = p.albumId === selectedAlbum.id;
-            }
+            matchesAlbum = p.albumId === selectedAlbum.id || (!p.albumId && p.eventDate === selectedAlbum.eventDate);
           }
 
           const matchesSearch =
@@ -348,7 +360,7 @@ function GaleriaContent() {
             }`}
           >
             <Sparkles className="w-4 h-4 text-dark-950" />
-            <span>🏀 Fotos Oficiales de Partidos (152)</span>
+            <span>🏀 Fotos Oficiales ({photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.includes("Curiol")).length || 155})</span>
           </button>
           <button
             onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
@@ -359,7 +371,7 @@ function GaleriaContent() {
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>👨‍👩‍👧 Fotos de Familias (Comunidad)</span>
+            <span>👨‍👩‍👧 Fotos de Familias ({photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || !p.uploaderName?.includes("Curiol")).length || 21})</span>
           </button>
         </div>
 
@@ -390,7 +402,7 @@ function GaleriaContent() {
         </div>
       )}
 
-      {/* 3. LISTADO DE ÁLBUMES ESPECÍFICOS SEGÚN LA PESTAÑA (DIRECTAMENTE ARRIBA) */}
+      {/* 3. LISTADO DE ÁLBUMES ESPECÍFICOS SEGÚN LA PESTAÑA */}
       {!selectedAlbumId ? (
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
@@ -400,7 +412,7 @@ function GaleriaContent() {
                 <span>
                   {activeTab === "community"
                     ? "Álbumes Colectivos de Familias"
-                    : "Álbumes Oficiales de Partidos"}
+                    : "Álbumes Oficiales de Partidos y Eventos"}
                 </span>
               </h2>
               <p className="text-xs text-gray-400">
@@ -419,6 +431,7 @@ function GaleriaContent() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {displayedAlbums.map((album) => {
               const isLiberia = album.id === "alb-curiol-liberia-2026" || album.id === "alb-comunidad-liberia-2026" || album.id === "alb-1" || album.title?.toLowerCase().includes("liberia");
+              const isYiyo = album.id === "alb-1789690146392" || album.id.includes("yiyo") || album.title?.toLowerCase().includes("yiyo");
 
               // Filtrar fotos que pertenecen estrictamente a este tipo de pestaña y álbum
               const albumPics = photos.filter((p) => {
@@ -430,29 +443,46 @@ function GaleriaContent() {
                 if (!matchesTab) return false;
 
                 let matchesAlbum = false;
-                if (isProTab) {
-                  if (album.id === "alb-curiol-liberia-2026" || album.title?.toLowerCase().includes("liberia")) {
-                    matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
-                  } else {
-                    matchesAlbum = p.albumId === album.id;
-                  }
+                if (isLiberia) {
+                  matchesAlbum = p.albumId === "alb-curiol-liberia-2026" || p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05" || p.title?.toLowerCase().includes("liberia");
+                } else if (isYiyo) {
+                  matchesAlbum = p.albumId === "alb-1789690146392" || p.albumId === "alb-comunidad-yiyo-2026" || p.eventDate === "2026-09-18" || p.title?.toLowerCase().includes("yiyo");
                 } else {
-                  if (album.id === "alb-comunidad-liberia-2026" || album.title?.toLowerCase().includes("liberia")) {
-                    matchesAlbum = p.albumId === "alb-comunidad-liberia-2026" || p.albumId === "alb-1" || p.eventDate === "2026-09-05";
-                  } else {
-                    matchesAlbum = p.albumId === album.id;
-                  }
+                  matchesAlbum = p.albumId === album.id;
                 }
 
                 return matchesAlbum;
               });
               
               // Conteo instantáneo 0ms sin retraso visual
-              const defaultCount = album.id === "alb-curiol-liberia-2026" ? 152 : album.id === "alb-comunidad-liberia-2026" ? 0 : (album.photoCount || 0);
+              const defaultCount =
+                album.id === "alb-curiol-liberia-2026"
+                  ? 152
+                  : album.id === "alb-comunidad-liberia-2026"
+                  ? 10
+                  : album.id === "alb-2"
+                  ? 16
+                  : (album.id === "alb-1789690146392" && activeTab === "pro_studio")
+                  ? 3
+                  : (isYiyo && activeTab === "community")
+                  ? 11
+                  : (album.photoCount || 0);
               const photoCount = albumPics.length > 0 ? albumPics.length : defaultCount;
 
               const isTodayAlbum = album.isOpenForUploads;
-              const coverPhoto = album.coverPhotoUrl || albumPics[0]?.photoUrl || "/Hero_Basketball/1.jpg";
+              const dynamicCover = albumPics.find((p) => Boolean(p.photoUrl) && !p.photoUrl.includes("Fotos_Equipo"))?.photoUrl;
+              const coverPhoto =
+                dynamicCover ||
+                (album.coverPhotoUrl && !album.coverPhotoUrl.includes("Fotos_Equipo")
+                  ? album.coverPhotoUrl
+                  : null) ||
+                (album.id === "alb-curiol-liberia-2026"
+                  ? "/photos/partidos/liberia_portada.webp"
+                  : album.id === "alb-comunidad-liberia-2026"
+                  ? "/Hero_Basketball/1.jpg"
+                  : album.id === "alb-2"
+                  ? "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg"
+                  : "/photos/partidos/liberia_portada.webp");
               const recentUploads = albumPics.slice(0, 3);
 
               return (

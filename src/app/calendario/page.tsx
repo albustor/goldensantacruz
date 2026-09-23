@@ -42,12 +42,23 @@ export default function CalendarioPage() {
     fetchData();
   }, []);
 
+  const isMatchFinished = (m: Match) => {
+    if (m.status === "finished") return true;
+    if (!m.matchDate) return false;
+    const today = new Date().toISOString().split("T")[0];
+    return m.matchDate < today;
+  };
+
+  const upcomingMatches = matches.filter((m) => !isMatchFinished(m));
+  const finishedMatches = matches.filter((m) => isMatchFinished(m));
+
   const filteredMatches = matches.filter((m) => {
     const matchCat = selectedCategory === "Todas" || m.category === selectedCategory;
+    const finished = isMatchFinished(m);
     const matchStat =
       selectedStatus === "all" ||
-      (selectedStatus === "upcoming" && m.status === "upcoming") ||
-      (selectedStatus === "finished" && m.status === "finished");
+      (selectedStatus === "upcoming" && !finished) ||
+      (selectedStatus === "finished" && finished);
     return matchCat && matchStat;
   });
 
@@ -237,7 +248,7 @@ export default function CalendarioPage() {
                   : "bg-dark-800 text-gray-400 hover:text-white border border-gray-700"
               }`}
             >
-              Próximos ({matches.filter((m) => m.status === "upcoming").length})
+              Próximos ({upcomingMatches.length})
             </button>
             <button
               onClick={() => setSelectedStatus("finished")}
@@ -247,7 +258,7 @@ export default function CalendarioPage() {
                   : "bg-dark-800 text-gray-400 hover:text-white border border-gray-700"
               }`}
             >
-              Jugados ({matches.filter((m) => m.status === "finished").length})
+              Jugados ({finishedMatches.length})
             </button>
           </div>
 
@@ -291,6 +302,7 @@ export default function CalendarioPage() {
               match.id === "mtc-lib-5" ||
               match.id === "mtc-lib-6" ||
               match.id === "mtc-lib-7";
+            const finished = isMatchFinished(match);
 
             return (
               <div
@@ -307,10 +319,19 @@ export default function CalendarioPage() {
                     {match.category}
                   </span>
 
-                  <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
-                    <Clock className="w-3.5 h-3.5" />
-                    {match.matchTime}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {finished ? (
+                      <span className="inline-flex items-center gap-1.5 text-xs font-black px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 shadow-sm">
+                        <CheckCircle2 className="w-3.5 h-3.5" />
+                        <span>JUGADO</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/40">
+                        <Clock className="w-3.5 h-3.5" />
+                        {match.matchTime}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 {/* Match Title / VS con Nombre Completo: Golden Sport Academy Santa Cruz */}
