@@ -25,12 +25,27 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Inicio", href: "/" },
-    { name: "En Vivo 🔴", href: "/en-vivo", isLiveBadge: true },
+    { name: "En Vivo", href: "/en-vivo", isLiveLink: true },
     { name: "Información", href: "/informacion" },
     { name: "Calendario", href: "/calendario" },
     { name: "Fotografías", href: "/galeria" },
     { name: "Publicidad", href: "/patrocinadores" },
   ];
+
+  const renderLinkContent = (link: typeof navLinks[0]) => {
+    if (link.isLiveLink) {
+      return (
+        <span className="inline-flex items-center justify-center gap-0.5 uppercase tracking-wider font-black">
+          <span>EN VIV</span>
+          <span className="relative inline-flex items-center justify-center w-2.5 h-2.5 ml-0.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-80" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600 shadow-[0_0_8px_rgba(239,68,68,1)]" />
+          </span>
+        </span>
+      );
+    }
+    return link.name;
+  };
 
   return (
     <header
@@ -83,7 +98,7 @@ export default function Navbar() {
                       : "text-gray-200 hover:text-golden-400 hover:bg-dark-800/80"
                   }`}
                 >
-                  {link.name}
+                  {renderLinkContent(link)}
                 </Link>
               );
             })}
@@ -146,7 +161,7 @@ export default function Navbar() {
                     : "text-gray-200 hover:bg-dark-800 hover:text-golden-400"
                 }`}
               >
-                {link.name}
+                {renderLinkContent(link)}
               </Link>
             );
           })}

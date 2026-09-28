@@ -253,7 +253,17 @@ export default function AdminPage() {
               }`}
             >
               <Icon className={`w-4 h-4 ${isActive ? "text-dark-900" : ""}`} />
-              <span>{tab.label}</span>
+              {tab.id === "transmision" ? (
+                <span className="inline-flex items-center gap-0.5">
+                  <span>TRANSMISIÓN EN VIV</span>
+                  <span className="relative inline-flex items-center justify-center w-2.5 h-2.5 ml-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-80" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600 shadow-[0_0_8px_rgba(239,68,68,1)]" />
+                  </span>
+                </span>
+              ) : (
+                <span>{tab.label}</span>
+              )}
               {typeof tab.badge === "number" && (
                 <span
                   className={`px-1.5 py-0.2 rounded-full text-[10px] ${

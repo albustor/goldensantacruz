@@ -153,8 +153,18 @@ export default function LiveStreamPage() {
                     ? "bg-red-600 text-white animate-pulse shadow-red-900/50"
                     : "bg-gray-800 text-gray-400 border border-gray-700"
                 }`}>
-                  <span className={`w-2 h-2 rounded-full ${config.isLive ? "bg-white" : "bg-gray-500"}`} />
-                  {config.isLive ? "🔴 EN VIVO AHORA" : "⚪ PRÓXIMA TRANSMISIÓN"}
+                  {config.isLive ? (
+                    <span className="inline-flex items-center gap-0.5">
+                      <span>EN VIV</span>
+                      <span className="relative inline-flex items-center justify-center w-2.5 h-2.5 ml-0.5">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-80" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-white" />
+                      </span>
+                      <span className="ml-1">AHORA</span>
+                    </span>
+                  ) : (
+                    "⚪ PRÓXIMA TRANSMISIÓN"
+                  )}
                 </span>
 
                 <span className="px-2.5 py-0.5 rounded-lg bg-golden-500/20 text-golden-400 border border-golden-500/40 text-xs font-black uppercase">
