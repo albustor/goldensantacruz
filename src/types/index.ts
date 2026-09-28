@@ -156,13 +156,13 @@ export interface SystemSettings {
 
 export type AcademySettings = SystemSettings;
 
-// MULTI-CAMERA LIVE STREAMING & SCOREBOARD TYPES (Bunny.net + GoPro 12 + DJI Osmo Pocket)
+// MULTI-CAMERA LIVE STREAMING & SCOREBOARD TYPES (Bunny.net + GoPro 12 + DJI Osmo Pocket + Smartphone)
 export interface LiveCameraConfig {
-  id: string; // 'cam-gopro' | 'cam-dji' | 'cam-main' | 'cam-youtube'
+  id: string; // 'cam-gopro' | 'cam-dji' | 'cam-phone' | 'cam-main' | 'cam-youtube'
   name: string;
   shortName: string;
-  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "YouTube Live / Señal Externa" | "OBS / Señal Mezclada" | "Cámara Secundaria";
-  role: "Cancha Completa" | "Seguimiento Dinámico" | "Bajo el Aro / Lateral" | "Mesa Técnica" | "Banquillo";
+  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "Smartphone 4K / Móvil en Trípode" | "YouTube Live / Señal Externa" | "OBS / Señal Mezclada" | "Cámara Secundaria";
+  role: "Cancha Completa" | "Seguimiento Dinámico" | "Bajo el Aro / Lateral" | "Gradas / Afición" | "Banquillo / Reacciones" | "Mesa Técnica";
   streamType: "bunny_stream" | "hls_direct" | "youtube" | "iframe_custom";
   youtubeUrl?: string;
   youtubeVideoId?: string;
@@ -201,6 +201,8 @@ export interface LiveStreamConfig {
   id: string;
   isLive: boolean;
   broadcastMode: "video_and_scoreboard" | "scoreboard_only";
+  scoreboardVisible?: boolean; // Toggle overlay marcador
+  sponsorsVisible?: boolean;   // Toggle publicidad / marca de agua
   title: string;
   matchDate: string;
   startTime: string;

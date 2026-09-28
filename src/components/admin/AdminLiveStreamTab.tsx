@@ -106,7 +106,56 @@ export default function AdminLiveStreamTab() {
   const handleCameraSwitch = async (camId: string) => {
     const updated = await Store.switchActiveCamera(camId);
     setConfig(updated);
-    flashStatus(`Cámara activa cambiada a: ${camId === "cam-gopro" ? "GoPro HERO 12" : "DJI Osmo Pocket"}`);
+    const cam = updated.cameras.find(c => c.id === camId);
+    flashStatus(`Cámara activa cambiada a: ${cam?.shortName || cam?.name || camId}`);
+  };
+
+  const handleToggleCameraActive = async (camId: string, currentActive: boolean) => {
+    const newActiveState = !currentActive;
+    const updated = await Store.toggleCameraActive(camId, newActiveState);
+    setConfig(updated);
+    flashStatus(
+      newActiveState
+        ? `Cámara activada y disponible para la afición`
+        : `Cámara apagada (conmutación automática a señal activa)`
+    );
+  };
+
+  const handleAddCamera = async () => {
+    const nextNum = config.cameras.length + 1;
+    const newCamId = `cam-${Date.now().toString(36)}`;
+    const newCamera: LiveCameraConfig = {
+      id: newCamId,
+      name: `Cámara ${nextNum}: Celular / Cámara Auxiliar`,
+      shortName: `Cámara ${nextNum}`,
+      deviceModel: "Smartphone 4K / Móvil en Trípode",
+      role: "Gradas / Afición",
+      streamType: "bunny_stream",
+      bunnyLibraryId: config.bunnyStreamLibraryId || "golden_stream_lib",
+      bunnyVideoId: `stream_aux_${nextNum}`,
+      rtmpServer: "rtmp://la.stream.bunny.net/live",
+      streamKey: `gsa_cam${nextNum}_live_key`,
+      hlsUrl: `https://video.bunnycdn.com/play/gsa_stream_${nextNum}/playlist.m3u8`,
+      embedUrl: `https://iframe.mediadelivery.net/embed/${config.bunnyStreamLibraryId || "golden_stream_lib"}/stream_aux_${nextNum}?autoplay=true&muted=false`,
+      isActive: true,
+      status: "live",
+    };
+
+    const updated = await Store.addCamera(newCamera);
+    setConfig(updated);
+    flashStatus(`Cámara #${nextNum} agregada exitosamente`);
+  };
+
+  const handleDeleteCamera = async (camId: string) => {
+    if (config.cameras.length <= 1) {
+      alert("Debe haber al menos 1 cámara configurada en el sistema.");
+      return;
+    }
+    if (window.confirm("¿Seguro que deseas eliminar esta cámara de la configuración?")) {
+      const updated = await Store.deleteCamera(camId);
+      setConfig(updated);
+      flashStatus("Cámara eliminada");
+    }
   };
 
   const handleCopy = (text: string, label: string) => {
@@ -133,7 +182,7 @@ export default function AdminLiveStreamTab() {
   const handleUpdateMatchInfo = async (field: keyof LiveStreamConfig, val: any) => {
     const updated = await Store.updateLiveStreamConfig({ [field]: val });
     setConfig(updated);
-    flashStatus("Información actualizada");
+    flashStatus("Configuración actualizada");
   };
 
   const handleUpdateCamera = async (camId: string, updates: Partial<LiveCameraConfig>) => {
@@ -289,19 +338,48 @@ export default function AdminLiveStreamTab() {
             </div>
           </div>
 
-          {/* Opciones Modulares: Activar/Desactivar Chat y Reacciones */}
-          <div className="flex items-center gap-3">
+          {/* Opciones Modulares: Activar/Desactivar Marcador, Patrocinadores, Chat y Reacciones */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => handleUpdateMatchInfo("scoreboardVisible", !(config.scoreboardVisible ?? true))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                (config.scoreboardVisible ?? true)
+                  ? "bg-dark-950 border-golden-500/60 text-golden-400 shadow-sm"
+                  : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
+              }`}
+              title="Mostrar u ocultar el marcador en pantalla sobre el video"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Marcador: {(config.scoreboardVisible ?? true) ? "Visible" : "Oculto"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleUpdateMatchInfo("sponsorsVisible", !(config.sponsorsVisible ?? true))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                (config.sponsorsVisible ?? true)
+                  ? "bg-dark-950 border-amber-500/60 text-amber-300 shadow-sm"
+                  : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
+              }`}
+              title="Mostrar u ocultar marca de agua y banners de patrocinadores"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Publicidad: {(config.sponsorsVisible ?? true) ? "Visible" : "Oculta"}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => handleUpdateMatchInfo("chatEnabled", !(config.chatEnabled ?? true))}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
                 (config.chatEnabled ?? true)
-                  ? "bg-dark-950 border-golden-500/50 text-golden-400"
+                  ? "bg-dark-950 border-blue-500/50 text-blue-400"
                   : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
               }`}
+              title="Activar o pausar el chat en vivo de familias"
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Chat: {(config.chatEnabled ?? true) ? "Activo" : "Desactivado"}</span>
+              <span>Chat: {(config.chatEnabled ?? true) ? "Activo" : "Pausado"}</span>
             </button>
 
             <button
@@ -312,9 +390,10 @@ export default function AdminLiveStreamTab() {
                   ? "bg-dark-950 border-orange-500/50 text-orange-400"
                   : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
               }`}
+              title="Activar o desactivar botones de emojis y aplausos"
             >
               <Flame className="w-3.5 h-3.5" />
-              <span>Reacciones: {(config.reactionsEnabled ?? true) ? "Activas" : "Desactivadas"}</span>
+              <span>Reacciones: {(config.reactionsEnabled ?? true) ? "Activas" : "Pausadas"}</span>
             </button>
           </div>
         </div>
@@ -678,47 +757,74 @@ export default function AdminLiveStreamTab() {
         </div>
       )}
 
-      {/* SUBTAB 2: CÁMARAS RTMP (GoPro HERO 12 + DJI Osmo Pocket) */}
+      {/* SUBTAB 2: CÁMARAS RTMP (GoPro HERO 12 + DJI Osmo Pocket + Smartphone) */}
       {activeSubTab === "camaras" && (
         <div className="space-y-6">
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 to-dark-900 border border-blue-800/40 text-blue-200 text-xs flex items-center gap-3">
-            <Smartphone className="w-5 h-5 text-blue-400 shrink-0" />
-            <div>
-              <p className="font-bold">Emisión Directa desde Apps Oficiales Móviles</p>
-              <p className="text-[11px] text-blue-300">
-                La GoPro HERO 12 emite directo desde la app <strong>GoPro Quik</strong> y la DJI Osmo Pocket desde <strong>DJI Mimo</strong> usando los endpoints RTMP y Claves generadas por Bunny.net.
-              </p>
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/40 via-dark-900 to-dark-900 border border-blue-800/40 text-blue-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <Smartphone className="w-5 h-5 text-blue-400 shrink-0" />
+              <div>
+                <p className="font-bold">Emisión Multi-Cámara Directa (GoPro + DJI + Celular en Trípode)</p>
+                <p className="text-[11px] text-blue-300">
+                  Transmite con la GoPro HERO 12 (GoPro Quik), DJI Osmo Pocket (DJI Mimo) o tu propio teléfono móvil conectado a trípode/estabilizador.
+                </p>
+              </div>
             </div>
+
+            <button
+              onClick={handleAddCamera}
+              className="px-4 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md shrink-0"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Agregar Otra Cámara</span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {config.cameras.map((cam, idx) => {
               const isSelected = config.selectedCameraId === cam.id;
+              const isCamActive = cam.isActive !== false;
               return (
                 <div
                   key={cam.id}
                   className={`p-6 rounded-3xl bg-dark-900 border-2 transition-all space-y-5 ${
                     isSelected
                       ? "border-golden-500 shadow-2xl shadow-golden-500/15"
-                      : "border-gray-800 hover:border-gray-700"
+                      : isCamActive
+                      ? "border-gray-800 hover:border-gray-700"
+                      : "border-red-900/40 opacity-70 bg-dark-950/80"
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-lg ${
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-lg shrink-0 ${
                         cam.id === "cam-gopro"
                           ? "bg-red-950/60 border-red-500 text-red-400"
-                          : "bg-emerald-950/60 border-emerald-500 text-emerald-400"
+                          : cam.id === "cam-dji"
+                          ? "bg-emerald-950/60 border-emerald-500 text-emerald-400"
+                          : "bg-blue-950/60 border-blue-500 text-blue-400"
                       }`}>
                         {idx + 1}
                       </div>
                       <div>
-                        <span className="text-xs font-black uppercase text-golden-400 tracking-wider block">
-                          {cam.deviceModel}
-                        </span>
-                        <h4 className="text-base font-black text-white">{cam.name}</h4>
-                        <div className="flex items-center gap-2 pt-1">
-                          <span className="text-[10px] uppercase font-bold text-gray-400">Rol Táctico:</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-black uppercase text-golden-400 tracking-wider">
+                            {cam.deviceModel}
+                          </span>
+                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${
+                            isCamActive ? "bg-emerald-950 text-emerald-400 border border-emerald-800" : "bg-red-950 text-red-400 border border-red-800"
+                          }`}>
+                            {isCamActive ? "● EN LÍNEA" : "○ APAGADA"}
+                          </span>
+                        </div>
+                        <input
+                          type="text"
+                          value={cam.name}
+                          onChange={(e) => handleUpdateCamera(cam.id, { name: e.target.value })}
+                          className="text-base font-black text-white bg-transparent border-b border-transparent hover:border-gray-700 focus:border-golden-500 outline-none w-full"
+                        />
+                        <div className="flex flex-wrap items-center gap-2 pt-1">
+                          <span className="text-[10px] uppercase font-bold text-gray-400">Rol:</span>
                           <select
                             value={cam.role}
                             onChange={(e: any) => handleUpdateCamera(cam.id, { role: e.target.value })}
@@ -726,31 +832,94 @@ export default function AdminLiveStreamTab() {
                           >
                             <option value="Cancha Completa">Cancha Completa (Plano General)</option>
                             <option value="Bajo el Aro / Lateral">Bajo el Aro / Lateral (Rebotes & Postes)</option>
+                            <option value="Gradas / Afición">Gradas / Afición & Familias</option>
+                            <option value="Banquillo / Reacciones">Banquillo & Coach Lenny</option>
                             <option value="Seguimiento Dinámico">Seguimiento Dinámico (Gimbal / Jugadas)</option>
-                            <option value="Banquillo">Banquillo & Coach Lenny</option>
                             <option value="Mesa Técnica">Mesa Técnica</option>
                           </select>
                         </div>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => handleCameraSwitch(cam.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                        isSelected
-                          ? "bg-golden-500 text-dark-950 border-golden-500 font-black shadow-md"
-                          : "bg-dark-800 text-gray-300 border-gray-700 hover:text-white"
-                      }`}
-                    >
-                      {isSelected ? "✓ Señal Principal" : "Seleccionar"}
-                    </button>
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      {/* Power Switch (ON / OFF) con auto-fallback */}
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCameraActive(cam.id, isCamActive)}
+                        className={`px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                          isCamActive
+                            ? "bg-emerald-950/60 text-emerald-400 border-emerald-700 hover:bg-emerald-900/80"
+                            : "bg-red-950/60 text-red-400 border-red-800 hover:bg-red-900/80"
+                        }`}
+                        title={isCamActive ? "Apagar cámara (conmutará automáticamente a otra señal activa)" : "Encender cámara"}
+                      >
+                        {isCamActive ? "ON" : "OFF"}
+                      </button>
+
+                      <button
+                        onClick={() => handleCameraSwitch(cam.id)}
+                        disabled={!isCamActive}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                          isSelected
+                            ? "bg-golden-500 text-dark-950 border-golden-500 font-black shadow-md"
+                            : isCamActive
+                            ? "bg-dark-800 text-gray-300 border-gray-700 hover:text-white"
+                            : "bg-dark-950 text-gray-600 border-gray-900 cursor-not-allowed"
+                        }`}
+                      >
+                        {isSelected ? "✓ Señal Principal" : "Seleccionar"}
+                      </button>
+
+                      {config.cameras.length > 1 && (
+                        <button
+                          onClick={() => handleDeleteCamera(cam.id)}
+                          className="p-1.5 rounded-xl bg-dark-950 hover:bg-red-950/60 text-gray-500 hover:text-red-400 border border-gray-800 transition-colors"
+                          title="Eliminar cámara"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Configuración de Dispositivo y Fuente de Video */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                        Modelo de Dispositivo
+                      </label>
+                      <select
+                        value={cam.deviceModel}
+                        onChange={(e: any) => handleUpdateCamera(cam.id, { deviceModel: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-gray-200 text-xs font-bold outline-none"
+                      >
+                        <option value="GoPro HERO 12 Black">GoPro HERO 12 Black</option>
+                        <option value="DJI Osmo Pocket">DJI Osmo Pocket</option>
+                        <option value="Smartphone 4K / Móvil en Trípode">Smartphone 4K / Celular en Trípode</option>
+                        <option value="YouTube Live / Señal Externa">YouTube Live / Señal Externa</option>
+                        <option value="OBS / Señal Mezclada">OBS / Señal Mezclada</option>
+                        <option value="Cámara Secundaria">Cámara Secundaria</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider">
+                        Nombre Corto (Botón en Vivo)
+                      </label>
+                      <input
+                        type="text"
+                        value={cam.shortName}
+                        onChange={(e) => handleUpdateCamera(cam.id, { shortName: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-golden-300 text-xs font-bold outline-none"
+                      />
+                    </div>
                   </div>
 
                   {/* Configuración de Fuente de Video (YouTube Live / Bunny RTMP) */}
                   <div className="space-y-3 p-4 rounded-2xl bg-dark-950 border border-gray-800">
                     <div className="flex items-center justify-between">
                       <label className="text-[10px] font-black uppercase text-gray-300 tracking-wider">
-                        Fuente de Video / Transmisión
+                        Protocolo de Transmisión
                       </label>
                       <div className="flex items-center gap-1.5 text-[10px]">
                         <button
@@ -860,11 +1029,17 @@ export default function AdminLiveStreamTab() {
                           <li>Conecta la señal en directo de YouTube o la app <strong>GoPro Quik</strong> (Modo RTMP a 1080p).</li>
                           <li>Permite a los espectadores seguir toda la rotación del equipo y la pizarra táctica.</li>
                         </>
-                      ) : (
+                      ) : cam.id === "cam-dji" ? (
                         <>
                           <li><strong>Ubicación táctica:</strong> Ubicada <strong>lateralmente junto al tablero o poste</strong> para capturar rebotes, tapones y canastas bajo el aro.</li>
                           <li>Abre la app <strong>DJI Mimo</strong> vinculada al DJI Osmo Pocket y activa el seguimiento de gimbal inteligente.</li>
                           <li>Ingresa la URL RTMP o el enlace para transmitir la acción dinámica a ras de cancha.</li>
+                        </>
+                      ) : (
+                        <>
+                          <li><strong>Ubicación sugerida:</strong> Teléfono móvil fijado en trípode para capturar la <strong>banca del equipo, expresiones de la Coach Lenny y la afición</strong>.</li>
+                          <li>Utiliza apps como <em>Larix Broadcaster</em>, <em>Prism Live</em> o la cámara de YouTube para emitir a 1080p.</li>
+                          <li>Ideal para entrevistas post-partido y momentos emotivos de los niños y familias.</li>
                         </>
                       )}
                     </ol>

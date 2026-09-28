@@ -123,8 +123,12 @@ export default function LiveStreamPage() {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  const currentCam = config.cameras.find((c) => c.id === selectedCamId) || config.cameras[0];
-  const secondaryCam = config.cameras.find((c) => c.id !== selectedCamId) || config.cameras[1];
+  const activeCameras = (config.cameras || []).filter(c => c.isActive !== false);
+  const targetCam = (config.cameras || []).find((c) => c.id === selectedCamId);
+  const currentCam = (targetCam && targetCam.isActive !== false)
+    ? targetCam
+    : (activeCameras[0] || config.cameras?.[0]);
+  const secondaryCam = activeCameras.find((c) => c.id !== currentCam?.id) || (config.cameras || []).find((c) => c.id !== currentCam?.id) || config.cameras?.[1];
 
   return (
     <div className="min-h-screen bg-dark-950 text-gray-100 pb-20">
@@ -311,44 +315,56 @@ export default function LiveStreamPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-dark-900 border border-gray-800">
                   <div className="flex items-center gap-1.5 overflow-x-auto">
                     {config.cameras.map((cam, idx) => {
-                      const isActive = selectedCamId === cam.id;
+                      const isCamActive = cam.isActive !== false;
+                      const isSelected = currentCam?.id === cam.id;
                       return (
                         <button
                           key={cam.id}
                           onClick={() => {
-                            setSelectedCamId(cam.id);
-                            setIsPipActive(false);
+                            if (isCamActive) {
+                              setSelectedCamId(cam.id);
+                              setIsPipActive(false);
+                            }
                           }}
+                          disabled={!isCamActive}
                           className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
-                            isActive && !isPipActive
+                            isSelected && !isPipActive
                               ? "bg-golden-500 text-dark-950 shadow-md shadow-golden-500/30 scale-102"
-                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-800 border border-gray-800"
+                              : isCamActive
+                              ? "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-800 border border-gray-800"
+                              : "bg-dark-950/40 text-gray-600 border border-gray-900 cursor-not-allowed"
                           }`}
                         >
                           <Camera className="w-3.5 h-3.5" />
                           <span>{cam.shortName || cam.name}</span>
                           <span className={`text-[10px] px-1.5 py-0.2 rounded ${
-                            isActive && !isPipActive ? "bg-dark-950 text-golden-400" : "bg-dark-800 text-gray-400"
+                            isSelected && !isPipActive 
+                              ? "bg-dark-950 text-golden-400 font-black" 
+                              : isCamActive 
+                              ? "bg-dark-800 text-gray-400" 
+                              : "bg-red-950/50 text-red-400 font-normal"
                           }`}>
-                            {cam.deviceModel.includes("GoPro") ? "Cancha" : "Móvil"}
+                            {isCamActive ? (cam.deviceModel.includes("GoPro") ? "Cancha" : cam.deviceModel.includes("DJI") ? "Bajo Aro" : "Móvil") : "Off"}
                           </span>
                         </button>
                       );
                     })}
 
-                    {/* PiP Mode Toggle */}
-                    <button
-                      onClick={() => setIsPipActive(!isPipActive)}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                        isPipActive
-                          ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/30"
-                          : "bg-dark-950 text-gray-400 hover:text-white border border-gray-800"
-                      }`}
-                      title="Activar Doble Cámara (PiP)"
-                    >
-                      <Layers className="w-3.5 h-3.5" />
-                      <span>Doble Cámara (PiP)</span>
-                    </button>
+                    {/* PiP Mode Toggle (solo si hay más de 1 cámara activa) */}
+                    {activeCameras.length > 1 && (
+                      <button
+                        onClick={() => setIsPipActive(!isPipActive)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                          isPipActive
+                            ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/30"
+                            : "bg-dark-950 text-gray-400 hover:text-white border border-gray-800"
+                        }`}
+                        title="Activar Doble Cámara (PiP)"
+                      >
+                        <Layers className="w-3.5 h-3.5" />
+                        <span>Doble Cámara (PiP)</span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Resolution / CDN badge */}
@@ -424,67 +440,71 @@ export default function LiveStreamPage() {
                           {secondaryCam?.shortName}
                         </div>
                         <span className="text-[10px] text-gray-300 font-bold uppercase">{secondaryCam?.deviceModel}</span>
-                        <span className="text-[9px] text-gray-500">Cámara 2</span>
+                        <span className="text-[9px] text-gray-500">Cámara Secundaria</span>
                       </div>
                     </div>
                   )}
 
-                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO */}
-                  <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                    <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2.5 sm:p-3 shadow-2xl flex items-center gap-3 text-white">
-                      
-                      {/* Home Team */}
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/40 p-0.5 flex items-center justify-center shrink-0">
-                          <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
+                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO (Condicional: scoreboardVisible) */}
+                  {(config.scoreboardVisible ?? true) && (
+                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                      <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2.5 sm:p-3 shadow-2xl flex items-center gap-3 text-white">
+                        
+                        {/* Home Team */}
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/40 p-0.5 flex items-center justify-center shrink-0">
+                            <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] sm:text-xs font-black uppercase text-golden-400 block leading-tight">
+                              GOLDEN
+                            </span>
+                            <span className="text-sm sm:text-lg font-black leading-none block">
+                              {config.scoreboard?.homeScore ?? 0}
+                            </span>
+                          </div>
                         </div>
-                        <div>
-                          <span className="text-[10px] sm:text-xs font-black uppercase text-golden-400 block leading-tight">
-                            GOLDEN
-                          </span>
-                          <span className="text-sm sm:text-lg font-black leading-none block">
-                            {config.scoreboard?.homeScore ?? 0}
-                          </span>
-                        </div>
-                      </div>
 
-                      {/* Divider & Period */}
-                      <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
-                        <span className="text-[10px] sm:text-xs font-black text-golden-400 uppercase">
-                          {config.scoreboard?.period || "Q1"}
-                        </span>
-                        <span className="text-[9px] font-mono text-gray-400">
-                          {config.scoreboard?.gameTime || "10:00"}
-                        </span>
-                      </div>
-
-                      {/* Away Team */}
-                      <div className="flex items-center gap-2">
-                        <div className="text-right">
-                          <span className="text-[10px] sm:text-xs font-black uppercase text-gray-300 block leading-tight truncate max-w-[70px] sm:max-w-[90px]">
-                            {config.scoreboard?.awayTeam || "RIVAL"}
+                        {/* Divider & Period */}
+                        <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
+                          <span className="text-[10px] sm:text-xs font-black text-golden-400 uppercase">
+                            {config.scoreboard?.period || "Q1"}
                           </span>
-                          <span className="text-sm sm:text-lg font-black leading-none block">
-                            {config.scoreboard?.awayScore ?? 0}
+                          <span className="text-[9px] font-mono text-gray-400">
+                            {config.scoreboard?.gameTime || "10:00"}
                           </span>
                         </div>
-                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-gray-700 flex items-center justify-center font-black text-gray-400 text-xs shrink-0">
-                          VS
-                        </div>
-                      </div>
 
+                        {/* Away Team */}
+                        <div className="flex items-center gap-2">
+                          <div className="text-right">
+                            <span className="text-[10px] sm:text-xs font-black uppercase text-gray-300 block leading-tight truncate max-w-[70px] sm:max-w-[90px]">
+                              {config.scoreboard?.awayTeam || "RIVAL"}
+                            </span>
+                            <span className="text-sm sm:text-lg font-black leading-none block">
+                              {config.scoreboard?.awayScore ?? 0}
+                            </span>
+                          </div>
+                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-gray-700 flex items-center justify-center font-black text-gray-400 text-xs shrink-0">
+                            VS
+                          </div>
+                        </div>
+
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Watermark Sponsor Overlay */}
-                  <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
-                      <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
-                      <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
-                        CURIOL STUDIO
-                      </span>
+                  {/* Watermark Sponsor Overlay (Condicional: sponsorsVisible) */}
+                  {(config.sponsorsVisible ?? true) && (
+                    <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
+                        <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
+                        <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
+                          CURIOL STUDIO
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                 </div>
               </>

@@ -836,6 +836,44 @@ export const Store = {
     return this.updateLiveStreamConfig({ cameras: updatedCameras });
   },
 
+  async toggleCameraActive(cameraId: string, isActive: boolean): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    let newSelectedId = current.selectedCameraId;
+
+    const updatedCameras = current.cameras.map(cam => {
+      if (cam.id === cameraId) {
+        return { ...cam, isActive, status: isActive ? ('live' as const) : ('offline' as const) };
+      }
+      return cam;
+    });
+
+    // Si la cámara que se apaga era la activa, buscar la siguiente cámara activa disponible
+    if (!isActive && current.selectedCameraId === cameraId) {
+      const fallback = updatedCameras.find(c => c.isActive && c.id !== cameraId);
+      if (fallback) {
+        newSelectedId = fallback.id;
+      }
+    }
+
+    return this.updateLiveStreamConfig({ cameras: updatedCameras, selectedCameraId: newSelectedId });
+  },
+
+  async addCamera(camera: LiveCameraConfig): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const updatedCameras = [...current.cameras, camera];
+    return this.updateLiveStreamConfig({ cameras: updatedCameras });
+  },
+
+  async deleteCamera(cameraId: string): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const updatedCameras = current.cameras.filter(c => c.id !== cameraId);
+    let newSelectedId = current.selectedCameraId;
+    if (current.selectedCameraId === cameraId) {
+      newSelectedId = updatedCameras[0]?.id || "";
+    }
+    return this.updateLiveStreamConfig({ cameras: updatedCameras, selectedCameraId: newSelectedId });
+  },
+
   async addLiveReaction(reaction: 'fire' | 'clap' | 'star' | 'basketball'): Promise<LiveStreamConfig> {
     const current = await this.getLiveStreamConfig();
     const currentReactions = current.reactions || { fire: 0, clap: 0, star: 0, basketball: 0 };
