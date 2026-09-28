@@ -1056,11 +1056,11 @@ export const INITIAL_SPONSORS: Sponsor[] = [
   {
     id: "spn-1",
     name: "Curiol Studio",
-    logoUrl: "/curiol-studio-logo.png",
+    logoUrl: "/curiol-studio-official.png",
     tier: "oro",
     websiteUrl: "https://www.curiol.studio",
-    phone: "62806989",
-    contactName: "Jenny Briceño",
+    phone: "60602617",
+    contactName: "Alberto Bustos Ortega",
     isActive: true,
   }
 ];

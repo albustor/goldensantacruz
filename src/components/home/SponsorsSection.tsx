@@ -42,19 +42,24 @@ export default function SponsorsSection({ sponsors: initialSponsors }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           {/* Main Sponsor Card: Curiol Studio */}
           <div className="p-6 rounded-2xl bg-dark-900/90 border-2 border-golden-500/60 flex flex-col sm:flex-row items-center gap-5 shadow-xl">
-            <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-dark-950/90 border-2 border-golden-500/50 flex items-center justify-center p-2 shrink-0 shadow-lg group">
+            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-dark-950/90 border-2 border-golden-500/50 flex items-center justify-center p-2 shrink-0 shadow-lg group">
               <Image
-                src="/curiol-studio-transparent.png"
-                alt="Curiol Studio"
-                width={96}
-                height={96}
+                src="/curiol-studio-official.png"
+                alt="Curiol Studio - Fotografía • Tecnología • Legado"
+                width={120}
+                height={120}
                 className="object-contain w-full h-full drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)] transition-transform group-hover:scale-105"
               />
             </div>
             <div className="space-y-1.5 text-center sm:text-left">
-              <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-golden-500 text-dark-900">
-                Patrocinador Oficial Oro
-              </span>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-golden-500 text-dark-900">
+                  Patrocinador Oficial Oro
+                </span>
+                <span className="text-[10px] font-bold text-golden-400/90 uppercase tracking-wider">
+                  Fotografía • Tecnología • Legado
+                </span>
+              </div>
               <h3 className="text-lg font-black text-white">Curiol Studio</h3>
               <p className="text-xs text-gray-300">
                 Cobertura fotográfica profesional de encuentros, clínicas de tiro y tienda oficial de recuerdos (imanes para neveras y retablos).

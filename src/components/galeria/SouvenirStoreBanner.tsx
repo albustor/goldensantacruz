@@ -20,19 +20,19 @@ export default function SouvenirStoreBanner({ arbolUrl = "https://www.curiol.stu
         {/* Cabecera Minimalista */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
+            <div className="w-12 h-12 rounded-xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
               <Image
-                src="/curiol-studio-transparent.png"
-                alt="Curiol Studio"
-                width={32}
-                height={32}
+                src="/curiol-studio-official.png"
+                alt="Curiol Studio - Fotografía • Tecnología • Legado"
+                width={48}
+                height={48}
                 className="object-contain"
               />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-xs sm:text-sm font-black text-white uppercase tracking-tight">
-                  Curiol Studio • Fotografía Oficial & Recuerdos
+                  Curiol Studio • Fotografía • Tecnología • Legado
                 </h3>
                 <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[9px] font-bold">
                   Convenio Deportivo

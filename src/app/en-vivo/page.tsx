@@ -299,8 +299,8 @@ export default function LiveStreamPage() {
                 <div className="pt-3 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
                   <span>Actualizado en vivo por la mesa técnica y directiva en cancha.</span>
                   <div className="flex items-center gap-2">
-                    <Image src="/curiol-studio-transparent.png" alt="Curiol" width={18} height={18} className="object-contain" />
-                    <span className="text-[10px] font-bold text-golden-400 uppercase">Curiol Studio • Cobertura Oficial</span>
+                    <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
+                    <span className="text-[10px] font-bold text-golden-400 uppercase">Curiol Studio • Fotografía • Tecnología • Legado</span>
                   </div>
                 </div>
               </div>
@@ -479,7 +479,7 @@ export default function LiveStreamPage() {
                   {/* Watermark Sponsor Overlay */}
                   <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
                     <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
-                      <Image src="/curiol-studio-transparent.png" alt="Curiol Studio" width={20} height={20} className="object-contain" />
+                      <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
                       <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
                         CURIOL STUDIO
                       </span>

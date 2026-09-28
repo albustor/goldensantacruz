@@ -112,25 +112,32 @@ export default function Footer() {
           </div>
 
           {/* Col 4: Curiol Studio & Enlaces Oficiales */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-dark-950 border border-golden-500/40 p-1 flex items-center justify-center shrink-0 shadow-md">
+          <div className="space-y-4">
+            <a
+              href="https://curiol.studio"
+              target="_blank"
+              rel="noreferrer"
+              className="block group"
+              title="Visitar Curiol Studio (https://curiol.studio)"
+            >
+              <div className="relative w-full h-20 rounded-2xl bg-dark-900 border-2 border-golden-500/50 p-2.5 flex items-center justify-center shadow-xl shadow-black/80 transition-all duration-300 group-hover:border-golden-400 group-hover:scale-102">
                 <Image
-                  src="/curiol-studio-transparent.png"
-                  alt="Curiol Studio"
-                  width={44}
-                  height={44}
-                  className="object-contain w-full h-full drop-shadow-[0_2px_8px_rgba(234,179,8,0.3)]"
+                  src="/curiol-studio-official.png"
+                  alt="Curiol Studio • Fotografía Tecnología Legado"
+                  width={240}
+                  height={80}
+                  className="object-contain max-h-full drop-shadow-[0_2px_14px_rgba(234,179,8,0.4)]"
                 />
               </div>
-              <div>
-                <span className="text-sm font-black text-white block tracking-wide">CURIOL STUDIO</span>
-                <span className="text-[10px] text-golden-400 font-bold uppercase tracking-wider block">Fotografía • Tecnología</span>
-              </div>
+            </a>
+            <div>
+              <span className="text-xs text-golden-400 font-black uppercase tracking-widest block">
+                Fotografía • Tecnología • Legado
+              </span>
+              <p className="text-xs text-gray-300 leading-relaxed pt-1">
+                Cobertura fotográfica profesional de partidos oficiales, retratos HD y producción de recuerdos familiares para Golden Sport Academy Santa Cruz.
+              </p>
             </div>
-            <p className="text-xs text-gray-300 leading-relaxed">
-              Cobertura fotográfica profesional de partidos oficiales, retratos HD y producción de recuerdos familiares para Golden Sport Academy Santa Cruz.
-            </p>
             <div className="space-y-1.5 pt-1">
               <a
                 href="https://curiol.studio"
@@ -139,7 +146,7 @@ export default function Footer() {
                 className="inline-flex items-center gap-1.5 text-xs text-golden-400 font-bold hover:text-golden-300 transition-colors"
               >
                 <span>Visitar curiol.studio</span>
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
@@ -160,15 +167,27 @@ export default function Footer() {
             href="https://curiol.studio"
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-dark-900 hover:bg-dark-800 border-2 border-golden-500/40 text-gray-200 text-xs font-medium transition-all hover:scale-105 shadow-md shadow-black/80 group cursor-pointer"
+            className="inline-flex items-center gap-3 px-4 py-2.5 rounded-2xl bg-dark-900 hover:bg-dark-850 border-2 border-golden-500/50 text-gray-200 text-xs font-medium transition-all hover:scale-105 shadow-lg shadow-black/90 group cursor-pointer"
             title="Visitar Curiol Studio (https://curiol.studio)"
           >
-            <Code className="w-4 h-4 text-golden-400 group-hover:rotate-12 transition-transform" />
-            <span>Desarrollado & Creado por</span>
-            <strong className="text-golden-400 font-black tracking-wide group-hover:text-golden-300 underline underline-offset-4 decoration-golden-500/50">
-              Curiol Studio
-            </strong>
-            <ExternalLink className="w-3.5 h-3.5 text-golden-400 group-hover:translate-x-0.5 transition-transform" />
+            <div className="h-9 w-28 relative flex items-center justify-center">
+              <Image
+                src="/curiol-studio-official.png"
+                alt="Curiol Studio"
+                width={120}
+                height={38}
+                className="object-contain max-h-full"
+              />
+            </div>
+            <div className="flex flex-col text-left border-l border-gray-700 pl-3">
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-gray-400">Desarrollo & Producción</span>
+                <ExternalLink className="w-3 h-3 text-golden-400 group-hover:translate-x-0.5 transition-transform" />
+              </div>
+              <span className="text-[10px] text-golden-400 font-black uppercase tracking-wider">
+                Fotografía • Tecnología • Legado
+              </span>
+            </div>
           </a>
 
         </div>
