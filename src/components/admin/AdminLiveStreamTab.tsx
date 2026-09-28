@@ -327,11 +327,11 @@ export default function AdminLiveStreamTab() {
         )}
       </div>
 
-      {/* Subtabs Selector */}
+      {/* Subtabs Selector (Todas las configuraciones siempre accesibles y almacenadas) */}
       <div className="flex items-center gap-2 border-b border-gray-800 pb-3 overflow-x-auto">
         <button
           onClick={() => setActiveSubTab("marcador")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
             activeSubTab === "marcador"
               ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
               : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
@@ -341,47 +341,41 @@ export default function AdminLiveStreamTab() {
           <span>Mando de Marcador en Cancha</span>
         </button>
 
-        {config.broadcastMode !== "scoreboard_only" && (
-          <>
-            <button
-              onClick={() => setActiveSubTab("camaras")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
-                activeSubTab === "camaras"
-                  ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-                  : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-              }`}
-            >
-              <Camera className="w-4 h-4" />
-              <span>Cámaras RTMP (GoPro + DJI)</span>
-            </button>
+        <button
+          onClick={() => setActiveSubTab("camaras")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+            activeSubTab === "camaras"
+              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+          }`}
+        >
+          <Camera className="w-4 h-4" />
+          <span>Cámaras (GoPro + DJI + YouTube)</span>
+        </button>
 
-            <button
-              onClick={() => setActiveSubTab("bunny")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
-                activeSubTab === "bunny"
-                  ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-                  : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-              <span>Bunny.net CDN Config</span>
-            </button>
-          </>
-        )}
+        <button
+          onClick={() => setActiveSubTab("bunny")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+            activeSubTab === "bunny"
+              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Bunny.net CDN Config</span>
+        </button>
 
-        {(config.chatEnabled ?? true) && (
-          <button
-            onClick={() => setActiveSubTab("chat")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
-              activeSubTab === "chat"
-                ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-                : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-            }`}
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>Chat de Afición & Anuncios ({config.chatMessages?.length || 0})</span>
-          </button>
-        )}
+        <button
+          onClick={() => setActiveSubTab("chat")}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+            activeSubTab === "chat"
+              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+          }`}
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>Chat de Afición & Anuncios ({config.chatMessages?.length || 0})</span>
+        </button>
       </div>
 
       {/* SUBTAB 1: MANDO DE MARCADOR EN CANCHA */}
