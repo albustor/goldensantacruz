@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -39,23 +39,30 @@ export default function MatchBanner({ match }: Props) {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/en-vivo"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/50 transition-all hover:scale-105"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>Ver En Vivo 🔴</span>
+            </Link>
             {match.locationUrl && (
               <a
                 href={match.locationUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-5 py-3 rounded-xl bg-dark-700 hover:bg-dark-600 text-white font-bold text-xs uppercase tracking-wider border border-gray-600 transition-all"
+                className="flex items-center gap-2 px-4 py-3 rounded-xl bg-dark-700 hover:bg-dark-600 text-white font-bold text-xs uppercase tracking-wider border border-gray-600 transition-all"
               >
                 <Navigation className="w-4 h-4 text-golden-400" />
-                Ver Mapa / Waze
+                <span>Waze</span>
               </a>
             )}
             <Link
               href="/calendario"
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
+              className="flex items-center gap-2 px-4 py-3 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black text-xs uppercase tracking-wider shadow-lg transition-all"
             >
-              Ver Calendario
+              <span>Calendario</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>

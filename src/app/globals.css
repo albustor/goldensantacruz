@@ -1,4 +1,4 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
@@ -51,5 +51,24 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(245, 158, 11, 0.2);
+  }
+
+  @keyframes floatUp {
+    0% {
+      opacity: 1;
+      transform: translateY(0) scale(0.8);
+    }
+    50% {
+      opacity: 0.9;
+      transform: translateY(-80px) scale(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-160px) scale(1.4);
+    }
+  }
+
+  .animate-floatUp {
+    animation: floatUp 2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 }

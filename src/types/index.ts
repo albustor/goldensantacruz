@@ -150,7 +150,78 @@ export interface SystemSettings {
   brandStudio: string; // "Curiol Studio"
   arbolGuanacasteUrl: string; // "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
   address: string;
+  bunnyApiKey?: string;
+  bunnyStreamLibraryId?: string;
 }
 
 export type AcademySettings = SystemSettings;
+
+// MULTI-CAMERA LIVE STREAMING & SCOREBOARD TYPES (Bunny.net + GoPro 12 + DJI Osmo Pocket)
+export interface LiveCameraConfig {
+  id: string; // 'cam-gopro' | 'cam-dji' | 'cam-main'
+  name: string;
+  shortName: string;
+  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "OBS / Señal Mezclada" | "Cámara Secundaria";
+  role: "Cancha Completa" | "Seguimiento Dinámico" | "Mesa Técnica" | "Banquillo";
+  streamType: "bunny_stream" | "hls_direct" | "youtube" | "iframe_custom";
+  bunnyVideoId?: string;
+  bunnyLibraryId?: string;
+  hlsUrl?: string;
+  embedUrl?: string;
+  rtmpServer: string;
+  streamKey: string;
+  isActive: boolean;
+  status: "live" | "offline" | "connecting";
+}
+
+export interface LiveScoreboard {
+  homeTeam: string; // "Golden Sport Santa Cruz"
+  homeScore: number;
+  homeFouls: number;
+  awayTeam: string; // "Parajeles"
+  awayScore: number;
+  awayFouls: number;
+  period: "Q1" | "Q2" | "Q3" | "Q4" | "OT" | "Medio Tiempo" | "Final" | "Próximo";
+  gameTime: string; // "08:45"
+  isClockRunning: boolean;
+  possession: "home" | "away" | "none";
+}
+
+export interface LiveChatMessage {
+  id: string;
+  authorName: string;
+  authorRole: "padre" | "madre" | "atleta" | "staff" | "aficionado";
+  message: string;
+  timestamp: string;
+}
+
+export interface LiveStreamConfig {
+  id: string;
+  isLive: boolean;
+  title: string;
+  matchDate: string;
+  startTime: string;
+  category: PlayerCategory;
+  location: string;
+  opponentName: string;
+  selectedCameraId: string; // ID of active camera for viewer
+  cameras: LiveCameraConfig[];
+  scoreboard: LiveScoreboard;
+  chatEnabled: boolean;
+  reactions: {
+    fire: number;
+    clap: number;
+    star: number;
+    basketball: number;
+  };
+  chatMessages: LiveChatMessage[];
+  sponsorWatermark: {
+    name: string;
+    logoUrl: string;
+    tagline: string;
+    websiteUrl: string;
+  };
+  bunnyApiKey?: string;
+  bunnyStreamLibraryId?: string;
+}
 

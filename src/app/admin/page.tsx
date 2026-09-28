@@ -16,7 +16,8 @@ import {
   Lock, 
   ArrowLeft,
   LayoutDashboard,
-  Mic
+  Mic,
+  Radio
 } from "lucide-react";
 import { 
   AcademySettings, 
@@ -34,6 +35,7 @@ import AdminPaymentsTab from "@/components/admin/AdminPaymentsTab";
 import AdminMatchesTab from "@/components/admin/AdminMatchesTab";
 import AdminGalleryTab from "@/components/admin/AdminGalleryTab";
 import AdminSponsorsTab from "@/components/admin/AdminSponsorsTab";
+import AdminLiveStreamTab from "@/components/admin/AdminLiveStreamTab";
 import AdminAIAssistantTab from "@/components/admin/AdminAIAssistantTab";
 import AdminAudioNotesTab from "@/components/admin/AdminAudioNotesTab";
 import AdminSettingsTab from "@/components/admin/AdminSettingsTab";
@@ -175,6 +177,7 @@ export default function AdminPage() {
 
   const navTabs = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { id: "transmision", label: "Transmisión En Vivo 🔴", icon: Radio, highlight: true },
     { id: "jugadores", label: "Jugadores", icon: Users, badge: players.length },
     { id: "cobranzas", label: "Cobranzas", icon: CreditCard, highlight: true },
     { id: "partidos", label: "Partidos", icon: Calendar, badge: matches.length },
@@ -275,6 +278,8 @@ export default function AdminPage() {
             onSelectTab={(tab) => setActiveTab(tab)}
           />
         )}
+
+        {activeTab === "transmision" && <AdminLiveStreamTab />}
 
         {activeTab === "jugadores" && (
           <AdminPlayersTab players={players} onRefresh={loadAllData} />

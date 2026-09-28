@@ -1,4 +1,4 @@
-import { Player, PaymentRecord, Match, GalleryPhoto, GalleryAlbum, Sponsor, SystemSettings, AudioNote, PlayerCategory } from "@/types";
+import { Player, PaymentRecord, Match, GalleryPhoto, GalleryAlbum, Sponsor, SystemSettings, AudioNote, PlayerCategory, LiveStreamConfig } from "@/types";
 
 export const INITIAL_SETTINGS: SystemSettings = {
   academyName: "Golden Sport Academy Santa Cruz",
@@ -12,6 +12,8 @@ export const INITIAL_SETTINGS: SystemSettings = {
   brandStudio: "Curiol Studio",
   arbolGuanacasteUrl: "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz",
   address: "Santa Bárbara de Santa Cruz, Guanacaste, Costa Rica",
+  bunnyApiKey: "",
+  bunnyStreamLibraryId: "",
 };
 
 export const INITIAL_CATEGORIES: string[] = [
@@ -1079,3 +1081,100 @@ export const INITIAL_AUDIO_NOTES: AudioNote[] = [
     author: "Coach Lenny Monge",
   }
 ];
+
+export const INITIAL_LIVE_STREAM_CONFIG: LiveStreamConfig = {
+  id: "live-session-main",
+  isLive: false,
+  title: "Golden Sport Academy Santa Cruz vs Parajeles • Jornada Oficial",
+  matchDate: "2026-10-03",
+  startTime: "10:00 AM",
+  category: "Infantil (U12-U14)",
+  location: "Gimnasio Municipal de Santa Cruz / Sede Santa Bárbara",
+  opponentName: "Parajeles",
+  selectedCameraId: "cam-gopro",
+  cameras: [
+    {
+      id: "cam-gopro",
+      name: "Cámara 1: Cancha Completa (GoPro 12)",
+      shortName: "GoPro 12",
+      deviceModel: "GoPro HERO 12 Black",
+      role: "Cancha Completa",
+      streamType: "bunny_stream",
+      bunnyLibraryId: "golden_stream_lib",
+      bunnyVideoId: "stream_gopro_main",
+      rtmpServer: "rtmp://la.stream.bunny.net/live",
+      streamKey: "gsa_gopro12_live_key_01",
+      hlsUrl: "https://video.bunnycdn.com/play/gsa_stream_1/playlist.m3u8",
+      embedUrl: "https://iframe.mediadelivery.net/embed/golden_stream_lib/stream_gopro_main?autoplay=true&muted=false",
+      isActive: true,
+      status: "live",
+    },
+    {
+      id: "cam-dji",
+      name: "Cámara 2: Seguimiento Dinámico (DJI Pocket)",
+      shortName: "DJI Pocket",
+      deviceModel: "DJI Osmo Pocket",
+      role: "Seguimiento Dinámico",
+      streamType: "bunny_stream",
+      bunnyLibraryId: "golden_stream_lib",
+      bunnyVideoId: "stream_dji_dynamic",
+      rtmpServer: "rtmp://la.stream.bunny.net/live",
+      streamKey: "gsa_djipocket_live_key_02",
+      hlsUrl: "https://video.bunnycdn.com/play/gsa_stream_2/playlist.m3u8",
+      embedUrl: "https://iframe.mediadelivery.net/embed/golden_stream_lib/stream_dji_dynamic?autoplay=true&muted=false",
+      isActive: true,
+      status: "live",
+    },
+  ],
+  scoreboard: {
+    homeTeam: "Golden Sport Academy Santa Cruz",
+    homeScore: 38,
+    homeFouls: 2,
+    awayTeam: "Parajeles",
+    awayScore: 32,
+    awayFouls: 3,
+    period: "Q3",
+    gameTime: "06:42",
+    isClockRunning: true,
+    possession: "home",
+  },
+  chatEnabled: true,
+  reactions: {
+    fire: 42,
+    clap: 28,
+    star: 35,
+    basketball: 56,
+  },
+  chatMessages: [
+    {
+      id: "msg-1",
+      authorName: "Familia Bustos",
+      authorRole: "padre",
+      message: "¡Excelente jugada en defensa equipo! Vamos con todo ⭐🏀",
+      timestamp: "10:15 AM",
+    },
+    {
+      id: "msg-2",
+      authorName: "Coach Lenny Monge",
+      authorRole: "staff",
+      message: "¡Gran intensidad en los rebotes y concentración en la rotación defensiva!",
+      timestamp: "10:18 AM",
+    },
+    {
+      id: "msg-3",
+      authorName: "Carlos Gómez (Papá)",
+      authorRole: "padre",
+      message: "¡Buena canasta de Mateo! Saludos a todos los papás en la transmisión 🔥",
+      timestamp: "10:22 AM",
+    },
+  ],
+  sponsorWatermark: {
+    name: "Curiol Studio",
+    logoUrl: "/curiol-studio-transparent.png",
+    tagline: "Patrocinador Oficial & Cobertura Audiovisual",
+    websiteUrl: "https://www.curiol.studio",
+  },
+  bunnyApiKey: "",
+  bunnyStreamLibraryId: "",
+};
+

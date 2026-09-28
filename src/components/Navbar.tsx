@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -25,6 +25,7 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Inicio", href: "/" },
+    { name: "En Vivo 🔴", href: "/en-vivo", isLiveBadge: true },
     { name: "Información", href: "/informacion" },
     { name: "Calendario", href: "/calendario" },
     { name: "Fotografías", href: "/galeria" },

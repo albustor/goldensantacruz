@@ -60,11 +60,19 @@ export default function HeroSection() {
 
           {/* Botones de Acción Directa */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+            <Link
+              href="/en-vivo"
+              className="px-4 py-2.5 rounded-2xl bg-red-600 hover:bg-red-500 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-red-900/50 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95 animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>Transmisión En Vivo 🔴</span>
+            </Link>
+
             <a
               href="#inscripcion"
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-golden-400 via-golden-500 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs uppercase tracking-wider shadow-xl shadow-golden-500/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-golden-400 via-golden-500 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs uppercase tracking-wider shadow-xl shadow-golden-500/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
             >
-              <span>Inscribir a mi Hijo(a)</span>
+              <span>Inscribir Atleta</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </a>
 
@@ -73,7 +81,7 @@ export default function HeroSection() {
               className="px-4 py-2.5 rounded-2xl bg-dark-900/90 hover:bg-dark-800 text-golden-300 font-bold text-xs uppercase tracking-wider border border-golden-500/40 flex items-center gap-1.5 transition-colors shadow-md"
             >
               <Info className="w-3.5 h-3.5 text-golden-400" />
-              <span>Conocer Información del Proyecto</span>
+              <span>Proyecto</span>
             </Link>
 
             <Link

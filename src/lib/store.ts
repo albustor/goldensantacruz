@@ -6,6 +6,10 @@ import {
   PaymentRecord,
   Player,
   Sponsor,
+  LiveStreamConfig,
+  LiveCameraConfig,
+  LiveScoreboard,
+  LiveChatMessage,
 } from '../types';
 import {
   INITIAL_ALBUMS,
@@ -17,6 +21,7 @@ import {
   INITIAL_SETTINGS,
   INITIAL_SPONSORS,
   INITIAL_CATEGORIES,
+  INITIAL_LIVE_STREAM_CONFIG,
 } from './initialData';
 import { supabase, isSupabaseConfigured } from './supabase';
 import {
@@ -50,6 +55,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'golden_settings_v5',
   AUDIO_NOTES: 'golden_audio_notes_v5',
   CATEGORIES: 'golden_categories_v5',
+  LIVE_STREAM: 'golden_live_stream_v1',
 };
 
 function getFromStorage<T>(key: string, fallback: T): T {
@@ -758,5 +764,99 @@ export const Store = {
     const updated = current.filter(c => c !== name);
     saveToStorage(STORAGE_KEYS.CATEGORIES, updated);
     return updated;
+  },
+
+  // LIVE STREAMING & SCOREBOARD MANAGEMENT (Bunny.net + GoPro 12 + DJI Osmo Pocket)
+  async getLiveStreamConfig(): Promise<LiveStreamConfig> {
+    return getFromStorage<LiveStreamConfig>(STORAGE_KEYS.LIVE_STREAM, INITIAL_LIVE_STREAM_CONFIG);
+  },
+
+  async updateLiveStreamConfig(updates: Partial<LiveStreamConfig>): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const updated: LiveStreamConfig = {
+      ...current,
+      ...updates,
+      scoreboard: updates.scoreboard ? { ...current.scoreboard, ...updates.scoreboard } : current.scoreboard,
+      reactions: updates.reactions ? { ...current.reactions, ...updates.reactions } : current.reactions,
+      sponsorWatermark: updates.sponsorWatermark ? { ...current.sponsorWatermark, ...updates.sponsorWatermark } : current.sponsorWatermark,
+    };
+    saveToStorage(STORAGE_KEYS.LIVE_STREAM, updated);
+    return updated;
+  },
+
+  async toggleLiveStatus(isLive: boolean): Promise<LiveStreamConfig> {
+    return this.updateLiveStreamConfig({ isLive });
+  },
+
+  async updateScoreboard(updates: Partial<LiveScoreboard>): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const updatedScoreboard: LiveScoreboard = {
+      ...current.scoreboard,
+      ...updates,
+    };
+    return this.updateLiveStreamConfig({ scoreboard: updatedScoreboard });
+  },
+
+  async addScore(team: 'home' | 'away', points: number): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const sb = current.scoreboard;
+    if (team === 'home') {
+      const newScore = Math.max(0, (sb.homeScore || 0) + points);
+      return this.updateScoreboard({ homeScore: newScore });
+    } else {
+      const newScore = Math.max(0, (sb.awayScore || 0) + points);
+      return this.updateScoreboard({ awayScore: newScore });
+    }
+  },
+
+  async addFoul(team: 'home' | 'away', delta: number): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const sb = current.scoreboard;
+    if (team === 'home') {
+      const newFouls = Math.max(0, (sb.homeFouls || 0) + delta);
+      return this.updateScoreboard({ homeFouls: newFouls });
+    } else {
+      const newFouls = Math.max(0, (sb.awayFouls || 0) + delta);
+      return this.updateScoreboard({ awayFouls: newFouls });
+    }
+  },
+
+  async switchActiveCamera(cameraId: string): Promise<LiveStreamConfig> {
+    return this.updateLiveStreamConfig({ selectedCameraId: cameraId });
+  },
+
+  async updateCamera(cameraId: string, updates: Partial<LiveCameraConfig>): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const updatedCameras = current.cameras.map(cam => {
+      if (cam.id === cameraId) {
+        return { ...cam, ...updates };
+      }
+      return cam;
+    });
+    return this.updateLiveStreamConfig({ cameras: updatedCameras });
+  },
+
+  async addLiveReaction(reaction: 'fire' | 'clap' | 'star' | 'basketball'): Promise<LiveStreamConfig> {
+    const current = await this.getLiveStreamConfig();
+    const currentReactions = current.reactions || { fire: 0, clap: 0, star: 0, basketball: 0 };
+    const updatedReactions = {
+      ...currentReactions,
+      [reaction]: (currentReactions[reaction] || 0) + 1,
+    };
+    return this.updateLiveStreamConfig({ reactions: updatedReactions });
+  },
+
+  async addLiveChatMessage(msg: Omit<LiveChatMessage, 'id' | 'timestamp'>): Promise<LiveChatMessage> {
+    const current = await this.getLiveStreamConfig();
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const newMsg: LiveChatMessage = {
+      ...msg,
+      id: `msg-${Date.now()}`,
+      timestamp: timeStr,
+    };
+    const updatedMessages = [...(current.chatMessages || []), newMsg];
+    await this.updateLiveStreamConfig({ chatMessages: updatedMessages });
+    return newMsg;
   }
 };
