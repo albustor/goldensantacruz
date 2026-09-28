@@ -158,12 +158,14 @@ export type AcademySettings = SystemSettings;
 
 // MULTI-CAMERA LIVE STREAMING & SCOREBOARD TYPES (Bunny.net + GoPro 12 + DJI Osmo Pocket)
 export interface LiveCameraConfig {
-  id: string; // 'cam-gopro' | 'cam-dji' | 'cam-main'
+  id: string; // 'cam-gopro' | 'cam-dji' | 'cam-main' | 'cam-youtube'
   name: string;
   shortName: string;
-  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "OBS / Señal Mezclada" | "Cámara Secundaria";
-  role: "Cancha Completa" | "Seguimiento Dinámico" | "Mesa Técnica" | "Banquillo";
+  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "YouTube Live / Señal Externa" | "OBS / Señal Mezclada" | "Cámara Secundaria";
+  role: "Cancha Completa" | "Seguimiento Dinámico" | "Bajo el Aro / Lateral" | "Mesa Técnica" | "Banquillo";
   streamType: "bunny_stream" | "hls_direct" | "youtube" | "iframe_custom";
+  youtubeUrl?: string;
+  youtubeVideoId?: string;
   bunnyVideoId?: string;
   bunnyLibraryId?: string;
   hlsUrl?: string;

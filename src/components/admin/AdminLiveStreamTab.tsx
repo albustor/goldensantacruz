@@ -136,6 +136,31 @@ export default function AdminLiveStreamTab() {
     flashStatus("Información actualizada");
   };
 
+  const handleUpdateCamera = async (camId: string, updates: Partial<LiveCameraConfig>) => {
+    const updated = await Store.updateCamera(camId, updates);
+    setConfig(updated);
+    flashStatus("Cámara actualizada");
+  };
+
+  const handleSetYouTubeUrl = async (camId: string, url: string) => {
+    let videoId = "";
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    const match = url.match(regExp);
+    if (match && match[2].length === 11) {
+      videoId = match[2];
+    }
+    const embed = videoId 
+      ? `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0&rel=0&playsinline=1`
+      : url;
+
+    await handleUpdateCamera(camId, {
+      youtubeUrl: url,
+      youtubeVideoId: videoId,
+      embedUrl: embed,
+      streamType: videoId ? "youtube" : "bunny_stream",
+    });
+  };
+
   const handleTestBunnyConnection = () => {
     setBunnyTestStatus("probando");
     setTimeout(() => {
@@ -688,7 +713,7 @@ export default function AdminLiveStreamTab() {
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border font-black text-lg ${
                         cam.id === "cam-gopro"
-                          ? "bg-blue-950/60 border-blue-500 text-blue-400"
+                          ? "bg-red-950/60 border-red-500 text-red-400"
                           : "bg-emerald-950/60 border-emerald-500 text-emerald-400"
                       }`}>
                         {idx + 1}
@@ -698,7 +723,20 @@ export default function AdminLiveStreamTab() {
                           {cam.deviceModel}
                         </span>
                         <h4 className="text-base font-black text-white">{cam.name}</h4>
-                        <span className="text-[11px] text-gray-400">Rol: {cam.role}</span>
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-[10px] uppercase font-bold text-gray-400">Rol Táctico:</span>
+                          <select
+                            value={cam.role}
+                            onChange={(e: any) => handleUpdateCamera(cam.id, { role: e.target.value })}
+                            className="px-2 py-0.5 rounded bg-dark-950 border border-gray-700 text-golden-400 text-[11px] font-bold outline-none"
+                          >
+                            <option value="Cancha Completa">Cancha Completa (Plano General)</option>
+                            <option value="Bajo el Aro / Lateral">Bajo el Aro / Lateral (Rebotes & Postes)</option>
+                            <option value="Seguimiento Dinámico">Seguimiento Dinámico (Gimbal / Jugadas)</option>
+                            <option value="Banquillo">Banquillo & Coach Lenny</option>
+                            <option value="Mesa Técnica">Mesa Técnica</option>
+                          </select>
+                        </div>
                       </div>
                     </div>
 
@@ -714,68 +752,125 @@ export default function AdminLiveStreamTab() {
                     </button>
                   </div>
 
-                  {/* RTMP Ingest Fields */}
+                  {/* Configuración de Fuente de Video (YouTube Live / Bunny RTMP) */}
                   <div className="space-y-3 p-4 rounded-2xl bg-dark-950 border border-gray-800">
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center justify-between">
-                        <span>Servidor RTMP Ingest</span>
-                        <button
-                          onClick={() => handleCopy(cam.rtmpServer, `rtmp-${cam.id}`)}
-                          className="text-golden-400 hover:text-golden-300 flex items-center gap-1 font-bold lowercase"
-                        >
-                          {copiedKey === `rtmp-${cam.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          <span>copiar url</span>
-                        </button>
+                    <div className="flex items-center justify-between">
+                      <label className="text-[10px] font-black uppercase text-gray-300 tracking-wider">
+                        Fuente de Video / Transmisión
                       </label>
-                      <input
-                        type="text"
-                        readOnly
-                        value={cam.rtmpServer}
-                        className="w-full px-3 py-2 rounded-xl bg-dark-900 border border-gray-700 text-white font-mono text-xs select-all"
-                      />
+                      <div className="flex items-center gap-1.5 text-[10px]">
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateCamera(cam.id, { streamType: "youtube" })}
+                          className={`px-2 py-0.5 rounded font-bold uppercase ${
+                            cam.streamType === "youtube"
+                              ? "bg-red-600 text-white"
+                              : "bg-dark-900 text-gray-400 border border-gray-800 hover:text-white"
+                          }`}
+                        >
+                          YouTube Live
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateCamera(cam.id, { streamType: "bunny_stream" })}
+                          className={`px-2 py-0.5 rounded font-bold uppercase ${
+                            cam.streamType === "bunny_stream"
+                              ? "bg-golden-500 text-dark-950 font-black"
+                              : "bg-dark-900 text-gray-400 border border-gray-800 hover:text-white"
+                          }`}
+                        >
+                          Bunny RTMP
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-1">
-                      <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center justify-between">
-                        <span>Clave de Transmisión (Stream Key)</span>
-                        <button
-                          onClick={() => handleCopy(cam.streamKey, `key-${cam.id}`)}
-                          className="text-golden-400 hover:text-golden-300 flex items-center gap-1 font-bold lowercase"
-                        >
-                          {copiedKey === `key-${cam.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                          <span>copiar clave</span>
-                        </button>
-                      </label>
-                      <input
-                        type="text"
-                        readOnly
-                        value={cam.streamKey}
-                        className="w-full px-3 py-2 rounded-xl bg-dark-900 border border-gray-700 text-golden-400 font-mono text-xs select-all"
-                      />
-                    </div>
+                    {cam.streamType === "youtube" ? (
+                      <div className="space-y-2 pt-1">
+                        <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider block">
+                          Enlace de YouTube (Video o Transmisión En Vivo)
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={cam.youtubeUrl || ""}
+                            onChange={(e) => handleSetYouTubeUrl(cam.id, e.target.value)}
+                            placeholder="https://youtu.be/ROMtqdRiTaY..."
+                            className="flex-1 px-3 py-2 rounded-xl bg-dark-900 border border-gray-700 text-golden-300 text-xs font-mono focus:border-golden-500 outline-none"
+                          />
+                          <a
+                            href={cam.youtubeUrl || "https://youtu.be/ROMtqdRiTaY"}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="p-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-gray-300 border border-gray-700"
+                            title="Abrir en YouTube"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                        <p className="text-[10px] text-gray-400">
+                          Video ID detectado: <code className="text-golden-400 font-mono">{cam.youtubeVideoId || "ROMtqdRiTaY"}</code>
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center justify-between">
+                            <span>Servidor RTMP Ingest</span>
+                            <button
+                              onClick={() => handleCopy(cam.rtmpServer, `rtmp-${cam.id}`)}
+                              className="text-golden-400 hover:text-golden-300 flex items-center gap-1 font-bold lowercase"
+                            >
+                              {copiedKey === `rtmp-${cam.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              <span>copiar url</span>
+                            </button>
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={cam.rtmpServer}
+                            className="w-full px-3 py-2 rounded-xl bg-dark-900 border border-gray-700 text-white font-mono text-xs select-all"
+                          />
+                        </div>
+
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black uppercase text-gray-400 tracking-wider flex items-center justify-between">
+                            <span>Clave de Transmisión (Stream Key)</span>
+                            <button
+                              onClick={() => handleCopy(cam.streamKey, `key-${cam.id}`)}
+                              className="text-golden-400 hover:text-golden-300 flex items-center gap-1 font-bold lowercase"
+                            >
+                              {copiedKey === `key-${cam.id}` ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                              <span>copiar clave</span>
+                            </button>
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={cam.streamKey}
+                            className="w-full px-3 py-2 rounded-xl bg-dark-900 border border-gray-700 text-golden-400 font-mono text-xs select-all"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Quick Setup Instructions */}
                   <div className="p-4 rounded-2xl bg-dark-800/60 border border-gray-800/80 space-y-2">
                     <span className="text-[11px] font-black uppercase text-gray-300 tracking-wider block">
-                      Instrucciones de Conexión:
+                      Instrucciones de Posicionamiento & Conexión:
                     </span>
                     <ol className="text-xs text-gray-400 space-y-1.5 list-decimal list-inside leading-relaxed">
                       {cam.id === "cam-gopro" ? (
                         <>
-                          <li>Abre la app <strong>GoPro Quik</strong> en tu teléfono y conecta la HERO 12.</li>
-                          <li>Toca en <strong>Transmitir en Vivo (Live)</strong> y selecciona <strong>RTMP</strong>.</li>
-                          <li>Pega la URL del Servidor y la Clave copiadas arriba.</li>
-                          <li>Elige resolución <strong>1080p</strong> y calidad <strong>Alta</strong>.</li>
-                          <li>¡Toca Iniciar Transmisión para enviar señal a Bunny.net!</li>
+                          <li><strong>Ubicación sugerida:</strong> En el centro de la gradería / línea media para plano general y cobertura de cancha completa.</li>
+                          <li>Conecta la señal en directo de YouTube o la app <strong>GoPro Quik</strong> (Modo RTMP a 1080p).</li>
+                          <li>Permite a los espectadores seguir toda la rotación del equipo y la pizarra táctica.</li>
                         </>
                       ) : (
                         <>
-                          <li>Abre la app <strong>DJI Mimo</strong> conectada al DJI Osmo Pocket.</li>
-                          <li>Desliza a la opción <strong>En Vivo (Live Stream)</strong> y elige <strong>RTMP</strong>.</li>
-                          <li>Ingresa el enlace RTMP completo: <code className="text-golden-400">{cam.rtmpServer}/{cam.streamKey}</code></li>
-                          <li>Verifica el encuadre y seguimiento de rostros / movimientos del Coach Lenny.</li>
-                          <li>¡Inicia la transmisión y muévete por la cancha!</li>
+                          <li><strong>Ubicación táctica:</strong> Ubicada <strong>lateralmente junto al tablero o poste</strong> para capturar rebotes, tapones y canastas bajo el aro.</li>
+                          <li>Abre la app <strong>DJI Mimo</strong> vinculada al DJI Osmo Pocket y activa el seguimiento de gimbal inteligente.</li>
+                          <li>Ingresa la URL RTMP o el enlace para transmitir la acción dinámica a ras de cancha.</li>
                         </>
                       )}
                     </ol>
