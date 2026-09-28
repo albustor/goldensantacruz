@@ -42,13 +42,13 @@ export default function SponsorsSection({ sponsors: initialSponsors }: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
           {/* Main Sponsor Card: Curiol Studio */}
           <div className="p-6 rounded-2xl bg-dark-900/90 border-2 border-golden-500/60 flex flex-col sm:flex-row items-center gap-5 shadow-xl">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl bg-dark-950/90 border-2 border-golden-500/50 flex items-center justify-center p-2 shrink-0 shadow-lg group">
+            <div className="w-40 sm:w-48 h-20 rounded-2xl bg-dark-950/80 border-2 border-golden-500/50 flex items-center justify-center p-3 shrink-0 shadow-lg group">
               <Image
                 src="/curiol-studio-official.png"
                 alt="Curiol Studio - Fotografía • Tecnología • Legado"
-                width={120}
-                height={120}
-                className="object-contain w-full h-full drop-shadow-[0_2px_10px_rgba(234,179,8,0.4)] transition-transform group-hover:scale-105"
+                width={200}
+                height={60}
+                className="object-contain w-full h-full drop-shadow-[0_2px_12px_rgba(234,179,8,0.4)] transition-transform group-hover:scale-105"
               />
             </div>
             <div className="space-y-1.5 text-center sm:text-left">
