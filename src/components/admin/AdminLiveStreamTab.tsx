@@ -220,9 +220,76 @@ export default function AdminLiveStreamTab() {
               ) : (
                 <>
                   <Play className="w-4 h-4 fill-current" />
-                  <span>INICIAR TRANSMISIÓN EN VIVO</span>
+                  <span>{config.broadcastMode === "scoreboard_only" ? "ACTIVAR MARCADOR EN VIVO" : "INICIAR TRANSMISIÓN EN VIVO"}</span>
                 </>
               )}
+            </button>
+          </div>
+        </div>
+
+        {/* MODO DE EMISIÓN & CONFIGURACIÓN RÁPIDA DE FUNCIONES */}
+        <div className="mt-6 pt-5 border-t border-gray-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <span className="text-xs font-black uppercase text-gray-300 tracking-wider flex items-center gap-1.5">
+              <Sliders className="w-3.5 h-3.5 text-golden-400" />
+              <span>Modo del Encuentro:</span>
+            </span>
+
+            <div className="inline-flex p-1 rounded-2xl bg-dark-950 border border-gray-700/80">
+              <button
+                type="button"
+                onClick={() => handleUpdateMatchInfo("broadcastMode", "video_and_scoreboard")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  (config.broadcastMode || "video_and_scoreboard") === "video_and_scoreboard"
+                    ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Video className="w-3.5 h-3.5" />
+                <span>📹 Video Multi-Cámara + Marcador</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleUpdateMatchInfo("broadcastMode", "scoreboard_only")}
+                className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                  config.broadcastMode === "scoreboard_only"
+                    ? "bg-emerald-500 text-dark-950 font-black shadow-md shadow-emerald-500/20"
+                    : "text-gray-400 hover:text-white"
+                }`}
+              >
+                <Tv className="w-3.5 h-3.5" />
+                <span>📊 Solo Marcador Digital (Sin Video)</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Opciones Modulares: Activar/Desactivar Chat y Reacciones */}
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => handleUpdateMatchInfo("chatEnabled", !(config.chatEnabled ?? true))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                (config.chatEnabled ?? true)
+                  ? "bg-dark-950 border-golden-500/50 text-golden-400"
+                  : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
+              }`}
+            >
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>Chat: {(config.chatEnabled ?? true) ? "Activo" : "Desactivado"}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleUpdateMatchInfo("reactionsEnabled", !(config.reactionsEnabled ?? true))}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
+                (config.reactionsEnabled ?? true)
+                  ? "bg-dark-950 border-orange-500/50 text-orange-400"
+                  : "bg-dark-950/50 border-gray-800 text-gray-500 line-through"
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5" />
+              <span>Reacciones: {(config.reactionsEnabled ?? true) ? "Activas" : "Desactivadas"}</span>
             </button>
           </div>
         </div>
@@ -236,10 +303,10 @@ export default function AdminLiveStreamTab() {
       </div>
 
       {/* Subtabs Selector */}
-      <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
+      <div className="flex items-center gap-2 border-b border-gray-800 pb-3 overflow-x-auto">
         <button
           onClick={() => setActiveSubTab("marcador")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
             activeSubTab === "marcador"
               ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
               : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
@@ -249,41 +316,47 @@ export default function AdminLiveStreamTab() {
           <span>Mando de Marcador en Cancha</span>
         </button>
 
-        <button
-          onClick={() => setActiveSubTab("camaras")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-            activeSubTab === "camaras"
-              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-          }`}
-        >
-          <Camera className="w-4 h-4" />
-          <span>Cámaras RTMP (GoPro + DJI)</span>
-        </button>
+        {config.broadcastMode !== "scoreboard_only" && (
+          <>
+            <button
+              onClick={() => setActiveSubTab("camaras")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+                activeSubTab === "camaras"
+                  ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+                  : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+              }`}
+            >
+              <Camera className="w-4 h-4" />
+              <span>Cámaras RTMP (GoPro + DJI)</span>
+            </button>
 
-        <button
-          onClick={() => setActiveSubTab("bunny")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-            activeSubTab === "bunny"
-              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-          }`}
-        >
-          <Layers className="w-4 h-4" />
-          <span>Bunny.net CDN Config</span>
-        </button>
+            <button
+              onClick={() => setActiveSubTab("bunny")}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+                activeSubTab === "bunny"
+                  ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+                  : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+              <span>Bunny.net CDN Config</span>
+            </button>
+          </>
+        )}
 
-        <button
-          onClick={() => setActiveSubTab("chat")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-            activeSubTab === "chat"
-              ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
-              : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
-          }`}
-        >
-          <MessageSquare className="w-4 h-4" />
-          <span>Chat de Afición & Anuncios ({config.chatMessages?.length || 0})</span>
-        </button>
+        {(config.chatEnabled ?? true) && (
+          <button
+            onClick={() => setActiveSubTab("chat")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all shrink-0 ${
+              activeSubTab === "chat"
+                ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/20"
+                : "bg-dark-800 text-gray-300 hover:text-white border border-gray-700"
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Chat de Afición & Anuncios ({config.chatMessages?.length || 0})</span>
+          </button>
+        )}
       </div>
 
       {/* SUBTAB 1: MANDO DE MARCADOR EN CANCHA */}

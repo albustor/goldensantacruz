@@ -189,369 +189,478 @@ export default function LiveStreamPage() {
 
       {/* Main Broadcast Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className={`grid grid-cols-1 ${config.chatEnabled !== false ? "lg:grid-cols-3" : "max-w-4xl mx-auto"} gap-6`}>
           
-          {/* Left / Center: Video Player & Camera Switcher (2 Cols) */}
-          <div className="lg:col-span-2 space-y-4">
+          {/* Left / Center: Video Player OR Arena Scoreboard (2 Cols or Full Width) */}
+          <div className={`${config.chatEnabled !== false ? "lg:col-span-2" : "w-full"} space-y-4`}>
             
-            {/* Camera Switcher Toolbar */}
-            <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-dark-900 border border-gray-800">
-              <div className="flex items-center gap-1.5 overflow-x-auto">
-                {config.cameras.map((cam, idx) => {
-                  const isActive = selectedCamId === cam.id;
-                  return (
-                    <button
-                      key={cam.id}
-                      onClick={() => {
-                        setSelectedCamId(cam.id);
-                        setIsPipActive(false);
-                      }}
-                      className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
-                        isActive && !isPipActive
-                          ? "bg-golden-500 text-dark-950 shadow-md shadow-golden-500/30 scale-102"
-                          : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-800 border border-gray-800"
-                      }`}
-                    >
-                      <Camera className="w-3.5 h-3.5" />
-                      <span>{cam.shortName || cam.name}</span>
-                      <span className={`text-[10px] px-1.5 py-0.2 rounded ${
-                        isActive && !isPipActive ? "bg-dark-950 text-golden-400" : "bg-dark-800 text-gray-400"
-                      }`}>
-                        {cam.deviceModel.includes("GoPro") ? "Cancha" : "Móvil"}
+            {/* IF SCOREBOARD-ONLY MODE (Sin cámaras de video) */}
+            {config.broadcastMode === "scoreboard_only" ? (
+              <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900 border-2 border-golden-500/50 shadow-2xl space-y-6 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-golden-500/5 rounded-full blur-3xl pointer-events-none" />
+                
+                {/* Header of Arena Scoreboard */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-3 h-3 rounded-full bg-emerald-500 animate-ping" />
+                    <span className="text-xs font-black uppercase tracking-wider text-golden-400">
+                      Tablero Electrónico Digital Oficial
+                    </span>
+                  </div>
+                  <span className="text-xs text-gray-400 font-mono">
+                    {config.matchDate} • {config.location || "Sede Santa Bárbara"}
+                  </span>
+                </div>
+
+                {/* Scoreboard Arena Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                  
+                  {/* Local Team Box (2 cols) */}
+                  <div className="md:col-span-2 p-5 sm:p-6 rounded-3xl bg-dark-950 border-2 border-golden-500/40 text-center space-y-3 shadow-xl relative">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-dark-900 border border-golden-500/40 p-1 flex items-center justify-center">
+                        <Image src="/logo.png" alt="Golden" width={28} height={28} className="object-contain" />
+                      </div>
+                      <span className="text-xs sm:text-sm font-black text-golden-400 uppercase tracking-tight">
+                        Golden Sport Academy
                       </span>
+                    </div>
+
+                    <div className="py-2">
+                      <span className="text-6xl sm:text-7xl lg:text-8xl font-black text-golden-400 font-mono tracking-tighter drop-shadow-[0_4px_20px_rgba(234,179,8,0.5)]">
+                        {config.scoreboard?.homeScore ?? 0}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mt-1">Puntos Oficiales</span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-800/80 text-xs">
+                      <span className="text-gray-400 font-bold">Faltas: <strong className="text-red-400 font-mono">{config.scoreboard?.homeFouls ?? 0}</strong></span>
+                      {config.scoreboard?.possession === "home" && (
+                        <span className="px-2 py-0.5 rounded-full bg-golden-500 text-dark-950 font-black text-[10px] uppercase tracking-wider animate-pulse">
+                          🏀 Posesión
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Center Match Info (1 col) */}
+                  <div className="p-4 rounded-2xl bg-dark-900/80 border border-gray-800 text-center space-y-2">
+                    <span className="text-[10px] font-black uppercase text-gray-400 block">Periodo</span>
+                    <span className="px-3 py-1 rounded-xl bg-golden-500 text-dark-950 text-sm font-black uppercase block tracking-wider shadow-md">
+                      {config.scoreboard?.period || "Q1"}
+                    </span>
+                    <span className="text-xs font-mono text-golden-400/90 block pt-1">
+                      {config.scoreboard?.gameTime || "10:00"}
+                    </span>
+                    <span className="text-[10px] text-gray-500 font-bold uppercase block">En Directo</span>
+                  </div>
+
+                  {/* Away Team Box (2 cols) */}
+                  <div className="md:col-span-2 p-5 sm:p-6 rounded-3xl bg-dark-950 border-2 border-gray-700 text-center space-y-3 shadow-xl relative">
+                    <div className="flex items-center justify-center gap-2">
+                      <div className="w-8 h-8 rounded-xl bg-dark-900 border border-gray-700 flex items-center justify-center font-black text-xs text-gray-400">
+                        VS
+                      </div>
+                      <span className="text-xs sm:text-sm font-black text-gray-200 uppercase tracking-tight truncate max-w-[150px]">
+                        {config.scoreboard?.awayTeam || config.opponentName || "Rival"}
+                      </span>
+                    </div>
+
+                    <div className="py-2">
+                      <span className="text-6xl sm:text-7xl lg:text-8xl font-black text-gray-200 font-mono tracking-tighter">
+                        {config.scoreboard?.awayScore ?? 0}
+                      </span>
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block mt-1">Puntos Rival</span>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-800/80 text-xs">
+                      <span className="text-gray-400 font-bold">Faltas: <strong className="text-red-400 font-mono">{config.scoreboard?.awayFouls ?? 0}</strong></span>
+                      {config.scoreboard?.possession === "away" && (
+                        <span className="px-2 py-0.5 rounded-full bg-blue-500 text-white font-black text-[10px] uppercase tracking-wider animate-pulse">
+                          🏀 Posesión
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Scoreboard Footer Note */}
+                <div className="pt-3 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+                  <span>Actualizado en vivo por la mesa técnica y directiva en cancha.</span>
+                  <div className="flex items-center gap-2">
+                    <Image src="/curiol-studio-transparent.png" alt="Curiol" width={18} height={18} className="object-contain" />
+                    <span className="text-[10px] font-bold text-golden-400 uppercase">Curiol Studio • Cobertura Oficial</span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* IF MULTI-CAMERA VIDEO MODE */
+              <>
+                {/* Camera Switcher Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-2 p-2 rounded-2xl bg-dark-900 border border-gray-800">
+                  <div className="flex items-center gap-1.5 overflow-x-auto">
+                    {config.cameras.map((cam, idx) => {
+                      const isActive = selectedCamId === cam.id;
+                      return (
+                        <button
+                          key={cam.id}
+                          onClick={() => {
+                            setSelectedCamId(cam.id);
+                            setIsPipActive(false);
+                          }}
+                          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                            isActive && !isPipActive
+                              ? "bg-golden-500 text-dark-950 shadow-md shadow-golden-500/30 scale-102"
+                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-800 border border-gray-800"
+                          }`}
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>{cam.shortName || cam.name}</span>
+                          <span className={`text-[10px] px-1.5 py-0.2 rounded ${
+                            isActive && !isPipActive ? "bg-dark-950 text-golden-400" : "bg-dark-800 text-gray-400"
+                          }`}>
+                            {cam.deviceModel.includes("GoPro") ? "Cancha" : "Móvil"}
+                          </span>
+                        </button>
+                      );
+                    })}
+
+                    {/* PiP Mode Toggle */}
+                    <button
+                      onClick={() => setIsPipActive(!isPipActive)}
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
+                        isPipActive
+                          ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/30"
+                          : "bg-dark-950 text-gray-400 hover:text-white border border-gray-800"
+                      }`}
+                      title="Activar Doble Cámara (PiP)"
+                    >
+                      <Layers className="w-3.5 h-3.5" />
+                      <span>Doble Cámara (PiP)</span>
                     </button>
-                  );
-                })}
+                  </div>
 
-                {/* PiP Mode Toggle */}
-                <button
-                  onClick={() => setIsPipActive(!isPipActive)}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all ${
-                    isPipActive
-                      ? "bg-golden-500 text-dark-950 font-black shadow-md shadow-golden-500/30"
-                      : "bg-dark-950 text-gray-400 hover:text-white border border-gray-800"
-                  }`}
-                  title="Activar Doble Cámara (PiP)"
-                >
-                  <Layers className="w-3.5 h-3.5" />
-                  <span>Doble Cámara (PiP)</span>
-                </button>
-              </div>
+                  {/* Resolution / CDN badge */}
+                  <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-dark-950 border border-gray-800 text-[11px] text-gray-400">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Bunny CDN 1080p 60fps</span>
+                  </div>
+                </div>
 
-              {/* Resolution / CDN badge */}
-              <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-lg bg-dark-950 border border-gray-800 text-[11px] text-gray-400">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span>Bunny CDN 1080p 60fps</span>
-              </div>
-            </div>
-
-            {/* Video Player Container */}
-            <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/30 shadow-2xl group">
-              
-              {/* Main Feed */}
-              {config.isLive ? (
-                <div className="w-full h-full relative bg-dark-950 flex items-center justify-center">
-                  {/* Simulated Dynamic HD Canvas / Real Player Embed */}
-                  {currentCam?.embedUrl ? (
-                    <iframe
-                      src={currentCam.embedUrl}
-                      className="w-full h-full border-0 absolute inset-0"
-                      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                      allowFullScreen
-                    />
+                {/* Video Player Container */}
+                <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/30 shadow-2xl group">
+                  
+                  {/* Main Feed */}
+                  {config.isLive ? (
+                    <div className="w-full h-full relative bg-dark-950 flex items-center justify-center">
+                      {currentCam?.embedUrl ? (
+                        <iframe
+                          src={currentCam.embedUrl}
+                          className="w-full h-full border-0 absolute inset-0"
+                          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <div className="w-full h-full relative bg-gradient-to-br from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-6 text-center space-y-4">
+                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#eab308_1px,transparent_1px)] [background-size:16px_16px]" />
+                          
+                          <div className="relative z-10 space-y-3 max-w-md">
+                            <div className="w-16 h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-2 mx-auto flex items-center justify-center shadow-lg shadow-golden-500/30 animate-bounce">
+                              <Image src="/logo.png" alt="Golden" width={50} height={50} className="object-contain" />
+                            </div>
+                            <h3 className="text-lg font-black text-white uppercase tracking-wide">
+                              Señal en Directo: {currentCam?.name}
+                            </h3>
+                            <p className="text-xs text-gray-300">
+                              Transmitiendo desde el Gimnasio de Santa Bárbara mediante <strong>{currentCam?.deviceModel}</strong> con tecnología Bunny Stream Live CDN.
+                            </p>
+                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-xs font-bold">
+                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                              <span>Latencia Ultra Baja • HLS Activo</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    /* High Performance Visual Simulated Stream Streamline */
-                    <div className="w-full h-full relative bg-gradient-to-br from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                      {/* Animated Basketball Court Ambience */}
-                      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#eab308_1px,transparent_1px)] [background-size:16px_16px]" />
-                      
-                      <div className="relative z-10 space-y-3 max-w-md">
-                        <div className="w-16 h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-2 mx-auto flex items-center justify-center shadow-lg shadow-golden-500/30 animate-bounce">
-                          <Image src="/logo.png" alt="Golden" width={50} height={50} className="object-contain" />
-                        </div>
-                        <h3 className="text-lg font-black text-white uppercase tracking-wide">
-                          Señal en Directo: {currentCam?.name}
-                        </h3>
-                        <p className="text-xs text-gray-300">
-                          Transmitiendo desde el Gimnasio de Santa Bárbara mediante <strong>{currentCam?.deviceModel}</strong> con tecnología Bunny Stream Live CDN.
+                    /* Offline / Standby Screen */
+                    <div className="w-full h-full bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-8 text-center space-y-4">
+                      <div className="w-20 h-20 rounded-3xl bg-dark-900 border-2 border-golden-500/50 p-3 flex items-center justify-center shadow-2xl">
+                        <Image src="/logo.png" alt="Golden" width={64} height={64} className="object-contain" />
+                      </div>
+                      <div className="space-y-1 max-w-lg">
+                        <h3 className="text-xl font-black text-white uppercase">Próxima Transmisión en Vivo</h3>
+                        <p className="text-xs text-gray-400 leading-relaxed">
+                          La señal se activará automáticamente cuando comience el encuentro. ¡Acompaña a nuestros atletas desde cualquier lugar con cobertura multi-cámara HD!
                         </p>
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-xs font-bold">
-                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                          <span>Latencia Ultra Baja • HLS Activo</span>
-                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 pt-2">
+                        <Link
+                          href="/calendario"
+                          className="px-4 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider transition-colors"
+                        >
+                          Ver Calendario de Partidos
+                        </Link>
                       </div>
                     </div>
                   )}
-                </div>
-              ) : (
-                /* Offline / Standby Screen */
-                <div className="w-full h-full bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                  <div className="w-20 h-20 rounded-3xl bg-dark-900 border-2 border-golden-500/50 p-3 flex items-center justify-center shadow-2xl">
-                    <Image src="/logo.png" alt="Golden" width={64} height={64} className="object-contain" />
-                  </div>
-                  <div className="space-y-1 max-w-lg">
-                    <h3 className="text-xl font-black text-white uppercase">Próxima Transmisión en Vivo</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      La señal se activará automáticamente cuando comience el encuentro. ¡Acompaña a nuestros atletas desde cualquier lugar con cobertura multi-cámara HD!
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3 pt-2">
-                    <Link
-                      href="/calendario"
-                      className="px-4 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider transition-colors"
-                    >
-                      Ver Calendario de Partidos
-                    </Link>
-                  </div>
-                </div>
-              )}
 
-              {/* PiP Inset Window (Secondary Camera) */}
-              {isPipActive && config.isLive && (
-                <div className="absolute top-4 right-4 w-48 sm:w-60 aspect-video rounded-2xl overflow-hidden bg-dark-900 border-2 border-golden-400 shadow-2xl z-30 transition-all hover:scale-105 cursor-pointer">
-                  <div className="relative w-full h-full bg-dark-950 flex flex-col items-center justify-center p-2 text-center">
-                    <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-dark-950/90 text-golden-400 font-mono text-[9px] font-bold border border-golden-500/40">
-                      {secondaryCam?.shortName}
+                  {/* PiP Inset Window (Secondary Camera) */}
+                  {isPipActive && config.isLive && (
+                    <div className="absolute top-4 right-4 w-48 sm:w-60 aspect-video rounded-2xl overflow-hidden bg-dark-900 border-2 border-golden-400 shadow-2xl z-30 transition-all hover:scale-105 cursor-pointer">
+                      <div className="relative w-full h-full bg-dark-950 flex flex-col items-center justify-center p-2 text-center">
+                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-dark-950/90 text-golden-400 font-mono text-[9px] font-bold border border-golden-500/40">
+                          {secondaryCam?.shortName}
+                        </div>
+                        <span className="text-[10px] text-gray-300 font-bold uppercase">{secondaryCam?.deviceModel}</span>
+                        <span className="text-[9px] text-gray-500">Cámara 2</span>
+                      </div>
                     </div>
-                    <span className="text-[10px] text-gray-300 font-bold uppercase">{secondaryCam?.deviceModel}</span>
-                    <span className="text-[9px] text-gray-500">Cámara 2</span>
-                  </div>
-                </div>
-              )}
+                  )}
 
-              {/* OFFICIAL SCOREBOARD OVERLAY */}
-              <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2.5 sm:p-3 shadow-2xl flex items-center gap-3 text-white">
-                  
-                  {/* Home Team */}
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/40 p-0.5 flex items-center justify-center shrink-0">
-                      <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
-                    </div>
-                    <div>
-                      <span className="text-[10px] sm:text-xs font-black uppercase text-golden-400 block leading-tight">
-                        GOLDEN
-                      </span>
-                      <span className="text-sm sm:text-lg font-black leading-none block">
-                        {config.scoreboard?.homeScore ?? 0}
-                      </span>
-                    </div>
-                  </div>
+                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO */}
+                  <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                    <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2.5 sm:p-3 shadow-2xl flex items-center gap-3 text-white">
+                      
+                      {/* Home Team */}
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/40 p-0.5 flex items-center justify-center shrink-0">
+                          <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
+                        </div>
+                        <div>
+                          <span className="text-[10px] sm:text-xs font-black uppercase text-golden-400 block leading-tight">
+                            GOLDEN
+                          </span>
+                          <span className="text-sm sm:text-lg font-black leading-none block">
+                            {config.scoreboard?.homeScore ?? 0}
+                          </span>
+                        </div>
+                      </div>
 
-                  {/* Divider & Period */}
-                  <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
-                    <span className="text-[10px] sm:text-xs font-black text-golden-400 uppercase">
-                      {config.scoreboard?.period || "Q1"}
-                    </span>
-                    <span className="text-[9px] font-mono text-gray-400">
-                      {config.scoreboard?.gameTime || "10:00"}
-                    </span>
+                      {/* Divider & Period */}
+                      <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
+                        <span className="text-[10px] sm:text-xs font-black text-golden-400 uppercase">
+                          {config.scoreboard?.period || "Q1"}
+                        </span>
+                        <span className="text-[9px] font-mono text-gray-400">
+                          {config.scoreboard?.gameTime || "10:00"}
+                        </span>
+                      </div>
+
+                      {/* Away Team */}
+                      <div className="flex items-center gap-2">
+                        <div className="text-right">
+                          <span className="text-[10px] sm:text-xs font-black uppercase text-gray-300 block leading-tight truncate max-w-[70px] sm:max-w-[90px]">
+                            {config.scoreboard?.awayTeam || "RIVAL"}
+                          </span>
+                          <span className="text-sm sm:text-lg font-black leading-none block">
+                            {config.scoreboard?.awayScore ?? 0}
+                          </span>
+                        </div>
+                        <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-gray-700 flex items-center justify-center font-black text-gray-400 text-xs shrink-0">
+                          VS
+                        </div>
+                      </div>
+
+                    </div>
                   </div>
 
-                  {/* Away Team */}
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <span className="text-[10px] sm:text-xs font-black uppercase text-gray-300 block leading-tight truncate max-w-[70px] sm:max-w-[90px]">
-                        {config.scoreboard?.awayTeam || "RIVAL"}
+                  {/* Watermark Sponsor Overlay */}
+                  <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
+                      <Image src="/curiol-studio-transparent.png" alt="Curiol Studio" width={20} height={20} className="object-contain" />
+                      <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
+                        CURIOL STUDIO
                       </span>
-                      <span className="text-sm sm:text-lg font-black leading-none block">
-                        {config.scoreboard?.awayScore ?? 0}
-                      </span>
-                    </div>
-                    <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-gray-700 flex items-center justify-center font-black text-gray-400 text-xs shrink-0">
-                      VS
                     </div>
                   </div>
 
                 </div>
-              </div>
+              </>
+            )}
 
-              {/* Watermark Sponsor Overlay */}
-              <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
-                <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
-                  <Image src="/curiol-studio-transparent.png" alt="Curiol Studio" width={20} height={20} className="object-contain" />
-                  <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
-                    CURIOL STUDIO
+            {/* Interactive Reaction Bar (si está habilitado) */}
+            {(config.reactionsEnabled ?? true) && (
+              <div className="p-4 rounded-3xl bg-dark-900 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black uppercase text-gray-400 tracking-wider">
+                    ¡Apoya a Golden!
                   </span>
                 </div>
+
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <button
+                    onClick={() => handleReaction("fire")}
+                    className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-orange-950/50 border border-orange-500/40 text-orange-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
+                  >
+                    <span>🔥</span>
+                    <span className="font-mono text-white text-xs">{config.reactions?.fire || 0}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleReaction("basketball")}
+                    className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-golden-950/50 border border-golden-500/40 text-golden-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
+                  >
+                    <span>🏀</span>
+                    <span className="font-mono text-white text-xs">{config.reactions?.basketball || 0}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleReaction("clap")}
+                    className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
+                  >
+                    <span>👏</span>
+                    <span className="font-mono text-white text-xs">{config.reactions?.clap || 0}</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleReaction("star")}
+                    className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-yellow-950/50 border border-yellow-500/40 text-yellow-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
+                  >
+                    <span>⭐</span>
+                    <span className="font-mono text-white text-xs">{config.reactions?.star || 0}</span>
+                  </button>
+                </div>
               </div>
-
-            </div>
-
-            {/* Interactive Reaction Bar */}
-            <div className="p-4 rounded-3xl bg-dark-900 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-black uppercase text-gray-400 tracking-wider">
-                  ¡Apoya a Golden!
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 sm:gap-3">
-                <button
-                  onClick={() => handleReaction("fire")}
-                  className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-orange-950/50 border border-orange-500/40 text-orange-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
-                >
-                  <span>🔥</span>
-                  <span className="font-mono text-white text-xs">{config.reactions?.fire || 0}</span>
-                </button>
-
-                <button
-                  onClick={() => handleReaction("basketball")}
-                  className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-golden-950/50 border border-golden-500/40 text-golden-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
-                >
-                  <span>🏀</span>
-                  <span className="font-mono text-white text-xs">{config.reactions?.basketball || 0}</span>
-                </button>
-
-                <button
-                  onClick={() => handleReaction("clap")}
-                  className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-emerald-950/50 border border-emerald-500/40 text-emerald-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
-                >
-                  <span>👏</span>
-                  <span className="font-mono text-white text-xs">{config.reactions?.clap || 0}</span>
-                </button>
-
-                <button
-                  onClick={() => handleReaction("star")}
-                  className="px-3.5 py-2 rounded-2xl bg-dark-950 hover:bg-yellow-950/50 border border-yellow-500/40 text-yellow-400 font-bold text-xs sm:text-sm flex items-center gap-1.5 transition-all hover:scale-110 active:scale-95 shadow-md"
-                >
-                  <span>⭐</span>
-                  <span className="font-mono text-white text-xs">{config.reactions?.star || 0}</span>
-                </button>
-              </div>
-            </div>
+            )}
 
             {/* Technical Information & Features Card */}
             <div className="p-5 rounded-3xl bg-dark-900/60 border border-gray-800/80 space-y-3 text-xs">
               <div className="flex items-center gap-2 text-golden-400 font-black uppercase text-xs">
                 <Sparkles className="w-4 h-4" />
-                <span>Cobertura Multi-Cámara Profesional</span>
+                <span>{config.broadcastMode === "scoreboard_only" ? "Marcador Digital en Tiempo Real" : "Cobertura Multi-Cámara Profesional"}</span>
               </div>
               <p className="text-gray-300 leading-relaxed">
-                Golden Sport Academy transmite sus partidos oficiales con un sistema de doble cámara HD: <strong>Cámara 1 (GoPro HERO 12)</strong> para la visión táctica de la cancha completa y <strong>Cámara 2 (DJI Osmo Pocket)</strong> para el seguimiento dinámico de las jugadas en movimiento y dirección técnica de la Coach Lenny Monge.
+                {config.broadcastMode === "scoreboard_only" 
+                  ? "Sigue el tanteador, faltas y periodos oficiales del partido en directo sin consumo intensivo de datos, sincronizado al instante por la mesa de control de Golden Sport Academy."
+                  : "Golden Sport Academy transmite sus partidos oficiales con un sistema de doble cámara HD: Cámara 1 (GoPro HERO 12) para la visión táctica de la cancha completa y Cámara 2 (DJI Osmo Pocket) para el seguimiento dinámico de las jugadas en movimiento y dirección técnica de la Coach Lenny Monge."
+                }
               </p>
             </div>
 
           </div>
 
-          {/* Right Column: Family Live Chat & Community Wall (1 Col) */}
-          <div className="space-y-4">
-            
-            <div className="p-6 rounded-3xl bg-dark-900 border border-golden-500/30 flex flex-col h-[640px] shadow-2xl">
+          {/* Right Column: Family Live Chat & Community Wall (1 Col, solo si chatEnabled está activo) */}
+          {(config.chatEnabled ?? true) && (
+            <div className="space-y-4">
               
-              {/* Chat Header */}
-              <div className="border-b border-gray-800 pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-golden-500/20 text-golden-400">
-                    <MessageSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black text-white uppercase">Muro de Familias</h3>
-                    <span className="text-[11px] text-gray-400">Comunidad Golden Santa Cruz</span>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
-                  ● En Línea
-                </span>
-              </div>
-
-              {/* Chat Messages List */}
-              <div
-                ref={chatContainerRef}
-                className="flex-1 overflow-y-auto space-y-3 py-4 pr-1 text-xs"
-              >
-                {config.chatMessages && config.chatMessages.length > 0 ? (
-                  config.chatMessages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`p-3 rounded-2xl border transition-all ${
-                        msg.authorRole === "staff"
-                          ? "bg-golden-500/10 border-golden-500/40"
-                          : "bg-dark-950 border-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className="font-black text-white">{msg.authorName}</span>
-                          <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${
-                            msg.authorRole === "staff"
-                              ? "bg-golden-500 text-dark-950"
-                              : "bg-dark-800 text-golden-400 border border-golden-500/30"
-                          }`}>
-                            {msg.authorRole}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-gray-500">{msg.timestamp}</span>
-                      </div>
-                      <p className="text-gray-300 leading-relaxed">{msg.message}</p>
+              <div className="p-6 rounded-3xl bg-dark-900 border border-golden-500/30 flex flex-col h-[640px] shadow-2xl">
+                
+                {/* Chat Header */}
+                <div className="border-b border-gray-800 pb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-golden-500/20 text-golden-400">
+                      <MessageSquare className="w-4 h-4" />
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center py-16 text-gray-500 text-xs">
-                    ¡Sé el primero en enviar un mensaje de apoyo al equipo! 🏀
+                    <div>
+                      <h3 className="text-sm font-black text-white uppercase">Muro de Familias</h3>
+                      <span className="text-[11px] text-gray-400">Comunidad Golden Santa Cruz</span>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Chat Input Form */}
-              <form onSubmit={handleSendMessage} className="space-y-2.5 pt-3 border-t border-gray-800">
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Tu Nombre / Familia"
-                    value={chatName}
-                    onChange={(e) => setChatName(e.target.value)}
-                    className="w-full px-3 py-1.5 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs placeholder-gray-500 focus:border-golden-500 outline-none"
-                  />
-                  <select
-                    value={chatRole}
-                    onChange={(e: any) => setChatRole(e.target.value)}
-                    className="w-full px-2 py-1.5 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs focus:border-golden-500 outline-none"
-                  >
-                    <option value="padre">Papá / Familiar</option>
-                    <option value="madre">Mamá / Familiar</option>
-                    <option value="atleta">Atleta / Jugador</option>
-                    <option value="aficionado">Aficionado</option>
-                  </select>
+                  <span className="px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-bold">
+                    ● En Línea
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Escribe un mensaje de apoyo..."
-                    value={chatMessage}
-                    onChange={(e) => setChatMessage(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs placeholder-gray-500 focus:border-golden-500 outline-none"
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSendingChat}
-                    className="p-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 transition-transform active:scale-95 shadow-md shadow-golden-500/20 disabled:opacity-50"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                {/* Chat Messages List */}
+                <div
+                  ref={chatContainerRef}
+                  className="flex-1 overflow-y-auto space-y-3 py-4 pr-1 text-xs"
+                >
+                  {config.chatMessages && config.chatMessages.length > 0 ? (
+                    config.chatMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className={`p-3 rounded-2xl border transition-all ${
+                          msg.authorRole === "staff"
+                            ? "bg-golden-500/10 border-golden-500/40"
+                            : "bg-dark-950 border-gray-800"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-black text-white">{msg.authorName}</span>
+                            <span className={`px-1.5 py-0.2 rounded text-[9px] font-black uppercase ${
+                              msg.authorRole === "staff"
+                                ? "bg-golden-500 text-dark-950"
+                                : "bg-dark-800 text-golden-400 border border-golden-500/30"
+                            }`}>
+                              {msg.authorRole}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-gray-500">{msg.timestamp}</span>
+                        </div>
+                        <p className="text-gray-300 leading-relaxed">{msg.message}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-16 text-gray-500 text-xs">
+                      ¡Sé el primero en enviar un mensaje de apoyo al equipo! 🏀
+                    </div>
+                  )}
                 </div>
-              </form>
 
-            </div>
+                {/* Chat Input Form */}
+                <form onSubmit={handleSendMessage} className="space-y-2.5 pt-3 border-t border-gray-800">
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Tu Nombre / Familia"
+                      value={chatName}
+                      onChange={(e) => setChatName(e.target.value)}
+                      className="w-full px-3 py-1.5 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs placeholder-gray-500 focus:border-golden-500 outline-none"
+                    />
+                    <select
+                      value={chatRole}
+                      onChange={(e: any) => setChatRole(e.target.value)}
+                      className="w-full px-2 py-1.5 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs focus:border-golden-500 outline-none"
+                    >
+                      <option value="padre">Papá / Familiar</option>
+                      <option value="madre">Mamá / Familiar</option>
+                      <option value="atleta">Atleta / Jugador</option>
+                      <option value="aficionado">Aficionado</option>
+                    </select>
+                  </div>
 
-            {/* Quick Link to Gallery / Photos */}
-            <div className="p-5 rounded-3xl bg-dark-900 border border-gray-800 flex items-center justify-between gap-4">
-              <div className="space-y-0.5">
-                <h4 className="text-xs font-black text-white uppercase">¿Quieres las fotos oficiales en HD?</h4>
-                <p className="text-[11px] text-gray-400">Visita el Álbum Digital de Curiol Studio.</p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      required
+                      placeholder="Escribe un mensaje de apoyo..."
+                      value={chatMessage}
+                      onChange={(e) => setChatMessage(e.target.value)}
+                      className="flex-1 px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs placeholder-gray-500 focus:border-golden-500 outline-none"
+                    />
+                    <button
+                      type="submit"
+                      disabled={isSendingChat}
+                      className="p-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 transition-transform active:scale-95 shadow-md shadow-golden-500/20 disabled:opacity-50"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  </div>
+                </form>
+
               </div>
-              <Link
-                href="/galeria"
-                className="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 border border-golden-500/30 text-xs font-bold uppercase shrink-0 transition-colors"
-              >
-                Ver Álbum
-              </Link>
-            </div>
 
-          </div>
+              {/* Quick Link to Gallery / Photos */}
+              <div className="p-5 rounded-3xl bg-dark-900 border border-gray-800 flex items-center justify-between gap-4">
+                <div className="space-y-0.5">
+                  <h4 className="text-xs font-black text-white uppercase">¿Quieres las fotos oficiales en HD?</h4>
+                  <p className="text-[11px] text-gray-400">Visita el Álbum Digital de Curiol Studio.</p>
+                </div>
+                <Link
+                  href="/galeria"
+                  className="px-3.5 py-2 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 border border-golden-500/30 text-xs font-bold uppercase shrink-0 transition-colors"
+                >
+                  Ver Álbum
+                </Link>
+              </div>
+
+            </div>
+          )}
 
         </div>
       </div>

@@ -198,6 +198,7 @@ export interface LiveChatMessage {
 export interface LiveStreamConfig {
   id: string;
   isLive: boolean;
+  broadcastMode: "video_and_scoreboard" | "scoreboard_only";
   title: string;
   matchDate: string;
   startTime: string;
@@ -208,6 +209,7 @@ export interface LiveStreamConfig {
   cameras: LiveCameraConfig[];
   scoreboard: LiveScoreboard;
   chatEnabled: boolean;
+  reactionsEnabled?: boolean;
   reactions: {
     fire: number;
     clap: number;

@@ -1085,6 +1085,7 @@ export const INITIAL_AUDIO_NOTES: AudioNote[] = [
 export const INITIAL_LIVE_STREAM_CONFIG: LiveStreamConfig = {
   id: "live-session-main",
   isLive: false,
+  broadcastMode: "video_and_scoreboard",
   title: "Golden Sport Academy Santa Cruz vs Parajeles • Jornada Oficial",
   matchDate: "2026-10-03",
   startTime: "10:00 AM",
@@ -1139,6 +1140,7 @@ export const INITIAL_LIVE_STREAM_CONFIG: LiveStreamConfig = {
     possession: "home",
   },
   chatEnabled: true,
+  reactionsEnabled: true,
   reactions: {
     fire: 42,
     clap: 28,
