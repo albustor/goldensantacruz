@@ -360,7 +360,7 @@ function GaleriaContent() {
             }`}
           >
             <Sparkles className="w-4 h-4 text-dark-950" />
-            <span>🏀 Fotos Oficiales ({photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.includes("Curiol")).length || 155})</span>
+            <span>🏀 Fotos Oficiales ({photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.includes("Curiol")).length})</span>
           </button>
           <button
             onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
@@ -371,7 +371,7 @@ function GaleriaContent() {
             }`}
           >
             <Users className="w-4 h-4" />
-            <span>👨‍👩‍👧 Fotos de Familias ({photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || !p.uploaderName?.includes("Curiol")).length || 21})</span>
+            <span>👨‍👩‍👧 Fotos de Familias ({photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || !p.uploaderName?.includes("Curiol")).length})</span>
           </button>
         </div>
 

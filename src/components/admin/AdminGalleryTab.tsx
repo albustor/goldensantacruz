@@ -39,6 +39,9 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   const [albums, setAlbums] = useState<GalleryAlbum[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [isCatManagerOpen, setIsCatManagerOpen] = useState(false);
+  const [localPhotos, setLocalPhotos] = useState<GalleryPhoto[]>(photos || []);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
 
   // Accordion state for photo gallery grid (collapsible)
   const [isGalleryExpanded, setIsGalleryExpanded] = useState(true);
@@ -65,6 +68,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
   // Upload photo state (Admin / Curiol Studio)
   const [isUploadPhotoOpen, setIsUploadPhotoOpen] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
   const [uploadPhotoForm, setUploadPhotoForm] = useState({
     albumId: "",
     title: "",
@@ -78,18 +82,51 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   });
 
   useEffect(() => {
+    if (photos && photos.length > 0) {
+      setLocalPhotos(photos);
+    }
+  }, [photos]);
+
+  useEffect(() => {
     loadAlbums();
     loadCategories();
+    // Suscripción progresiva en tiempo real para sincronizar todas las fotos desde Supabase
+    Store.loadGalleryPhotosProgressive((updatedList) => {
+      setLocalPhotos(updatedList);
+    });
   }, []);
 
   const loadAlbums = async () => {
     const data = await Store.getAlbums();
-    setAlbums(data);
+    setAlbums(data.sort((a, b) => new Date(b.eventDate).getTime() - new Date(a.eventDate).getTime()));
   };
 
   const loadCategories = async () => {
     const cats = await Store.getCategories();
     setCategories(cats);
+  };
+
+  const handleManualSync = async () => {
+    setIsSyncing(true);
+    setSyncStatusMsg("Sincronizando con base de datos en la nube...");
+    try {
+      await loadAlbums();
+      const updated = await Store.loadGalleryPhotosProgressive((updatedList, progress) => {
+        setLocalPhotos(updatedList);
+        if (progress) {
+          setSyncStatusMsg(`Cargando fotos: ${progress.loaded} / ${progress.total}`);
+        }
+      });
+      setLocalPhotos(updated);
+      onRefresh();
+      setSyncStatusMsg("¡Sincronización completada con éxito!");
+      setTimeout(() => setSyncStatusMsg(null), 3000);
+    } catch (e) {
+      setSyncStatusMsg("Error al sincronizar");
+      setTimeout(() => setSyncStatusMsg(null), 3000);
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   const handleOpenEditAlbum = (album: GalleryAlbum) => {
@@ -178,33 +215,42 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
       alert("Por favor selecciona una o más fotografías para subir.");
       return;
     }
-    const targetAlbum = albums.find(a => a.id === uploadPhotoForm.albumId);
-    const eventDate = targetAlbum ? targetAlbum.eventDate : new Date().toISOString().split("T")[0];
+    if (isUploading) return;
+    setIsUploading(true);
 
-    for (let i = 0; i < uploadPhotoForm.previewUrls.length; i++) {
-      const url = uploadPhotoForm.previewUrls[i];
-      const baseTitle = uploadPhotoForm.title || (targetAlbum ? targetAlbum.title : "Foto Oficial");
-      const finalTitle = uploadPhotoForm.previewUrls.length > 1 ? `${baseTitle} #${i + 1}` : baseTitle;
+    try {
+      const targetAlbum = albums.find(a => a.id === uploadPhotoForm.albumId);
+      const eventDate = targetAlbum ? targetAlbum.eventDate : new Date().toISOString().split("T")[0];
 
-      await Store.addGalleryPhoto({
-        albumId: uploadPhotoForm.albumId,
-        eventDate: eventDate,
-        title: finalTitle,
-        category: uploadPhotoForm.category as PlayerCategory,
-        photoUrl: url,
-        caption: uploadPhotoForm.caption,
-        uploaderName: uploadPhotoForm.uploaderName || (uploadPhotoForm.photoType === "pro_studio" ? "Curiol Studio" : "Familia"),
-        photoType: uploadPhotoForm.photoType,
-        isApproved: true,
-        watermarkTag: "Curiol Studio Santa Cruz",
-        priceDigital: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.priceDigital : undefined,
-        pricePrint: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.pricePrint : undefined,
-      });
+      for (let i = 0; i < uploadPhotoForm.previewUrls.length; i++) {
+        const url = uploadPhotoForm.previewUrls[i];
+        const baseTitle = uploadPhotoForm.title || (targetAlbum ? targetAlbum.title : "Foto Oficial");
+        const finalTitle = uploadPhotoForm.previewUrls.length > 1 ? `${baseTitle} #${i + 1}` : baseTitle;
+
+        await Store.addGalleryPhoto({
+          albumId: uploadPhotoForm.albumId,
+          eventDate: eventDate,
+          title: finalTitle,
+          category: uploadPhotoForm.category as PlayerCategory,
+          photoUrl: url,
+          caption: uploadPhotoForm.caption,
+          uploaderName: uploadPhotoForm.uploaderName || (uploadPhotoForm.photoType === "pro_studio" ? "Curiol Studio" : "Familia"),
+          photoType: uploadPhotoForm.photoType,
+          isApproved: true,
+          watermarkTag: "Curiol Studio Santa Cruz",
+          priceDigital: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.priceDigital : undefined,
+          pricePrint: uploadPhotoForm.photoType === "pro_studio" ? uploadPhotoForm.pricePrint : undefined,
+        });
+      }
+
+      setIsUploadPhotoOpen(false);
+      onRefresh();
+      alert(`¡${uploadPhotoForm.previewUrls.length} ${uploadPhotoForm.previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} y publicadas con éxito en el álbum!`);
+    } catch (e) {
+      alert("Ocurrió un error al subir las fotos. Inténtalo de nuevo.");
+    } finally {
+      setIsUploading(false);
     }
-
-    setIsUploadPhotoOpen(false);
-    onRefresh();
-    alert(`¡${uploadPhotoForm.previewUrls.length} ${uploadPhotoForm.previewUrls.length === 1 ? 'fotografía subida' : 'fotografías subidas'} y publicadas con éxito en el álbum!`);
   };
 
   const handleDeletePhoto = async (id: string, title: string) => {
@@ -215,28 +261,63 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   };
 
   // Separa álbumes entre colectivos y Curiol Studio
-  const communityAlbums = albums.filter(a => 
-    a.createdBy?.toLowerCase().includes("papá") || 
-    a.createdBy?.toLowerCase().includes("familia") ||
-    a.title.toLowerCase().includes("colectivo") ||
-    a.title.toLowerCase().includes("familiar")
-  );
+  const communityAlbums = albums.filter(a => {
+    const createdBy = (a.createdBy || "").toLowerCase();
+    const title = (a.title || "").toLowerCase();
+    return a.albumType === "community" || createdBy.includes("pap") || createdBy.includes("familia") || title.includes("colectivo") || title.includes("familiar");
+  });
   
   const proStudioAlbums = albums.filter(a => !communityAlbums.some(ca => ca.id === a.id));
 
+  const activePhotos = localPhotos.length > 0 ? localPhotos : (photos || []);
+
   // Filtrado de fotos para la cuadrícula
-  const filteredPhotos = photos.filter(p => {
+  const filteredPhotos = activePhotos.filter(p => {
     if (filterType === "community") return p.photoType === "community";
     if (filterType === "pro_studio") return p.photoType === "pro_studio";
     return true;
+  }).sort((a, b) => {
+    const timeA = new Date(a.createdAt || a.eventDate || 0).getTime();
+    const timeB = new Date(b.createdAt || b.eventDate || 0).getTime();
+    return timeB - timeA;
   });
 
-  const communityPhotosCount = photos.filter(p => p.photoType === "community").length;
-  const proPhotosCount = photos.filter(p => p.photoType === "pro_studio").length;
+  const communityPhotosCount = activePhotos.filter(p => p.photoType === "community").length;
+  const proPhotosCount = activePhotos.filter(p => p.photoType === "pro_studio").length;
 
   return (
     <div className="space-y-8 animate-fadeIn">
       
+      {/* BARRA DE ESTADO & SINCRONIZACIÓN CON BASE DE DATOS */}
+      <div className="p-4 rounded-2xl bg-dark-850 border border-gray-700 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-md">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-xl bg-golden-500/20 text-golden-400 flex items-center justify-center border border-golden-500/40 shrink-0">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-bold text-white block">
+              Base de Datos: <strong className="text-golden-400">{activePhotos.length} fotos</strong> en {albums.length} álbumes
+            </span>
+            <span className="text-[11px] text-gray-400">
+              {syncStatusMsg || "Sincronización en tiempo real y persistencia en IndexedDB activas"}
+            </span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleManualSync}
+          disabled={isSyncing}
+          className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all ${
+            isSyncing 
+              ? "bg-dark-700 text-gray-400 cursor-not-allowed" 
+              : "bg-dark-700 hover:bg-dark-600 text-golden-400 border border-golden-500/40 hover:scale-105"
+          }`}
+        >
+          <span className={isSyncing ? "animate-spin" : ""}>↻</span>
+          <span>{isSyncing ? "Sincronizando..." : "Sincronizar Álbumes"}</span>
+        </button>
+      </div>
+
       {/* ⚠️ ALERTA OBLIGATORIA: ATLETAS SIN AUTORIZACIÓN FOTOGRÁFICA */}
       <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-red-950/90 via-rose-950/80 to-red-950/90 border-2 border-red-500/70 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -320,7 +401,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
         {/* Tarjetas de Álbumes Colectivos */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {(communityAlbums.length > 0 ? communityAlbums : [albums[0]]).filter(Boolean).map((album) => {
-            const count = photos.filter((p) => (p.albumId === album.id || p.eventDate === album.eventDate) && p.photoType === "community").length;
+            const count = activePhotos.filter((p) => (p.albumId === album.id || (!albums.some(a => a.id === p.albumId) && p.eventDate === album.eventDate)) && p.photoType === "community").length;
 
             return (
               <div
@@ -424,9 +505,9 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
         {/* Tarjetas de Álbumes Oficiales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {albums.map((album) => {
-            const count = photos.filter((p) => p.albumId === album.id || p.eventDate === album.eventDate).length;
-            const isToday = album.eventDate === "2026-09-05" || album.isOpenForUploads;
+          {proStudioAlbums.map((album) => {
+            const count = activePhotos.filter((p) => p.albumId === album.id || (!albums.some(a => a.id === p.albumId) && p.eventDate === album.eventDate && p.photoType === "pro_studio")).length;
+            const isToday = album.eventDate === new Date().toISOString().split("T")[0] || album.isOpenForUploads;
 
             return (
               <div
@@ -525,7 +606,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight">
-                  Fotografías en Galería ({photos.length})
+                  Fotografías en Galería ({activePhotos.length})
                 </h3>
                 <span className="text-[11px] text-golden-400 font-bold hidden sm:inline">
                   • {isGalleryExpanded ? "Toca para minimizar" : "Toca para expandir"}
@@ -575,7 +656,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                       : "text-gray-400 hover:text-white"
                   }`}
                 >
-                  Todas ({photos.length})
+                  Todas ({activePhotos.length})
                 </button>
                 <button
                   onClick={() => setFilterType("community")}
@@ -1010,10 +1091,11 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-900 font-black uppercase shadow-lg flex items-center gap-1.5"
+                  disabled={isUploading}
+                  className={`px-6 py-2.5 rounded-xl text-dark-900 font-black uppercase shadow-lg flex items-center gap-1.5 ${isUploading ? 'bg-golden-500/50 cursor-not-allowed' : 'bg-golden-500 hover:bg-golden-400'}`}
                 >
-                  <Upload className="w-4 h-4" />
-                  <span>Publicar en Álbum</span>
+                  <Upload className={`w-4 h-4 ${isUploading ? 'animate-bounce' : ''}`} />
+                  <span>{isUploading ? 'Publicando...' : 'Publicar en Álbum'}</span>
                 </button>
               </div>
             </form>

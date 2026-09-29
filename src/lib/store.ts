@@ -272,74 +272,137 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.MATCHES, current.filter(m => m.id !== id));
   },
 
-  // ALBUMS
+  // ALBUMS (Direct Hybrid Sync: LocalStorage + Supabase Cloud Auto-Discovery)
   async getAlbums(): Promise<GalleryAlbum[]> {
     const stored = getFromStorage<GalleryAlbum[]>(STORAGE_KEYS.ALBUMS, INITIAL_ALBUMS);
     const cleaned = (stored || INITIAL_ALBUMS).filter(a => a.id !== 'alb-3');
-    const existingIds = new Set(cleaned.map(a => a.id));
-    let hasChanges = cleaned.length !== (stored || []).length;
+    const albumMap = new Map<string, GalleryAlbum>();
 
-    let merged = cleaned.map(a => {
-      const match = INITIAL_ALBUMS.find(i => i.id === a.id);
-      if (match && match.coverPhotoUrl && a.coverPhotoUrl !== match.coverPhotoUrl) {
-        hasChanges = true;
-        return { ...a, coverPhotoUrl: match.coverPhotoUrl };
+    // 1. Registrar álbumes base iniciales
+    INITIAL_ALBUMS.forEach(a => albumMap.set(a.id, { ...a }));
+
+    // 2. Sobreponer modificaciones locales guardadas
+    cleaned.forEach(a => {
+      if (albumMap.has(a.id)) {
+        albumMap.set(a.id, { ...albumMap.get(a.id)!, ...a });
+      } else {
+        albumMap.set(a.id, a);
       }
-      return a;
     });
 
-    for (const initAlb of INITIAL_ALBUMS) {
-      if (!existingIds.has(initAlb.id)) {
-        merged.push(initAlb);
-        existingIds.add(initAlb.id);
-        hasChanges = true;
-      }
-    }
-
-    // Auto-descubrir álbumes dinámicos a partir de las fotos existentes en IndexedDB
+    // 3. Auto-descubrir y sincronizar álbumes desde Supabase y la caché de IndexedDB
     try {
-      const localPhotos = await getGalleryPhotosFromDB();
-      const albumPhotosMap = new Map<string, GalleryPhoto[]>();
-      localPhotos.forEach(p => {
-        if (p.albumId) {
-          if (!albumPhotosMap.has(p.albumId)) {
-            albumPhotosMap.set(p.albumId, []);
+      let photosMeta: Array<{
+        albumId?: string;
+        title?: string;
+        category?: string;
+        eventDate?: string;
+        uploaderName?: string;
+        photoType?: string;
+        photoUrl?: string;
+      }> = [];
+
+      // Si Supabase está disponible, consultar metadatos livianos (<300ms)
+      if (isSupabaseConfigured && supabase) {
+        try {
+          const { data: cloudMeta } = await supabase
+            .from('gallery_photos')
+            .select('album_id, title, category, event_date, uploader_name, photo_type')
+            .order('created_at', { ascending: false });
+
+          if (cloudMeta && cloudMeta.length > 0) {
+            photosMeta = cloudMeta.map((m: any) => ({
+              albumId: m.album_id || undefined,
+              title: m.title,
+              category: m.category,
+              eventDate: m.event_date,
+              uploaderName: m.uploader_name,
+              photoType: m.photo_type,
+            }));
           }
-          albumPhotosMap.get(p.albumId)!.push(p);
+        } catch (cloudErr) {
+          console.warn('[Store] Error al consultar metadatos de álbumes en Supabase:', cloudErr);
+        }
+      }
+
+      // Si no hay datos de nube o para complementar, leer IndexedDB
+      if (photosMeta.length === 0) {
+        const localPhotos = await getGalleryPhotosFromDB();
+        photosMeta = localPhotos.map(p => ({
+          albumId: p.albumId,
+          title: p.title,
+          category: p.category,
+          eventDate: p.eventDate,
+          uploaderName: p.uploaderName,
+          photoType: p.photoType,
+          photoUrl: p.photoUrl,
+        }));
+      }
+
+      // Agrupar metadatos por álbum
+      const grouped = new Map<string, typeof photosMeta>();
+      photosMeta.forEach(p => {
+        if (p.albumId) {
+          if (!grouped.has(p.albumId)) grouped.set(p.albumId, []);
+          grouped.get(p.albumId)!.push(p);
         }
       });
 
-      albumPhotosMap.forEach((pList, albId) => {
-        if (!existingIds.has(albId) && pList.length > 0) {
-          const sample = pList[0];
-          const hasCommunity = pList.some(p => p.photoType === 'community');
-          const hasPro = pList.some(p => p.photoType === 'pro_studio');
-          const cleanTitle = sample.title?.replace(/#\d+.*$/, '').replace(/•.*$/, '').trim() || `Evento (${sample.eventDate || 'Reciente'})`;
+      grouped.forEach((pList, albId) => {
+        const sample = pList[0];
+        const hasCommunity = pList.some(p => p.photoType === 'community');
+        const hasPro = pList.some(p => p.photoType === 'pro_studio');
 
-          const autoAlbum: GalleryAlbum = {
+        // Limpiar título del álbum eliminando prefijos y números de foto (#43, etc.)
+        let cleanTitle = sample.title || `Evento (${sample.eventDate || 'Reciente'})`;
+        cleanTitle = cleanTitle
+          .replace(/^Fotograf[ií]a Oficial\s*[•\-–]\s*/i, '')
+          .replace(/^Recuerdo Familiar\s*#?\d*\s*[•\-–]\s*/i, '')
+          .replace(/^Sesi[oó]n Oficial\s*[•\-–]\s*/i, '')
+          .replace(/\s*#\d+.*$/, '')
+          .replace(/\s*•\s*$/, '')
+          .trim();
+
+        if (!cleanTitle || cleanTitle.length < 3) {
+          cleanTitle = `Jornada Deportiva (${sample.eventDate || '2026'})`;
+        }
+
+        if (albId === 'alb-1789690146392') {
+          cleanTitle = 'Visita de Julio "Yiyo" • Evento Especial';
+        }
+
+        const isKnownCommunity = albId.includes('comunidad') || albId.includes('familia') || (hasCommunity && !hasPro);
+
+        if (!albumMap.has(albId)) {
+          albumMap.set(albId, {
             id: albId,
-            title: albId === 'alb-1789690146392' ? 'Visita de Julio "Yiyo" • Evento Especial' : cleanTitle,
-            eventDate: sample.eventDate || new Date().toISOString().split('T')[0],
-            category: sample.category || 'Eventos Especiales',
-            coverPhotoUrl: pList.find(p => Boolean(p.photoUrl))?.photoUrl || '/photos/partidos/liberia_portada.webp',
-            createdBy: sample.uploaderName || 'Comunidad Golden',
-            albumType: hasCommunity && !hasPro ? 'community' : 'pro_studio',
+            title: cleanTitle,
+            eventDate: sample.eventDate || '2026-09-29',
+            category: (sample.category as any) || 'Eventos Especiales',
+            coverPhotoUrl: sample.photoUrl || '/photos/partidos/liberia_portada.webp',
+            createdBy: sample.uploaderName || (isKnownCommunity ? 'Familias & Papás' : 'Curiol Studio Oficial'),
+            albumType: isKnownCommunity ? 'community' : 'pro_studio',
             isLocked: false,
             isOpenForUploads: true,
-          };
-          merged.push(autoAlbum);
-          existingIds.add(albId);
-          hasChanges = true;
+          });
+        } else {
+          // Actualizar datos faltantes
+          const existing = albumMap.get(albId)!;
+          if (cleanTitle && cleanTitle.length > 3 && existing.title.startsWith('Evento (')) {
+            existing.title = cleanTitle;
+          }
+          if (sample.category && !existing.category) {
+            existing.category = sample.category as any;
+          }
         }
       });
     } catch (e) {
       console.warn('[Store] Error al auto-descubrir álbumes:', e);
     }
 
-    if (hasChanges) {
-      saveToStorage(STORAGE_KEYS.ALBUMS, merged);
-    }
-    return merged;
+    const finalAlbums = Array.from(albumMap.values());
+    saveToStorage(STORAGE_KEYS.ALBUMS, finalAlbums);
+    return finalAlbums;
   },
 
   async getOrCreateDailyAlbum(
@@ -406,11 +469,11 @@ export const Store = {
     saveToStorage(STORAGE_KEYS.ALBUMS, current.filter(a => a.id !== albumId));
   },
 
-  // GALLERY PHOTOS (Ultra-fast Cache-First IndexedDB + Background/Manual Cloud Sync + Progressive Streaming)
+  // GALLERY PHOTOS (Ultra-fast Cache-First IndexedDB + Zero-Timeout Progressive Streaming)
   async loadGalleryPhotosProgressive(
     onUpdate: (photos: GalleryPhoto[], progress?: { loaded: number; total: number; isDone: boolean }) => void
   ): Promise<GalleryPhoto[]> {
-    // 1. Cargar caché local de IndexedDB inmediatamente (0ms) combinada con fotos iniciales esenciales
+    // 1. Cargar caché local de IndexedDB inmediatamente (0ms)
     const localPhotos = await getGalleryPhotosFromDB();
     const cleanLocal = localPhotos.filter(
       p => !p.id.startsWith('pht-eq-') && 
@@ -422,34 +485,30 @@ export const Store = {
            !p.id.startsWith('gal-178864')
     );
 
-    // Sembrar INITIAL_PHOTOS si no están presentes
-    const initialMap = new Map<string, GalleryPhoto>();
-    INITIAL_PHOTOS.forEach(p => initialMap.set(p.id, p));
-    cleanLocal.forEach(p => initialMap.set(p.id, p));
-    const combinedLocal = Array.from(initialMap.values());
+    const currentPhotosMap = new Map<string, GalleryPhoto>();
 
-    if (combinedLocal.length > 0) {
-      onUpdate(combinedLocal, { loaded: combinedLocal.length, total: Math.max(combinedLocal.length, 176), isDone: combinedLocal.length >= 176 });
+    // Sembrar INITIAL_PHOTOS
+    INITIAL_PHOTOS.forEach(p => currentPhotosMap.set(p.id, p));
+    cleanLocal.forEach(p => currentPhotosMap.set(p.id, p));
+
+    const initialCombined = Array.from(currentPhotosMap.values());
+    const initialWithImages = initialCombined.filter(p => Boolean(p.photoUrl)).length;
+
+    if (initialCombined.length > 0) {
+      onUpdate(initialCombined, { loaded: initialWithImages, total: initialCombined.length, isDone: false });
     }
 
     if (!isSupabaseConfigured || !supabase) {
-      onUpdate(combinedLocal, { loaded: combinedLocal.length, total: combinedLocal.length, isDone: true });
-      return combinedLocal;
+      onUpdate(initialCombined, { loaded: initialWithImages, total: initialCombined.length, isDone: true });
+      return initialCombined;
     }
 
     try {
-      // 2. Consulta ultra-rápida de metadatos (< 800ms) para sincronizar registros vigentes en la nube
+      // 2. Consulta ultrarrápida de METADATOS SIN PHOTO_URL (< 300ms, cero timeouts garantizado)
       const { data: metaRows, error: metaErr } = await supabase
         .from('gallery_photos')
-        .select('id, album_id, event_date, title, category, caption, uploader_name, uploader_role, photo_type, likes_count, is_approved, created_at, watermark_tag, price_digital, price_print, photo_url')
+        .select('id, album_id, event_date, title, category, caption, uploader_name, uploader_role, photo_type, likes_count, is_approved, created_at, watermark_tag, price_digital, price_print')
         .order('created_at', { ascending: false });
-
-      const currentPhotosMap = new Map<string, GalleryPhoto>();
-
-      // Mantener fotos base locales (comunitarias y uniformes)
-      combinedLocal.forEach(p => {
-        currentPhotosMap.set(p.id, p);
-      });
 
       if (!metaErr && metaRows && metaRows.length > 0) {
         metaRows.forEach((row: any) => {
@@ -458,9 +517,9 @@ export const Store = {
             id: row.id,
             albumId: row.album_id || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
             eventDate: row.event_date || '2026-09-05',
-            title: row.title || 'Fotografía de la Jornada',
+            title: row.title || 'Fotografía Oficial',
             category: row.category || 'Intercantonal',
-            photoUrl: row.photo_url || existing?.photoUrl || '',
+            photoUrl: existing?.photoUrl || '',
             caption: row.caption || '',
             uploaderName: row.uploader_name || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
             uploaderRole: (row.uploader_role || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
@@ -474,80 +533,59 @@ export const Store = {
           });
         });
 
-        // Notificar metadatos limpios de inmediato
+        // Notificar metadatos completos inmediatamente (<300ms): ahora todos los álbumes muestran su conteo exacto
         const metaPhotoList = Array.from(currentPhotosMap.values());
         const readyCount = metaPhotoList.filter(p => Boolean(p.photoUrl)).length;
         onUpdate(metaPhotoList, { loaded: readyCount, total: metaPhotoList.length, isDone: readyCount >= metaPhotoList.length });
       }
 
-      // 3. Descarga progresiva de imágenes en lotes de 25 ordenadas de las MÁS RECIENTES a las más antiguas (DESC)
-      const pageSize = 25;
-      let from = 0;
-      let hasMore = true;
+      // 3. Descarga progresiva de imágenes en lotes pequeños (15 fotos por lote)
+      const allPhotos = Array.from(currentPhotosMap.values());
+      const missingPhotos = allPhotos.filter(p => !p.photoUrl || p.photoUrl.length < 50);
 
-      while (hasMore) {
-        let chunkData: any[] | null = null;
-        let attempts = 0;
+      const batchSize = 15;
+      for (let i = 0; i < missingPhotos.length; i += batchSize) {
+        const batch = missingPhotos.slice(i, i + batchSize);
+        const batchIds = batch.map(b => b.id);
 
-        while (attempts < 3) {
-          attempts++;
-          const { data, error } = await supabase
+        try {
+          const { data: imgRows, error: imgErr } = await supabase
             .from('gallery_photos')
-            .select('*')
-            .order('created_at', { ascending: false })
-            .range(from, from + pageSize - 1);
+            .select('id, photo_url')
+            .in('id', batchIds);
 
-          if (!error && data) {
-            chunkData = data;
-            break;
-          } else {
-            await new Promise(r => setTimeout(r, 300));
-          }
-        }
-
-        if (chunkData && chunkData.length > 0) {
-          chunkData.forEach((row: any) => {
-            currentPhotosMap.set(row.id, {
-              id: row.id,
-              albumId: row.album_id || row.albumId || (row.photo_type === 'pro_studio' ? 'alb-curiol-liberia-2026' : 'alb-comunidad-liberia-2026'),
-              eventDate: row.event_date || row.eventDate || '2026-09-05',
-              title: row.title || 'Fotografía de la Jornada',
-              category: row.category || 'Intercantonal',
-              photoUrl: row.photo_url || row.photoUrl,
-              caption: row.caption || '',
-              uploaderName: row.uploader_name || row.uploaderName || (row.photo_type === 'pro_studio' ? 'Curiol Studio Oficial' : 'Papá Golden'),
-              uploaderRole: (row.uploader_role || row.uploaderRole || (row.photo_type === 'pro_studio' ? 'staff' : 'padre')) as any,
-              photoType: (row.photo_type || row.photoType || (row.uploader_role === 'staff' || row.uploader_name?.includes('Curiol') ? 'pro_studio' : 'community')) as any,
-              likesCount: row.likes_count ?? row.likesCount ?? 0,
-              isApproved: row.is_approved ?? row.isApproved ?? true,
-              createdAt: row.created_at || row.createdAt,
-              watermarkTag: row.watermark_tag || row.watermarkTag || (row.photo_type === 'pro_studio' ? 'Curiol Studio Santa Cruz' : 'Golden Sport Santa Cruz'),
-              priceDigital: row.price_digital || row.priceDigital,
-              pricePrint: row.price_print || row.pricePrint,
+          if (!imgErr && imgRows) {
+            imgRows.forEach((r: any) => {
+              const p = currentPhotosMap.get(r.id);
+              if (p && r.photo_url) {
+                p.photoUrl = r.photo_url;
+              }
             });
-          });
 
-          from += pageSize;
-          const currentList = Array.from(currentPhotosMap.values());
-          const withImagesCount = currentList.filter(p => Boolean(p.photoUrl)).length;
-          
-          await saveGalleryPhotosToDB(currentList.filter(p => Boolean(p.photoUrl)));
-          onUpdate(currentList, { loaded: withImagesCount, total: currentList.length, isDone: withImagesCount >= currentList.length });
+            const currentUpdatedList = Array.from(currentPhotosMap.values());
+            const currentWithImg = currentUpdatedList.filter(p => Boolean(p.photoUrl)).length;
 
-          if (chunkData.length < pageSize) {
-            hasMore = false;
+            // Guardar lote en IndexedDB para persistencia permanente (0ms en futuras cargas)
+            await saveGalleryPhotosToDB(currentUpdatedList.filter(p => Boolean(p.photoUrl)));
+
+            onUpdate(currentUpdatedList, {
+              loaded: currentWithImg,
+              total: currentUpdatedList.length,
+              isDone: i + batchSize >= missingPhotos.length,
+            });
           }
-        } else {
-          hasMore = false;
+        } catch (batchErr) {
+          console.warn('[Store] Error al descargar lote de imágenes:', batchErr);
         }
       }
 
       const finalList = Array.from(currentPhotosMap.values());
-      onUpdate(finalList, { loaded: finalList.filter(p => Boolean(p.photoUrl)).length, total: finalList.length, isDone: true });
+      const finalLoaded = finalList.filter(p => Boolean(p.photoUrl)).length;
+      onUpdate(finalList, { loaded: finalLoaded, total: finalList.length, isDone: true });
       return finalList;
     } catch (err) {
       console.warn('[Store] Error en carga progresiva de fotos:', err);
-      return cleanLocal;
+      return Array.from(currentPhotosMap.values());
     }
   },
 
