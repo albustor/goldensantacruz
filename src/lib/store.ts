@@ -511,6 +511,15 @@ export const Store = {
         .order('created_at', { ascending: false });
 
       if (!metaErr && metaRows && metaRows.length > 0) {
+        const cloudIdSet = new Set(metaRows.map((r: any) => r.id));
+
+        // Purgar de la memoria local cualquier foto que haya sido eliminada o depurada de Supabase
+        Array.from(currentPhotosMap.keys()).forEach((id) => {
+          if (!cloudIdSet.has(id) && (id.startsWith('gal-') || id.startsWith('pht-179') || id.startsWith('pht-fecoba'))) {
+            currentPhotosMap.delete(id);
+          }
+        });
+
         metaRows.forEach((row: any) => {
           const existing = currentPhotosMap.get(row.id);
           currentPhotosMap.set(row.id, {
