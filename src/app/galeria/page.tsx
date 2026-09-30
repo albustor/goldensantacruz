@@ -266,12 +266,23 @@ function GaleriaContent() {
     }
   };
 
-  const handleLike = async (photoId: string, e?: React.MouseEvent) => {
+  const [likedPhotoIds, setLikedPhotoIds] = useState<Set<string>>(new Set());
+
+  const handleLike = (photoId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    await Store.likeGalleryPhoto(photoId);
+    // 1. Instantáneo (0ms): Actualizar estado de UI inmediatamente
     setPhotos((prev) =>
-      prev.map((p) => (p.id === photoId ? { ...p, likesCount: p.likesCount + 1 } : p))
+      prev.map((p) => (p.id === photoId ? { ...p, likesCount: (p.likesCount || 0) + 1 } : p))
     );
+    if (selectedPhotoForView?.id === photoId) {
+      setSelectedPhotoForView((prev) => prev ? { ...prev, likesCount: (prev.likesCount || 0) + 1 } : null);
+    }
+    setLikedPhotoIds((prev) => new Set(prev).add(photoId));
+
+    // 2. Persistencia en segundo plano sin congelar la interfaz
+    Store.likeGalleryPhoto(photoId).catch((err) => {
+      console.warn("[Gallery] Error al guardar like en segundo plano:", err);
+    });
   };
 
   const handleDeletePhoto = async (photoId: string, e?: React.MouseEvent) => {
@@ -738,13 +749,15 @@ function GaleriaContent() {
                       📸 {photo.photoType === "pro_studio" ? "Curiol Studio Pro" : `Familia: ${photo.uploaderName}`}
                     </div>
 
-                    {/* Like Button */}
+                    {/* Like Button (Instant 0ms Feedback) */}
                     <button
                       onClick={(e) => handleLike(photo.id, e)}
-                      className="absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-dark-950/90 backdrop-blur-md text-red-400 hover:text-red-300 text-xs font-bold flex items-center gap-1 border border-white/20 transition-transform active:scale-125 shadow-md"
+                      className={`absolute bottom-2.5 right-2.5 z-10 px-2.5 py-1 rounded-full bg-dark-950/90 backdrop-blur-md text-red-400 hover:text-red-300 text-xs font-bold flex items-center gap-1 border border-white/20 transition-all active:scale-125 shadow-md ${
+                        likedPhotoIds.has(photo.id) ? "scale-110 ring-2 ring-red-500/60" : ""
+                      }`}
                       title="Me gusta"
                     >
-                      <Heart className="w-3.5 h-3.5 fill-red-400" />
+                      <Heart className={`w-3.5 h-3.5 fill-red-400 transition-transform ${likedPhotoIds.has(photo.id) ? "scale-125 animate-bounce" : ""}`} />
                       <span>{photo.likesCount}</span>
                     </button>
                   </div>

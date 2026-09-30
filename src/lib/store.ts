@@ -720,8 +720,8 @@ export const Store = {
   },
 
   async likeGalleryPhoto(id: string): Promise<void> {
-    const current = await this.getGalleryPhotos();
-    const updated = current.map(p => p.id === id ? { ...p, likesCount: p.likesCount + 1 } : p);
+    const current = await getGalleryPhotosFromDB();
+    const updated = current.map(p => p.id === id ? { ...p, likesCount: (p.likesCount || 0) + 1 } : p);
     await saveGalleryPhotosToDB(updated);
 
     if (isSupabaseConfigured && supabase) {

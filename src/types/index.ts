@@ -110,6 +110,9 @@ export interface GalleryAlbum {
   isOpenForUploads?: boolean;
   albumType?: "community" | "pro_studio";
   photoCount?: number;
+  isArbolHito?: boolean;
+  arbolSlug?: string;
+  arbolNodeUrl?: string;
 }
 
 export interface Sponsor {
