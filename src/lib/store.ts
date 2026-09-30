@@ -281,12 +281,10 @@ export const Store = {
     // 1. Registrar álbumes base iniciales
     INITIAL_ALBUMS.forEach(a => albumMap.set(a.id, { ...a }));
 
-    // 2. Sobreponer modificaciones locales guardadas
+    // 2. Sobreponer modificaciones locales únicamente de álbumes reconocidos
     cleaned.forEach(a => {
       if (albumMap.has(a.id)) {
         albumMap.set(a.id, { ...albumMap.get(a.id)!, ...a });
-      } else {
-        albumMap.set(a.id, a);
       }
     });
 
@@ -353,7 +351,7 @@ export const Store = {
         const hasCommunity = pList.some(p => p.photoType === 'community');
         const hasPro = pList.some(p => p.photoType === 'pro_studio');
 
-        // Limpiar título del álbum eliminando prefijos y números de foto (#43, etc.)
+        // Títulos estandarizados para álbumes conocidos
         let cleanTitle = sample.title || `Evento (${sample.eventDate || 'Reciente'})`;
         cleanTitle = cleanTitle
           .replace(/^Fotograf[ií]a Oficial\s*[•\-–]\s*/i, '')
@@ -363,12 +361,20 @@ export const Store = {
           .replace(/\s*•\s*$/, '')
           .trim();
 
-        if (!cleanTitle || cleanTitle.length < 3) {
-          cleanTitle = `Jornada Deportiva (${sample.eventDate || '2026'})`;
+        if (albId === 'alb-1790721881901') {
+          cleanTitle = 'Entrega de balones por parte de FECOBA';
+        } else if (albId === 'alb-1789690146392') {
+          cleanTitle = 'Visita de Julio "Yiyo" • Evento Especial';
+        } else if (albId === 'alb-comunidad-yiyo-2026') {
+          cleanTitle = 'Álbum Familiar • Visita de Julio "Yiyo"';
+        } else if (albId === 'alb-curiol-liberia-2026') {
+          cleanTitle = 'Galería Oficial Curiol Studio • Gran Jornada de Liberia 2026';
+        } else if (albId === 'alb-comunidad-liberia-2026') {
+          cleanTitle = 'Álbum Familiar • Gran Jornada de Liberia';
         }
 
-        if (albId === 'alb-1789690146392') {
-          cleanTitle = 'Visita de Julio "Yiyo" • Evento Especial';
+        if (!cleanTitle || cleanTitle.length < 3) {
+          cleanTitle = `Jornada Deportiva (${sample.eventDate || '2026'})`;
         }
 
         const isKnownCommunity = albId.includes('comunidad') || albId.includes('familia') || (hasCommunity && !hasPro);
@@ -377,7 +383,7 @@ export const Store = {
           albumMap.set(albId, {
             id: albId,
             title: cleanTitle,
-            eventDate: sample.eventDate || '2026-09-29',
+            eventDate: sample.eventDate || '2026-09-24',
             category: (sample.category as any) || 'Eventos Especiales',
             coverPhotoUrl: sample.photoUrl || '/photos/partidos/liberia_portada.webp',
             createdBy: sample.uploaderName || (isKnownCommunity ? 'Familias & Papás' : 'Curiol Studio Oficial'),
@@ -400,7 +406,12 @@ export const Store = {
       console.warn('[Store] Error al auto-descubrir álbumes:', e);
     }
 
-    const finalAlbums = Array.from(albumMap.values());
+    // Filtrar cualquier álbum huérfano o vacío que no esté en INITIAL_ALBUMS
+    const finalAlbums = Array.from(albumMap.values()).filter(a => {
+      if (a.id === 'alb-3' || a.title === 'Fotografía Oficial') return false;
+      return true;
+    });
+
     saveToStorage(STORAGE_KEYS.ALBUMS, finalAlbums);
     return finalAlbums;
   },
