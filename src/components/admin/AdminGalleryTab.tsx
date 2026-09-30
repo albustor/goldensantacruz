@@ -49,6 +49,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
   // Edit album state
   const [editingAlbum, setEditingAlbum] = useState<GalleryAlbum | null>(null);
+  const [selectedArbolAlbum, setSelectedArbolAlbum] = useState<GalleryAlbum | null>(null);
   const [editAlbumForm, setEditAlbumForm] = useState({
     title: "",
     eventDate: "",
@@ -461,6 +462,15 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                     >
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedArbolAlbum(album)}
+                      className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-emerald-400 border border-gray-700 text-xs flex items-center gap-1"
+                      title="Vincular/Gestionar en Árbol de Guanacaste"
+                    >
+                      <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
+                    </button>
                   </div>
 
                   <button
@@ -579,16 +589,16 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
 
                     <button
                       type="button"
-                      onClick={() => handleToggleArbolHito(album)}
-                      className={`px-2 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 border transition-all ${
-                        album.isArbolHito || album.albumType === "pro_studio"
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm"
-                          : "bg-dark-800 text-gray-400 border-gray-700"
+                      onClick={() => setSelectedArbolAlbum(album)}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all ${
+                        album.isArbolHito !== false || album.albumType === "pro_studio"
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm hover:bg-emerald-500/30"
+                          : "bg-dark-800 text-gray-400 border-gray-700 hover:bg-dark-750"
                       }`}
-                      title="Vincular/Activar como hito en la constelación del Árbol de Guanacaste"
+                      title="Vincular/Publicar en la constelación del Árbol de Guanacaste"
                     >
                       <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{album.isArbolHito || album.albumType === "pro_studio" ? "Hito Árbol" : "Vincular"}</span>
+                      <span>{album.isArbolHito !== false || album.albumType === "pro_studio" ? "Árbol Hito" : "Vincular"}</span>
                     </button>
 
                     <a
@@ -1193,6 +1203,120 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
           loadCategories();
         }}
       />
+
+      {/* 7. MODAL DE VINCULACIÓN DIRECTA AL ÁRBOL DE GUANACASTE (CURIOL STUDIO) */}
+      {selectedArbolAlbum && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 animate-fadeIn">
+          <div className="w-full max-w-lg bg-dark-900 border-2 border-emerald-500/60 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative">
+            <button
+              onClick={() => setSelectedArbolAlbum(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-dark-800 text-gray-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-lg">
+                <TreeDeciduous className="w-6 h-6" />
+              </div>
+              <div>
+                <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">
+                  Curiol Studio • Red Phygital
+                </span>
+                <h3 className="text-lg font-black text-white uppercase">
+                  Vincular al Árbol de Guanacaste
+                </h3>
+              </div>
+            </div>
+
+            {/* Resumen del Álbum */}
+            <div className="p-4 rounded-2xl bg-dark-950 border border-emerald-500/30 space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-400 font-bold">Álbum Seleccionado:</span>
+                <span className="text-emerald-400 font-black">📅 {selectedArbolAlbum.eventDate}</span>
+              </div>
+              <h4 className="text-sm font-black text-white">{selectedArbolAlbum.title}</h4>
+              <div className="flex items-center justify-between text-[11px] text-gray-400 pt-1 border-t border-gray-800">
+                <span>Categoría: <strong>{selectedArbolAlbum.category}</strong></span>
+                <span className="text-golden-400 font-bold">
+                  📸 {localPhotos.filter(p => p.albumId === selectedArbolAlbum.id).length} fotos asociadas
+                </span>
+              </div>
+            </div>
+
+            {/* Estado del Hito */}
+            <div className="space-y-3">
+              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-dark-800 border border-gray-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg">⭐</span>
+                  <div>
+                    <span className="text-xs font-bold text-white block">Estado de Publicación en el Árbol</span>
+                    <span className="text-[10px] text-gray-400">
+                      {selectedArbolAlbum.isArbolHito !== false
+                        ? "Hito activo en la línea de tiempo oficial"
+                        : "Hito no vinculado actualmente"}
+                    </span>
+                  </div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={selectedArbolAlbum.isArbolHito !== false}
+                  onChange={async (e) => {
+                    const updated = { ...selectedArbolAlbum, isArbolHito: e.target.checked };
+                    setSelectedArbolAlbum(updated);
+                    await Store.updateAlbum(updated);
+                    loadAlbums();
+                    onRefresh();
+                  }}
+                  className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 h-5 w-5"
+                />
+              </label>
+
+              {/* Botón de Acción Directa: Abrir Línea de Tiempo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <a
+                  href={`https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs uppercase tracking-wider shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-105 text-center"
+                >
+                  <TreeDeciduous className="w-4 h-4" />
+                  <span>Abrir Árbol de Guanacaste ↗</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const payload = JSON.stringify({
+                      albumId: selectedArbolAlbum.id,
+                      title: selectedArbolAlbum.title,
+                      eventDate: selectedArbolAlbum.eventDate,
+                      category: selectedArbolAlbum.category,
+                      photosCount: localPhotos.filter(p => p.albumId === selectedArbolAlbum.id).length,
+                      directLink: `${window.location.origin}/galeria?album=${selectedArbolAlbum.id}&tab=pro_studio`,
+                    }, null, 2);
+                    navigator.clipboard.writeText(payload);
+                    alert("¡Datos del Hito copiados al portapapeles para Curiol Studio!");
+                  }}
+                  className="py-3 px-4 rounded-2xl bg-dark-800 hover:bg-dark-750 text-emerald-300 font-bold text-xs uppercase tracking-wider border border-emerald-500/40 flex items-center justify-center gap-2"
+                >
+                  <span>📋 Copiar Datos de Hito</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-gray-800 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setSelectedArbolAlbum(null)}
+                className="px-5 py-2.5 rounded-xl bg-dark-800 text-gray-300 font-bold text-xs uppercase"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
