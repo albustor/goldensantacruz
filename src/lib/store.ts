@@ -49,7 +49,7 @@ const STORAGE_KEYS = {
   PLAYERS: 'golden_players_v7',
   PAYMENTS: 'golden_payments_v7',
   MATCHES: 'golden_matches_v6',
-  ALBUMS: 'golden_albums_v10',
+  ALBUMS: 'golden_albums_v11',
   GALLERY: 'golden_gallery_v7',
   SPONSORS: 'golden_sponsors_v5',
   SETTINGS: 'golden_settings_v5',
@@ -371,6 +371,8 @@ export const Store = {
           cleanTitle = 'Galería Oficial Curiol Studio • Gran Jornada de Liberia 2026';
         } else if (albId === 'alb-comunidad-liberia-2026') {
           cleanTitle = 'Álbum Familiar • Gran Jornada de Liberia';
+        } else if (albId === 'alb-david-fundador-2026' || albId === 'clinatecnicagp' || albId === 'gJ74JX7Y75v4eagaxjXf') {
+          cleanTitle = 'Clínica Técnica de David • Técnico Fundador';
         }
 
         if (!cleanTitle || cleanTitle.length < 3) {
@@ -406,11 +408,17 @@ export const Store = {
       console.warn('[Store] Error al auto-descubrir álbumes:', e);
     }
 
-    // Filtrar cualquier álbum huérfano o vacío que no esté en INITIAL_ALBUMS
-    const finalAlbums = Array.from(albumMap.values()).filter(a => {
-      if (a.id === 'alb-3' || a.title === 'Fotografía Oficial') return false;
-      return true;
-    });
+    // Filtrar cualquier álbum huérfano o vacío que no esté en INITIAL_ALBUMS y ordenar cronológicamente descendente
+    const finalAlbums = Array.from(albumMap.values())
+      .filter(a => {
+        if (a.id === 'alb-3' || a.title === 'Fotografía Oficial') return false;
+        return true;
+      })
+      .sort((a, b) => {
+        const timeA = new Date(a.eventDate || '1970-01-01').getTime();
+        const timeB = new Date(b.eventDate || '1970-01-01').getTime();
+        return timeB - timeA;
+      });
 
     saveToStorage(STORAGE_KEYS.ALBUMS, finalAlbums);
     return finalAlbums;

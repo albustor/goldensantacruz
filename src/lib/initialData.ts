@@ -984,6 +984,17 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     isLocked: true,
     isOpenForUploads: false,
   },
+  {
+    id: "alb-david-fundador-2026",
+    title: "Clínica Técnica de David • Técnico Fundador",
+    eventDate: "2026-07-18",
+    category: "Clínicas de Tecnificación & Tiro",
+    coverPhotoUrl: "https://firebasestorage.googleapis.com/v0/b/curiol-studio.firebasestorage.app/o/albums%2F1784456110563_EntrenamientoGPJulio.jpg?alt=media",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
+    isLocked: true,
+    isOpenForUploads: false,
+  },
 
   // 2. COLECTIVOS DE FAMILIAS Y PAPÁS
   {
@@ -1047,6 +1058,26 @@ export const INITIAL_PHOTOS: GalleryPhoto[] = [
     likesCount: 15 + (idx % 12),
     isApproved: true,
     uploadedAt: "2026-08-22",
+    watermarkTag: "Curiol Studio Santa Cruz",
+    priceDigital: 2500,
+    pricePrint: 3500,
+  })),
+
+  // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - CLÍNICA TÉCNICA DE DAVID FUNDADOR (16 FOTOS, alb-david-fundador-2026)
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].map((num, idx) => ({
+    id: `pht-david-${num}`,
+    photoUrl: `/Fotos_Equipo/${num}.jpg`,
+    title: `Clínica Técnica con David • Sesión #${num}`,
+    caption: `Entrenamiento formativo de fundamentos, biomecánica de tiro y dominio de balón impartido por el Técnico Fundador David.`,
+    category: "Clínicas de Tecnificación & Tiro" as PlayerCategory,
+    uploaderName: "Curiol Studio Oficial",
+    uploaderRole: "staff" as const,
+    photoType: "pro_studio" as const,
+    albumId: "alb-david-fundador-2026",
+    eventDate: "2026-07-18",
+    likesCount: 12 + (idx % 9),
+    isApproved: true,
+    uploadedAt: "2026-07-18",
     watermarkTag: "Curiol Studio Santa Cruz",
     priceDigital: 2500,
     pricePrint: 3500,

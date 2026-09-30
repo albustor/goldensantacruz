@@ -24,6 +24,7 @@ import {
   Trash2,
   Download,
   CheckCircle2,
+  Share2,
 } from "lucide-react";
 import { GalleryAlbum, GalleryPhoto, SystemSettings } from "@/types";
 import { Store } from "@/lib/store";
@@ -182,6 +183,42 @@ function GaleriaContent() {
     }, 250);
   };
 
+  const handleShareAlbum = async (album: GalleryAlbum, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://goldensportacademy.vercel.app";
+    const albumUrl = `${currentOrigin}/galeria?album=${album.id}&tab=${album.albumType || activeTab}`;
+    const shareTitle = `📸 Álbum: ${album.title} • Golden Sport Academy Santa Cruz`;
+    const shareText = `🏀 ¡Mira todas las fotografías del álbum "${album.title}" (${formatFullDate(album.eventDate)}) de Golden Sport Academy Santa Cruz! Ver álbum completo aquí:`;
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({
+          title: shareTitle,
+          text: shareText,
+          url: albumUrl,
+        });
+        showToast("✅ ¡Enlace del álbum compartido!");
+        return;
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    }
+
+    // Fallback 1: Copiar enlace al portapapeles
+    try {
+      if (typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText} ${albumUrl}`);
+        showToast("📋 ¡Enlace del álbum copiado al portapapeles!");
+        return;
+      }
+    } catch (clipErr) {}
+
+    // Fallback 2: Abrir WhatsApp con mensaje directo
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${albumUrl}`)}`;
+    window.open(whatsappUrl, "_blank");
+    showToast("📲 ¡Abriendo WhatsApp para compartir álbum!");
+  };
+
   // Modales
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedPhotoForView, setSelectedPhotoForView] = useState<GalleryPhoto | null>(null);
@@ -254,15 +291,21 @@ function GaleriaContent() {
   // Pestaña "pro_studio": Álbumes oficiales Curiol Studio exclusivamente
   const effectiveAlbums = (albums && albums.length > 0) ? albums : INITIAL_ALBUMS;
 
-  const displayedAlbums = effectiveAlbums.filter((a) => {
-    if (a.id === "alb-3" || !a.title || a.title === "Fotografía Oficial") return false;
+  const displayedAlbums = effectiveAlbums
+    .filter((a) => {
+      if (a.id === "alb-3" || !a.title || a.title === "Fotografía Oficial") return false;
 
-    if (activeTab === "community") {
-      return a.albumType === "community";
-    } else {
-      return a.albumType === "pro_studio" || !a.albumType;
-    }
-  });
+      if (activeTab === "community") {
+        return a.albumType === "community";
+      } else {
+        return a.albumType === "pro_studio" || !a.albumType;
+      }
+    })
+    .sort((a, b) => {
+      const timeA = new Date(a.eventDate || "1970-01-01").getTime();
+      const timeB = new Date(b.eventDate || "1970-01-01").getTime();
+      return timeB - timeA;
+    });
 
   const selectedAlbum = effectiveAlbums.find((a) => a.id === selectedAlbumId);
 
@@ -293,7 +336,7 @@ function GaleriaContent() {
     settings?.arbolGuanacasteUrl ||
     "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz";
 
-  const proCount = photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol")).length || 222;
+  const proCount = photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol")).length || 238;
   const commCount = photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || (!p.photoType && !p.uploaderName?.toLowerCase().includes("curiol"))).length || 24;
 
   return (
@@ -378,6 +421,8 @@ function GaleriaContent() {
                   ? "/Hero_Basketball/1.jpg"
                   : album.id === "alb-2"
                   ? "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg"
+                  : album.id === "alb-david-fundador-2026"
+                  ? "https://firebasestorage.googleapis.com/v0/b/curiol-studio.firebasestorage.app/o/albums%2F1784456110563_EntrenamientoGPJulio.jpg?alt=media"
                   : "/photos/partidos/liberia_portada.webp");
               const recentUploads = albumPics.slice(0, 3);
 
@@ -462,29 +507,42 @@ function GaleriaContent() {
                       </p>
                     </div>
 
-                    {/* Botón de Entrada */}
-                    <div className="pt-2 border-t border-gray-800 flex items-center justify-between">
+                    {/* Botón de Entrada y Acciones de Compartir */}
+                    <div className="pt-2 border-t border-gray-800 flex items-center justify-between gap-2">
                       <span className="text-xs font-black text-golden-400 uppercase flex items-center gap-1.5 group-hover:underline">
                         <span>
                           {activeTab === "community"
-                            ? (isTodayAlbum ? "Entrar & Subir Fotos" : `Ver ${photoCount} Fotos de Familias`)
+                            ? (isTodayAlbum ? "Entrar & Subir Fotos" : `Ver ${photoCount} Fotos`)
                             : `Ver ${photoCount} Fotos Oficiales`}
                         </span>
                         <ChevronRight className="w-4 h-4" />
                       </span>
 
-                      {isTodayAlbum && activeTab === "community" && (
-                        <span className="text-[10px] text-emerald-400 font-bold">
-                          ● Abierto para papás
-                        </span>
-                      )}
+                      <div className="flex items-center gap-1.5">
+                        {/* BOTÓN COMPARTIR ÁLBUM COMPLETO */}
+                        <button
+                          type="button"
+                          onClick={(e) => handleShareAlbum(album, e)}
+                          className="px-2.5 py-1.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-golden-400 hover:text-white border border-gray-700 hover:border-golden-500/50 transition-all flex items-center gap-1 text-[10px] font-black uppercase shadow-sm active:scale-95"
+                          title="Compartir enlace directo a este álbum completo"
+                        >
+                          <Share2 className="w-3.5 h-3.5 text-golden-400" />
+                          <span>Compartir</span>
+                        </button>
 
-                      {activeTab === "pro_studio" && (
-                        <span className="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-                          <TreeDeciduous className="w-3 h-3 text-emerald-400" />
-                          <span>Hito Árbol Guanacaste</span>
-                        </span>
-                      )}
+                        {activeTab === "pro_studio" && (
+                          <a
+                            href={arbolUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="p-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold uppercase transition-all flex items-center gap-1"
+                            title="Ver en el Árbol de Guanacaste (Curiol Studio)"
+                          >
+                            <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -541,7 +599,18 @@ function GaleriaContent() {
                 </div>
 
                 {/* Acciones del Banner */}
-                <div className="flex flex-col sm:flex-row items-center gap-3">
+                <div className="flex flex-wrap items-center justify-center md:justify-end gap-3">
+                  {/* BOTÓN COMPARTIR ÁLBUM COMPLETO */}
+                  <button
+                    type="button"
+                    onClick={(e) => handleShareAlbum(selectedAlbum, e)}
+                    className="px-5 py-3 rounded-2xl bg-dark-950 hover:bg-dark-850 text-golden-300 hover:text-white border border-golden-500/50 text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2 shrink-0 transition-transform hover:scale-105 active:scale-95"
+                    title="Compartir este álbum completo por WhatsApp o enlace directo"
+                  >
+                    <Share2 className="w-4 h-4 text-golden-400" />
+                    <span>Compartir Álbum</span>
+                  </button>
+
                   {selectedAlbum.isOpenForUploads && activeTab === "community" && (
                     <button
                       onClick={() => setIsUploadOpen(true)}
@@ -561,7 +630,7 @@ function GaleriaContent() {
                       className="px-5 py-3 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 shrink-0 transition-transform hover:scale-105"
                     >
                       <TreeDeciduous className="w-4 h-4 text-emerald-400" />
-                      <span>Punto Nodo en Árbol de Guanacaste ↗</span>
+                      <span>Ver en Árbol Guanacaste ↗</span>
                     </a>
                   )}
                 </div>
