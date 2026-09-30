@@ -23,16 +23,21 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const navLinks = [
+  interface NavLinkItem {
+    name: string;
+    href: string;
+    isLiveLink?: boolean;
+  }
+
+  const navLinks: NavLinkItem[] = [
     { name: "Inicio", href: "/" },
-    { name: "En Vivo", href: "/en-vivo", isLiveLink: true },
     { name: "Información", href: "/informacion" },
     { name: "Calendario", href: "/calendario" },
     { name: "Fotografías", href: "/galeria" },
     { name: "Publicidad", href: "/patrocinadores" },
   ];
 
-  const renderLinkContent = (link: typeof navLinks[0]) => {
+  const renderLinkContent = (link: NavLinkItem) => {
     if (link.isLiveLink) {
       return (
         <span className="inline-flex items-center justify-center gap-0.5 uppercase tracking-wider font-black">

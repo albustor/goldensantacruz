@@ -33,6 +33,10 @@ import { LiveStreamConfig, LiveScoreboard, LiveCameraConfig, LiveChatMessage } f
 import { Store } from "@/lib/store";
 import { INITIAL_LIVE_STREAM_CONFIG } from "@/lib/initialData";
 
+// FLAG DE BLOQUEO TEMPORAL DEL MÓDULO DE TRANSMISIÓN EN VIVO
+// Para reactivar cuando la academia lo requiera, cambiar IS_LIVE_STREAM_BLOCKED a false
+const IS_LIVE_STREAM_BLOCKED = true;
+
 interface FloatingEmoji {
   id: number;
   emoji: string;
@@ -56,10 +60,57 @@ export default function LiveStreamPage() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (IS_LIVE_STREAM_BLOCKED) return;
     loadLiveConfig();
     const interval = setInterval(loadLiveConfig, 4000);
     return () => clearInterval(interval);
   }, []);
+
+  if (IS_LIVE_STREAM_BLOCKED) {
+    return (
+      <div className="min-h-[80vh] flex items-center justify-center px-4 py-16 animate-fadeIn">
+        <div className="max-w-xl w-full text-center space-y-6 p-8 sm:p-10 rounded-3xl bg-dark-900 border-2 border-golden-500/40 shadow-2xl backdrop-blur-xl">
+          <div className="w-20 h-20 rounded-3xl bg-dark-950 border-2 border-golden-500/50 p-3 mx-auto flex items-center justify-center shadow-lg shadow-golden-500/20">
+            <Image src="/logo.png" alt="Golden Sport Academy" width={64} height={64} className="object-contain" priority />
+          </div>
+
+          <div className="space-y-2.5">
+            <span className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-golden-500/20 text-golden-400 text-xs font-black uppercase tracking-wider border border-golden-500/30">
+              <Radio className="w-3.5 h-3.5 text-golden-400" />
+              <span>Transmisiones en Pausa Técnica</span>
+            </span>
+            <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
+              Señal en Mantenimiento
+            </h1>
+            <p className="text-xs sm:text-sm text-gray-300 leading-relaxed max-w-md mx-auto">
+              El módulo de transmisión multi-cámara en directo se encuentra temporalmente en pausa para optimización técnica. Puedes consultar la programación de partidos y las fotografías oficiales de la academia.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+            <Link
+              href="/calendario"
+              className="px-5 py-2.5 rounded-2xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider shadow-lg shadow-golden-500/20 transition-all hover:scale-105"
+            >
+              📅 Calendario de Partidos
+            </Link>
+            <Link
+              href="/galeria"
+              className="px-5 py-2.5 rounded-2xl bg-dark-800 hover:bg-dark-700 text-golden-300 font-bold text-xs uppercase tracking-wider border border-golden-500/40 transition-all hover:scale-105"
+            >
+              📸 Galería de Fotografías
+            </Link>
+            <Link
+              href="/"
+              className="px-4 py-2.5 rounded-2xl bg-dark-950 hover:bg-dark-850 text-gray-400 hover:text-white font-bold text-xs uppercase tracking-wider border border-gray-800 transition-all"
+            >
+              Volver al Inicio
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const loadLiveConfig = async () => {
     const live = await Store.getLiveStreamConfig();
