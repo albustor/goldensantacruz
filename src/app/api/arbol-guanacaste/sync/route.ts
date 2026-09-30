@@ -80,7 +80,7 @@ export async function POST(req: Request) {
             : "https://firebasestorage.googleapis.com/v0/b/curiol-studio.firebasestorage.app/o/albums%2F1787049814984_1.jpg?alt=media"
         );
 
-        const newEvent = {
+        const newEvent: any = {
           id: eventId,
           date: album.eventDate || new Date().toISOString().split("T")[0],
           title: album.title || "Evento Oficial Golden Sport Academy",
@@ -89,13 +89,16 @@ export async function POST(req: Request) {
           mediaType: "image",
           location: album.location || "Santa Cruz / Guanacaste",
           albumId: albumId,
-          albumSlug: album.arbolSlug || albumId,
           albumLink: `https://goldensantacruz.vercel.app/galeria?album=${albumId}&tab=pro_studio`,
           isMilestone: true,
           tags: ["Golden Sport Academy", "Santa Cruz", "Baloncesto", "Curiol Studio"],
           createdAt: new Date().toISOString(),
           buttonText: `✨ ABRIR ÁLBUM DIGITAL (${countNum} FOTOS)`,
         };
+
+        if (album.arbolSlug && !album.arbolSlug.startsWith("http")) {
+          newEvent.albumSlug = album.arbolSlug;
+        }
 
         // Reemplazar o insertar
         const existingIdx = currentEvents.findIndex((e: any) => e.albumId === albumId || e.id === eventId);
@@ -147,7 +150,7 @@ export async function POST(req: Request) {
               ? "6z6WckmoouRzxS4d8wEu"
               : albumId.startsWith("golden-") ? albumId : `golden-${alb.eventDate || "evento"}-${albumId}`;
 
-        const item = {
+        const item: any = {
           id: eventId,
           date: alb.eventDate || new Date().toISOString().split("T")[0],
           title: alb.title,
@@ -156,13 +159,17 @@ export async function POST(req: Request) {
           mediaType: "image",
           location: "Santa Cruz / Guanacaste",
           albumId: albumId,
-          albumSlug: alb.arbolSlug || albumId,
           albumLink: `https://goldensantacruz.vercel.app/galeria?album=${albumId}&tab=pro_studio`,
           isMilestone: true,
           tags: ["Golden Sport Academy", "Santa Cruz", "Baloncesto", "Curiol Studio"],
           createdAt: new Date().toISOString(),
           buttonText: `✨ ABRIR ÁLBUM DIGITAL`,
         };
+
+        if (alb.arbolSlug && !alb.arbolSlug.startsWith("http")) {
+          item.albumSlug = alb.arbolSlug;
+        }
+
         milestonesToSync.push(item);
         await docRef.collection("events").doc(eventId).set(item, { merge: true });
       }
