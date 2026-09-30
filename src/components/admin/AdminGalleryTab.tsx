@@ -43,6 +43,10 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncStatusMsg, setSyncStatusMsg] = useState<string | null>(null);
 
+  // Estado de sincronización en vivo con el Árbol de Guanacaste (Curiol Studio)
+  const [syncedArbolAlbumIds, setSyncedArbolAlbumIds] = useState<string[]>([]);
+  const [isSyncingArbol, setIsSyncingArbol] = useState(false);
+
   // Accordion state for photo gallery grid (collapsible)
   const [isGalleryExpanded, setIsGalleryExpanded] = useState(true);
   const [filterType, setFilterType] = useState<"all" | "community" | "pro_studio">("all");
@@ -95,6 +99,7 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
   useEffect(() => {
     loadAlbums();
     loadCategories();
+    loadArbolStatus();
     // Suscripción progresiva en tiempo real para sincronizar todas las fotos desde Supabase
     Store.loadGalleryPhotosProgressive((updatedList) => {
       setLocalPhotos(updatedList);
@@ -111,11 +116,24 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     setCategories(cats);
   };
 
+  const loadArbolStatus = async () => {
+    try {
+      const res = await fetch("/api/arbol-guanacaste/sync");
+      const data = await res.json();
+      if (data.success && Array.isArray(data.syncedAlbumIds)) {
+        setSyncedArbolAlbumIds(data.syncedAlbumIds);
+      }
+    } catch {
+      // Silencioso si no hay conexión
+    }
+  };
+
   const handleManualSync = async () => {
     setIsSyncing(true);
     setSyncStatusMsg("Sincronizando con base de datos en la nube...");
     try {
       await loadAlbums();
+      await loadArbolStatus();
       const updated = await Store.loadGalleryPhotosProgressive((updatedList, progress) => {
         setLocalPhotos(updatedList);
         if (progress) {
@@ -164,14 +182,80 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
     onRefresh();
   };
 
-  const handleToggleArbolHito = async (album: GalleryAlbum) => {
-    const nextStatus = !album.isArbolHito;
-    await Store.updateAlbum({
-      ...album,
-      isArbolHito: nextStatus,
-    });
-    loadAlbums();
-    onRefresh();
+  const handleToggleArbolHito = async (album: GalleryAlbum, customStatus?: boolean) => {
+    const nextStatus = customStatus !== undefined ? customStatus : !album.isArbolHito;
+    setIsSyncingArbol(true);
+    try {
+      const photosForAlb = localPhotos.filter(p => p.albumId === album.id || p.eventDate === album.eventDate);
+      const coverUrl = album.coverPhotoUrl || (photosForAlb[0]?.photoUrl) || "";
+
+      const res = await fetch("/api/arbol-guanacaste/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "toggle",
+          album: { ...album, coverPhotoUrl: coverUrl },
+          isArbolHito: nextStatus,
+          photosCount: photosForAlb.length,
+          coverPhotoUrl: coverUrl,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await Store.updateAlbum({
+          ...album,
+          isArbolHito: nextStatus,
+        });
+        await loadAlbums();
+        await loadArbolStatus();
+        onRefresh();
+        alert(nextStatus ? "✨ ¡Álbum vinculado y publicado en el Árbol de Guanacaste!" : "Hito desvinculado del Árbol de Guanacaste.");
+      } else {
+        alert("Error al sincronizar con Curiol Studio: " + data.error);
+      }
+    } catch (err: any) {
+      alert("Error al conectar con Curiol Studio: " + err.message);
+    } finally {
+      setIsSyncingArbol(false);
+    }
+  };
+
+  const handleSyncAllToArbol = async () => {
+    setIsSyncingArbol(true);
+    try {
+      const activeAlbumsWithPhotos = albums.map(alb => {
+        const photosForAlb = localPhotos.filter(p => p.albumId === alb.id || p.eventDate === alb.eventDate);
+        const coverUrl = alb.coverPhotoUrl || (photosForAlb[0]?.photoUrl) || "";
+        return {
+          ...alb,
+          coverPhotoUrl: coverUrl,
+        };
+      });
+
+      const res = await fetch("/api/arbol-guanacaste/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "sync_all",
+          allAlbums: activeAlbumsWithPhotos,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        await loadAlbums();
+        await loadArbolStatus();
+        onRefresh();
+        alert(`✨ ¡Constelación sincronizada! ${data.events?.length || 0} hitos actualizados en el Árbol de Guanacaste.`);
+      } else {
+        alert("Error al sincronizar con Curiol Studio: " + data.error);
+      }
+    } catch (err: any) {
+      alert("Error al conectar con Curiol Studio: " + err.message);
+    } finally {
+      setIsSyncingArbol(false);
+    }
   };
 
   const handleDeleteAlbum = async (albumId: string, title: string) => {
@@ -365,33 +449,53 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
       </div>
 
       {/* BANNER DE VINCULACIÓN AL ÁRBOL DE GUANACASTE */}
-      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/40 via-dark-800 to-dark-800 border-2 border-emerald-500/50 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-md">
-            <TreeDeciduous className="w-6 h-6" />
+      <div className="p-6 rounded-3xl bg-gradient-to-r from-emerald-950/50 via-dark-850 to-dark-900 border-2 border-emerald-500/60 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-5">
+        <div className="flex items-start sm:items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 shadow-lg animate-pulse">
+            <TreeDeciduous className="w-6 h-6 text-emerald-400" />
           </div>
-          <div>
-            <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider block">
-              Ecosistema Central Curiol Studio
-            </span>
-            <h3 className="text-base font-black text-white uppercase">
-              Árbol de Guanacaste • Línea de Tiempo Histórica
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black uppercase text-emerald-400 tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                Ecosistema Central Curiol Studio
+              </span>
+              <span className="text-[10px] font-bold text-gray-400">
+                • {syncedArbolAlbumIds.length} hitos activos en constelación
+              </span>
+            </div>
+            <h3 className="text-base sm:text-lg font-black text-white uppercase">
+              Árbol de Guanacaste • Línea de Tiempo Phygital
             </h3>
             <p className="text-xs text-gray-300">
-              Al finalizar cada jornada, consolida el material y accede a la línea de tiempo oficial en Curiol Studio.
+              Los álbumes activados se sincronizan en vivo como estrellas en el árbol de Curiol Studio.
             </p>
           </div>
         </div>
 
-        <a
-          href="https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
-          target="_blank"
-          rel="noreferrer"
-          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shrink-0 transition-transform hover:scale-105"
-        >
-          <span>Abrir Árbol de Guanacaste ↗</span>
-          <ExternalLink className="w-3.5 h-3.5" />
-        </a>
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto justify-start lg:justify-end">
+          <button
+            onClick={handleSyncAllToArbol}
+            disabled={isSyncingArbol}
+            className={`px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-2 shadow-md transition-all ${
+              isSyncingArbol
+                ? "bg-dark-700 text-gray-400 cursor-not-allowed"
+                : "bg-dark-800 hover:bg-dark-700 text-emerald-300 border border-emerald-500/50 hover:scale-105"
+            }`}
+          >
+            <span className={isSyncingArbol ? "animate-spin" : ""}>↻</span>
+            <span>{isSyncingArbol ? "Sincronizando..." : "Sincronizar Todo con el Árbol"}</span>
+          </button>
+
+          <a
+            href="https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz"
+            target="_blank"
+            rel="noreferrer"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-dark-950 font-black text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shrink-0 transition-transform hover:scale-105"
+          >
+            <span>Abrir Árbol de Guanacaste ↗</span>
+            <ExternalLink className="w-3.5 h-3.5" />
+          </a>
+        </div>
       </div>
 
       {/* 1. LÍNEA 1: ÁLBUM COLECTIVO DE LAS FAMILIAS (FOTOS INICIALES DE PAPÁS) */}
@@ -466,10 +570,15 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                     <button
                       type="button"
                       onClick={() => setSelectedArbolAlbum(album)}
-                      className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-emerald-400 border border-gray-700 text-xs flex items-center gap-1"
+                      className={`p-1.5 rounded-lg border text-xs flex items-center gap-1.5 transition-all ${
+                        syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                          : "bg-dark-800 hover:bg-dark-700 text-gray-400 border-gray-700"
+                      }`}
                       title="Vincular/Gestionar en Árbol de Guanacaste"
                     >
-                      <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
+                      <TreeDeciduous className={`w-3.5 h-3.5 ${syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false ? 'text-emerald-400' : 'text-gray-400'}`} />
+                      <span className="hidden sm:inline">{syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false ? "Hito Árbol" : "Vincular"}</span>
                     </button>
                   </div>
 
@@ -591,14 +700,14 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
                       type="button"
                       onClick={() => setSelectedArbolAlbum(album)}
                       className={`px-2.5 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 border transition-all ${
-                        album.isArbolHito !== false || album.albumType === "pro_studio"
-                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm hover:bg-emerald-500/30"
+                        syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false
+                          ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-sm hover:bg-emerald-500/30"
                           : "bg-dark-800 text-gray-400 border-gray-700 hover:bg-dark-750"
                       }`}
-                      title="Vincular/Publicar en la constelación del Árbol de Guanacaste"
+                      title={syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false ? "Hito activo en el Árbol de Guanacaste • Toca para gestionar" : "Vincular a la constelación del Árbol de Guanacaste"}
                     >
-                      <TreeDeciduous className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>{album.isArbolHito !== false || album.albumType === "pro_studio" ? "Árbol Hito" : "Vincular"}</span>
+                      <TreeDeciduous className={`w-3.5 h-3.5 ${syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false ? 'text-emerald-400' : 'text-gray-400'}`} />
+                      <span>{syncedArbolAlbumIds.includes(album.id) || album.isArbolHito !== false ? "Árbol Hito Activo" : "Vincular"}</span>
                     </button>
 
                     <a
@@ -1245,32 +1354,60 @@ export default function AdminGalleryTab({ photos, onRefresh }: Props) {
             </div>
 
             {/* Estado del Hito */}
-            <div className="space-y-3">
-              <label className="flex items-center justify-between p-3.5 rounded-2xl bg-dark-800 border border-gray-700 cursor-pointer hover:border-emerald-500/50 transition-colors">
-                <div className="flex items-center gap-2.5">
-                  <span className="text-lg">⭐</span>
-                  <div>
-                    <span className="text-xs font-bold text-white block">Estado de Publicación en el Árbol</span>
-                    <span className="text-[10px] text-gray-400">
-                      {selectedArbolAlbum.isArbolHito !== false
-                        ? "Hito activo en la línea de tiempo oficial"
-                        : "Hito no vinculado actualmente"}
-                    </span>
+            <div className="space-y-4">
+              <div className="p-4 rounded-2xl bg-dark-950 border border-gray-700 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/40 shrink-0">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-black text-white block uppercase">
+                        Sincronización en la Constelación
+                      </span>
+                      <p className="text-[11px] text-gray-300 mt-0.5">
+                        {syncedArbolAlbumIds.includes(selectedArbolAlbum.id) || selectedArbolAlbum.isArbolHito !== false
+                          ? "🟢 Este álbum está publicado y activo como nodo/estrella en el Árbol de Guanacaste de Curiol Studio."
+                          : "⚪ No publicado actualmente en la línea de tiempo."}
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={selectedArbolAlbum.isArbolHito !== false}
-                  onChange={async (e) => {
-                    const updated = { ...selectedArbolAlbum, isArbolHito: e.target.checked };
-                    setSelectedArbolAlbum(updated);
-                    await Store.updateAlbum(updated);
-                    loadAlbums();
-                    onRefresh();
-                  }}
-                  className="rounded border-gray-700 text-emerald-500 focus:ring-emerald-500 h-5 w-5"
-                />
-              </label>
+
+                <div className="pt-2 border-t border-gray-800 flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={isSyncingArbol}
+                    onClick={async () => {
+                      const isCurrentlyActive = syncedArbolAlbumIds.includes(selectedArbolAlbum.id) || selectedArbolAlbum.isArbolHito !== false;
+                      const nextState = !isCurrentlyActive;
+                      await handleToggleArbolHito(selectedArbolAlbum, nextState);
+                      setSelectedArbolAlbum({ ...selectedArbolAlbum, isArbolHito: nextState });
+                    }}
+                    className={`px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-2 shadow-md transition-all ${
+                      syncedArbolAlbumIds.includes(selectedArbolAlbum.id) || selectedArbolAlbum.isArbolHito !== false
+                        ? "bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40"
+                        : "bg-emerald-500 hover:bg-emerald-400 text-dark-950 shadow-emerald-500/20"
+                    }`}
+                  >
+                    {isSyncingArbol ? (
+                      <>
+                        <span className="animate-spin">↻</span>
+                        <span>Sincronizando con Curiol Studio...</span>
+                      </>
+                    ) : syncedArbolAlbumIds.includes(selectedArbolAlbum.id) || selectedArbolAlbum.isArbolHito !== false ? (
+                      <>
+                        <span>Desvincular del Árbol</span>
+                      </>
+                    ) : (
+                      <>
+                        <TreeDeciduous className="w-4 h-4" />
+                        <span>🌟 Publicar y Activar en el Árbol</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
 
               {/* Botón de Acción Directa: Abrir Línea de Tiempo */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
