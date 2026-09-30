@@ -426,7 +426,9 @@ function GaleriaContent() {
                 (album.coverPhotoUrl && !album.coverPhotoUrl.includes("Fotos_Equipo")
                   ? album.coverPhotoUrl
                   : null) ||
-                (album.id === "alb-curiol-liberia-2026"
+                (album.id === "alb-1790721881901"
+                  ? "/photos/fecoba_portada.webp"
+                  : album.id === "alb-curiol-liberia-2026"
                   ? "/photos/partidos/liberia_portada.webp"
                   : album.id === "alb-comunidad-liberia-2026"
                   ? "/Hero_Basketball/1.jpg"
@@ -434,7 +436,7 @@ function GaleriaContent() {
                   ? "/photos/uniforme/GoldenAcademy_StaCruz_001.jpg"
                   : album.id === "alb-david-fundador-2026"
                   ? "https://firebasestorage.googleapis.com/v0/b/curiol-studio.firebasestorage.app/o/albums%2F1784456110563_EntrenamientoGPJulio.jpg?alt=media"
-                  : "/photos/partidos/liberia_portada.webp");
+                  : "/photos/fecoba_portada.webp");
               const recentUploads = albumPics.slice(0, 3);
 
               return (

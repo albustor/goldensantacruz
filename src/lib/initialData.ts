@@ -956,7 +956,7 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     title: "Entrega de balones por parte de FECOBA",
     eventDate: "2026-09-24",
     category: "Eventos Especiales",
-    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
+    coverPhotoUrl: "/photos/fecoba_portada.webp",
     createdBy: "Curiol Studio Oficial",
     albumType: "pro_studio",
     isLocked: false,
@@ -970,8 +970,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
     createdBy: "Curiol Studio Oficial",
     albumType: "pro_studio",
-    isLocked: false,
-    isOpenForUploads: true,
+    isLocked: true,
+    isOpenForUploads: false,
   },
   {
     id: "alb-2",
@@ -1016,8 +1016,8 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
     createdBy: "Familias & Papás",
     albumType: "community",
-    isLocked: false,
-    isOpenForUploads: true,
+    isLocked: true,
+    isOpenForUploads: false,
   }
 ];
 
