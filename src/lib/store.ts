@@ -49,7 +49,7 @@ const STORAGE_KEYS = {
   PLAYERS: 'golden_players_v7',
   PAYMENTS: 'golden_payments_v7',
   MATCHES: 'golden_matches_v6',
-  ALBUMS: 'golden_albums_v7',
+  ALBUMS: 'golden_albums_v10',
   GALLERY: 'golden_gallery_v7',
   SPONSORS: 'golden_sponsors_v5',
   SETTINGS: 'golden_settings_v5',

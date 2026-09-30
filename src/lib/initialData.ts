@@ -950,14 +950,15 @@ export const INITIAL_MATCHES: Match[] = [
 ];
 
 export const INITIAL_ALBUMS: GalleryAlbum[] = [
+  // 1. OFICIALES CURIOL PRO
   {
-    id: "alb-comunidad-liberia-2026",
-    title: "Álbum Familiar • Gran Jornada de Liberia",
-    eventDate: "2026-09-05",
-    category: "Intercantonal",
-    coverPhotoUrl: "/Hero_Basketball/1.jpg",
-    createdBy: "Familias & Papás",
-    albumType: "community",
+    id: "alb-1790721881901",
+    title: "Entrega de balones por parte de FECOBA",
+    eventDate: "2026-09-24",
+    category: "Eventos Especiales",
+    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
+    createdBy: "Curiol Studio Oficial",
+    albumType: "pro_studio",
     isLocked: false,
     isOpenForUploads: true,
   },
@@ -966,28 +967,6 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     title: "Galería Oficial Curiol Studio • Gran Jornada de Liberia 2026",
     eventDate: "2026-09-05",
     category: "Intercantonal",
-    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
-    createdBy: "Curiol Studio Oficial",
-    albumType: "pro_studio",
-    isLocked: false,
-    isOpenForUploads: true,
-  },
-  {
-    id: "alb-comunidad-yiyo-2026",
-    title: "Álbum Familiar • Visita de Julio \"Yiyo\"",
-    eventDate: "2026-09-18",
-    category: "Eventos Especiales",
-    coverPhotoUrl: "/Hero_Basketball/2.jpg",
-    createdBy: "Familias & Papás",
-    albumType: "community",
-    isLocked: false,
-    isOpenForUploads: true,
-  },
-  {
-    id: "alb-1790721881901",
-    title: "Entrega de balones por parte de FECOBA",
-    eventDate: "2026-09-24",
-    category: "Eventos Especiales",
     coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
     createdBy: "Curiol Studio Oficial",
     albumType: "pro_studio",
@@ -1004,6 +983,30 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     albumType: "pro_studio",
     isLocked: true,
     isOpenForUploads: false,
+  },
+
+  // 2. COLECTIVOS DE FAMILIAS Y PAPÁS
+  {
+    id: "alb-comunidad-yiyo-2026",
+    title: "Álbum Familiar • Visita de Julio \"Yiyo\"",
+    eventDate: "2026-09-18",
+    category: "Eventos Especiales",
+    coverPhotoUrl: "/Hero_Basketball/2.jpg",
+    createdBy: "Familias & Papás",
+    albumType: "community",
+    isLocked: false,
+    isOpenForUploads: true,
+  },
+  {
+    id: "alb-comunidad-liberia-2026",
+    title: "Álbum Familiar • Gran Jornada de Liberia",
+    eventDate: "2026-09-05",
+    category: "Intercantonal",
+    coverPhotoUrl: "/Hero_Basketball/1.jpg",
+    createdBy: "Familias & Papás",
+    albumType: "community",
+    isLocked: false,
+    isOpenForUploads: true,
   }
 ];
 

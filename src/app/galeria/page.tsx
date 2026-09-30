@@ -293,101 +293,67 @@ function GaleriaContent() {
     settings?.arbolGuanacasteUrl ||
     "https://www.curiol.studio/linea-de-tiempo/golden-academy-santa-cruz";
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+  const proCount = photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.toLowerCase().includes("curiol")).length || 222;
+  const commCount = photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || (!p.photoType && !p.uploaderName?.toLowerCase().includes("curiol"))).length || 24;
 
-      {/* 1. HEADER */}
-      <div className="text-center space-y-2 max-w-3xl mx-auto">
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500/15 border border-golden-500/30 text-golden-400 text-xs font-black uppercase tracking-wider">
-          <Camera className="w-3.5 h-3.5" />
-          <span>Galería Fotográfica Oficial</span>
-        </div>
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
+
+      {/* 1. HEADER ULTRA-MINIMALISTA */}
+      <div className="text-center space-y-2 max-w-2xl mx-auto">
         <h1 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
-          Álbum &{" "}
+          Galería &{" "}
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-golden-300 via-golden-400 to-amber-500">
-            Recuerdos Deportivos
+            Recuerdos
           </span>
         </h1>
+        <p className="text-xs text-gray-400">
+          Golden Sport Academy Santa Cruz • Cobertura Audiovisual & Archivo Comunitario
+        </p>
       </div>
 
-      {/* 2. SELECTOR PRINCIPAL DE PESTAÑAS */}
-      <div className="flex flex-col items-center gap-3">
-        <div className="inline-flex p-1.5 rounded-2xl bg-dark-900 border-2 border-golden-500/40 shadow-2xl max-w-xl w-full">
-          <button
-            onClick={() => { setActiveTab("pro_studio"); setSelectedAlbumId(null); }}
-            className={`flex-1 py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-              activeTab === "pro_studio"
-                ? "bg-gradient-to-r from-golden-400 to-amber-500 text-dark-950 shadow-lg scale-[1.02]"
-                : "text-gray-400 hover:text-white hover:bg-dark-800"
-            }`}
-          >
-            <Sparkles className="w-4 h-4 text-dark-950" />
-            <span>🏀 Fotos Oficiales ({photos.filter(p => p.photoType === "pro_studio" || p.uploaderRole === "staff" || p.uploaderName?.includes("Curiol")).length})</span>
-          </button>
-          <button
-            onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
-            className={`flex-1 py-3.5 px-4 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-              activeTab === "community"
-                ? "bg-gradient-to-r from-golden-400 to-amber-500 text-dark-950 shadow-lg scale-[1.02]"
-                : "text-gray-400 hover:text-white hover:bg-dark-800"
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            <span>👨‍👩‍👧 Fotos de Familias ({photos.filter(p => p.photoType === "community" || p.uploaderRole === "padre" || !p.uploaderName?.includes("Curiol")).length})</span>
-          </button>
-        </div>
+      {/* 2. DOS GRANDES BOTONES PRINCIPALES (MINIMALISTAS & ELEGANTES) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-2xl mx-auto w-full">
+        <button
+          onClick={() => { setActiveTab("pro_studio"); setSelectedAlbumId(null); }}
+          className={`p-5 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-xl ${
+            activeTab === "pro_studio"
+              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 scale-[1.02] ring-2 ring-golden-400 shadow-golden-500/20"
+              : "bg-dark-900 text-gray-400 hover:text-white hover:bg-dark-850 border border-gray-800"
+          }`}
+        >
+          <Sparkles className="w-5 h-5 shrink-0" />
+          <span>🏀 Fotos Oficiales Curiol ({proCount})</span>
+        </button>
 
-        {/* Guía Visual Amigable para Papás */}
-        <div className="w-full max-w-xl p-3.5 rounded-2xl bg-gradient-to-r from-emerald-950/70 via-dark-900 to-emerald-950/70 border border-emerald-500/40 text-xs text-emerald-300 flex items-center gap-3 shadow-lg">
-          <span className="text-xl shrink-0">💡</span>
-          <p className="text-[11px] sm:text-xs text-gray-200 leading-snug">
-            <strong className="text-emerald-400 font-black uppercase">¿Cómo guardar las fotos gratis?</strong> Toca el botón verde <strong className="text-white bg-emerald-700/80 px-2 py-0.5 rounded font-black inline-flex items-center gap-1">📥 Guardar en mi Teléfono</strong> en cualquier foto para guardarla directamente en tu galería o carrete.
-          </p>
-        </div>
+        <button
+          onClick={() => { setActiveTab("community"); setSelectedAlbumId(null); }}
+          className={`p-5 rounded-2xl font-black text-sm uppercase tracking-wider flex items-center justify-center gap-3 transition-all shadow-xl ${
+            activeTab === "community"
+              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 scale-[1.02] ring-2 ring-golden-400 shadow-golden-500/20"
+              : "bg-dark-900 text-gray-400 hover:text-white hover:bg-dark-850 border border-gray-800"
+          }`}
+        >
+          <Users className="w-5 h-5 shrink-0" />
+          <span>👨‍👩‍👧 Fotos de Familias ({commCount})</span>
+        </button>
       </div>
 
-      {/* BARRA DE SINCRONIZACIÓN PROGRESIVA PARA DISPOSITIVOS MÓVILES */}
-      {syncProgress && !syncProgress.isDone && syncProgress.loaded < syncProgress.total && (
-        <div className="p-3.5 rounded-2xl bg-gradient-to-r from-golden-500/15 via-dark-900 to-golden-500/15 border border-golden-500/40 text-xs text-golden-300 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xl animate-fade-in">
-          <div className="flex items-center gap-2.5 text-center sm:text-left">
-            <Sparkles className="w-4 h-4 text-golden-400 animate-spin shrink-0" />
-            <span className="font-semibold">
-              Sincronizando galería fotográfica en alta resolución: <strong className="text-white">{syncProgress.loaded} de {syncProgress.total} fotos</strong> listas en tu dispositivo.
-            </span>
-          </div>
-          <div className="w-full sm:w-44 bg-dark-950 rounded-full h-2.5 overflow-hidden border border-golden-500/30 shrink-0 p-0.5">
-            <div
-              className="bg-gradient-to-r from-golden-400 to-amber-500 h-full transition-all duration-300 rounded-full"
-              style={{ width: `${Math.max(5, Math.round((syncProgress.loaded / syncProgress.total) * 100))}%` }}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* 3. LISTADO DE ÁLBUMES ESPECÍFICOS SEGÚN LA PESTAÑA */}
+      {/* 3. LISTADO DE ÁLBUMES */}
       {!selectedAlbumId ? (
         <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-800 pb-3">
-            <div>
-              <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <FolderHeart className="w-5 h-5 text-golden-400" />
-                <span>
-                  {activeTab === "community"
-                    ? "Álbumes Colectivos de Familias"
-                    : "Álbumes Oficiales de Partidos y Eventos"}
-                </span>
-              </h2>
-              <p className="text-xs text-gray-400">
+          <div className="flex items-center justify-between border-b border-gray-800 pb-3">
+            <h2 className="text-base font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <FolderHeart className="w-4 h-4 text-golden-400" />
+              <span>
                 {activeTab === "community"
-                  ? "Selecciona un álbum familiar para ver o subir fotos de las gradas."
-                  : "Cobertura fotográfica oficial en alta definición para jugadores y familias."}
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-golden-400 font-bold">
-                {displayedAlbums.length} {displayedAlbums.length === 1 ? 'álbum registrado' : 'álbumes registrados'}
+                  ? "Álbumes Colectivos de Familias"
+                  : "Álbumes Oficiales Curiol Studio"}
               </span>
-            </div>
+            </h2>
+            <span className="text-xs text-golden-400 font-bold">
+              {displayedAlbums.length} {displayedAlbums.length === 1 ? 'álbum' : 'álbumes'}
+            </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
