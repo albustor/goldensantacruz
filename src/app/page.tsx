@@ -1,6 +1,7 @@
 import React from "react";
 import HeroBackground from "@/components/home/HeroBackground";
 import HeroSection from "@/components/home/HeroSection";
+import HomeVideoSection from "@/components/home/HomeVideoSection";
 import ScheduleSection from "@/components/home/ScheduleSection";
 import RegistrationSection from "@/components/home/RegistrationSection";
 import QuickAccessBanners from "@/components/home/QuickAccessBanners";
@@ -24,10 +25,13 @@ export default async function HomePage() {
         <HeroSection />
       </div>
 
-      {/* 2. CALENDARIO OFICIAL DE PARTIDOS */}
+      {/* 2. VIDEO OFICIAL PRINCIPAL */}
+      <HomeVideoSection />
+
+      {/* 3. CALENDARIO OFICIAL DE PARTIDOS */}
       <ScheduleSection />
 
-      {/* 2. Banners de Acceso Rápido & Pilares Institucionales (Cuotas, Galería, Pauta, Línea de Tiempo) */}
+      {/* 4. Banners de Acceso Rápido & Pilares Institucionales (Cuotas, Galería, Pauta, Línea de Tiempo) */}
       <QuickAccessBanners />
 
       {/* 3. Pre-Inscripción de Atletas */}

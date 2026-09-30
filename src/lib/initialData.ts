@@ -1013,7 +1013,7 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
     title: "Álbum Familiar • Gran Jornada de Liberia",
     eventDate: "2026-09-05",
     category: "Intercantonal",
-    coverPhotoUrl: "/Hero_Basketball/1.jpg",
+    coverPhotoUrl: "/photos/partidos/liberia_portada.webp",
     createdBy: "Familias & Papás",
     albumType: "community",
     isLocked: false,
@@ -1022,23 +1022,6 @@ export const INITIAL_ALBUMS: GalleryAlbum[] = [
 ];
 
 export const INITIAL_PHOTOS: GalleryPhoto[] = [
-  // FOTOGRAFÍAS COMUNITARIAS Y FAMILIARES - GRAN JORNADA DE LIBERIA (10 FOTOS, alb-comunidad-liberia-2026)
-  ...[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => ({
-    id: `pht-com-lib-${num}`,
-    photoUrl: `/Hero_Basketball/${num}.jpg`,
-    title: `Recuerdo Familiar #${num} • Gradas de Liberia`,
-    caption: `Fotografía tomada y compartida por las familias y papás de Golden Sport Academy en el Gimnasio Municipal de Liberia.`,
-    category: "Intercantonal" as PlayerCategory,
-    uploaderName: num % 2 === 0 ? "Familia Golden Sport" : "Papás en Gradas",
-    uploaderRole: "padre" as const,
-    photoType: "community" as const,
-    albumId: "alb-comunidad-liberia-2026",
-    eventDate: "2026-09-05",
-    likesCount: 8 + (num % 7),
-    isApproved: true,
-    uploadedAt: "2026-09-05",
-    watermarkTag: "Golden Sport Santa Cruz",
-  })),
 
   // FOTOGRAFÍAS OFICIALES CURIOL STUDIO - PRESENTACIÓN DEL UNIFORME OFICIAL (16 FOTOS, alb-2)
   ...[
