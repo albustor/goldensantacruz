@@ -27,10 +27,12 @@ export default function Navbar() {
     name: string;
     href: string;
     isLiveLink?: boolean;
+    isPaused?: boolean;
   }
 
   const navLinks: NavLinkItem[] = [
     { name: "Inicio", href: "/" },
+    { name: "En Vivo", href: "/en-vivo", isLiveLink: true, isPaused: true },
     { name: "Información", href: "/informacion" },
     { name: "Calendario", href: "/calendario" },
     { name: "Fotografías", href: "/galeria" },
@@ -38,6 +40,16 @@ export default function Navbar() {
   ];
 
   const renderLinkContent = (link: NavLinkItem) => {
+    if (link.isLiveLink && link.isPaused) {
+      return (
+        <span className="inline-flex items-center justify-center gap-1.5 uppercase tracking-wider font-bold">
+          <span>En Vivo</span>
+          <span className="px-1.5 py-0.5 rounded-md bg-dark-800 text-[9px] font-black text-amber-400/90 border border-amber-500/30 uppercase leading-none">
+            Pausa
+          </span>
+        </span>
+      );
+    }
     if (link.isLiveLink) {
       return (
         <span className="inline-flex items-center justify-center gap-0.5 uppercase tracking-wider font-black">
@@ -90,16 +102,18 @@ export default function Navbar() {
           </Link>
 
           {/* Menú Desktop con Distribución Uniforme */}
-          <nav className="hidden md:flex flex-1 items-center justify-center max-w-3xl mx-auto gap-2 p-1.5 rounded-2xl bg-dark-900/70 border border-gray-800/80 backdrop-blur-md">
+          <nav className="hidden md:flex flex-1 items-center justify-center max-w-3xl mx-auto gap-1.5 sm:gap-2 p-1.5 rounded-2xl bg-dark-900/70 border border-gray-800/80 backdrop-blur-md">
             {navLinks.map((link) => {
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`flex-1 text-center py-2 px-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 ${
+                  className={`flex-1 text-center py-2 px-2.5 sm:px-3 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider transition-all duration-200 ${
                     isActive
                       ? "bg-golden-500 text-dark-950 shadow-md shadow-golden-500/30 font-black scale-102"
+                      : link.isPaused
+                      ? "text-gray-400 hover:text-golden-300 hover:bg-dark-800/80"
                       : "text-gray-200 hover:text-golden-400 hover:bg-dark-800/80"
                   }`}
                 >
@@ -160,13 +174,25 @@ export default function Navbar() {
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`block px-4 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl font-black text-sm uppercase tracking-wider transition-colors ${
                   isActive
                     ? "bg-golden-500 text-dark-950"
+                    : link.isPaused
+                    ? "text-gray-300 hover:bg-dark-800 hover:text-golden-400"
                     : "text-gray-200 hover:bg-dark-800 hover:text-golden-400"
                 }`}
               >
-                {renderLinkContent(link)}
+                <span>{link.name}</span>
+                {link.isPaused ? (
+                  <span className="px-2 py-0.5 rounded-md bg-dark-900 text-[10px] font-black text-amber-400 border border-amber-500/30">
+                    En Pausa
+                  </span>
+                ) : link.isLiveLink ? (
+                  <span className="relative inline-flex items-center justify-center w-2.5 h-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-80" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-600" />
+                  </span>
+                ) : null}
               </Link>
             );
           })}
