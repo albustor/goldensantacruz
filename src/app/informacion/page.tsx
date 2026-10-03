@@ -54,7 +54,7 @@ export default function InformacionPage() {
 
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-2xl bg-dark-900 border border-golden-500/30 text-xs sm:text-sm font-bold text-gray-200 shadow-md">
             <MapPin className="w-4 h-4 text-golden-500 shrink-0" />
-            <span>Ubicación: Santa Bárbara de Santa Cruz, Guanacaste</span>
+            <span>Sede Oficial: Santa Bárbara de Santa Cruz, Guanacaste</span>
           </div>
 
           <p className="text-xs sm:text-base text-gray-300 max-w-3xl mx-auto leading-relaxed font-normal">
@@ -242,7 +242,7 @@ export default function InformacionPage() {
         <div className="space-y-2 text-center lg:text-left">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500/20 text-golden-400 text-xs font-bold uppercase">
             <MapPin className="w-3.5 h-3.5" />
-            <span>Ubicación: Santa Bárbara de Santa Cruz, Guanacaste</span>
+            <span>Sede de Entrenamientos: Santa Bárbara de Santa Cruz, Guanacaste</span>
           </div>
           <h3 className="text-2xl sm:text-3xl font-black text-white uppercase">
             Coordinación Directa de Entrenamientos
@@ -275,7 +275,7 @@ export default function InformacionPage() {
             Formación Deportiva desde <span className="text-golden-500">Menores de U8 hasta Juvenil</span>
           </h2>
           <p className="text-sm sm:text-base text-gray-400 max-w-2xl mx-auto">
-            Programas adaptados a cada etapa del desarrollo infantil y juvenil en Santa Bárbara con <strong>Golden Sport Academy Santa Cruz</strong>.
+            Programas adaptados a cada etapa del desarrollo infantil y juvenil en <strong>Golden Sport Academy Santa Cruz</strong> (Sede Santa Bárbara).
           </p>
         </div>
 
@@ -293,7 +293,7 @@ export default function InformacionPage() {
               Estimulación temprana de la psicomotricidad, familiarización lúdica con el balón, coordinación ojo-mano, equilibrio y primeros botes.
             </p>
             <div className="pt-2 text-xs font-semibold text-golden-400">
-              Sábados & Martes • Santa Bárbara
+              Sábados & Martes • Sede Santa Bárbara, Santa Cruz
             </div>
           </div>
 
@@ -310,7 +310,7 @@ export default function InformacionPage() {
               Fundamentos de bote con ambas manos, pases precisos, mecánicas iniciales de tiro avaladas por <strong>FECOBA</strong> y juego en equipo.
             </p>
             <div className="pt-2 text-xs font-semibold text-golden-400">
-              Martes y Jueves • Santa Bárbara
+              Martes y Jueves • Sede Santa Bárbara, Santa Cruz
             </div>
           </div>
 
@@ -327,7 +327,7 @@ export default function InformacionPage() {
               Perfeccionamiento técnico individual, tiro en suspensión, desmarque sin balón, defensa 1 contra 1 y transición rápida.
             </p>
             <div className="pt-2 text-xs font-semibold text-golden-400">
-              Lunes, Miércoles y Viernes • Santa Bárbara
+              Lunes, Miércoles y Viernes • Sede Santa Bárbara, Santa Cruz
             </div>
           </div>
 
@@ -344,7 +344,7 @@ export default function InformacionPage() {
               Entrenamiento de alta exigencia, acondicionamiento físico, esquemas tácticos de juego y fogueos intercantonales.
             </p>
             <div className="pt-2 text-xs font-semibold text-golden-400">
-              Lunes a Viernes • Santa Bárbara
+              Lunes a Viernes • Sede Santa Bárbara, Santa Cruz
             </div>
           </div>
 

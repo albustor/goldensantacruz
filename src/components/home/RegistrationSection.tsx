@@ -58,13 +58,13 @@ export default function RegistrationSection() {
         <div className="text-center space-y-2 mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-golden-500/20 text-golden-400 text-xs font-black uppercase">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Inscripciones Santa Bárbara</span>
+            <span>Inscripciones • Golden Sport Academy Santa Cruz</span>
           </div>
           <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
             Pre-Inscripción de Atleta
           </h2>
           <p className="text-xs sm:text-sm text-gray-300 max-w-lg mx-auto">
-            Desde <strong>menores de U8</strong> hasta <strong>Juvenil U18</strong>. Ingrese los datos y le contactaremos para la primera clase de prueba en Santa Bárbara.
+            Desde <strong>menores de U8</strong> hasta <strong>Juvenil U18</strong> en <strong>Santa Cruz</strong>. Ingrese los datos y le contactaremos para la primera clase formativa en nuestra sede en Santa Bárbara de Santa Cruz.
           </p>
         </div>
 
@@ -216,7 +216,7 @@ export default function RegistrationSection() {
 
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
               <div className="text-[11px] text-gray-400">
-                🔒 Ubicación: Santa Bárbara de Santa Cruz, Guanacaste.
+                🔒 Sede Oficial: Santa Bárbara de Santa Cruz, Guanacaste.
               </div>
               <button
                 type="submit"
