@@ -89,23 +89,46 @@ const HP_ROJA_WEBRTC_DRON = `${HP_ROJA_HTTPS_TUNNEL_URL}/cam_view/dron`;
 
 export default function LiveStreamPage() {
   const [config, setConfig] = useState<LiveStreamConfig>(INITIAL_LIVE_STREAM_CONFIG);
-  const [selectedCamId, setSelectedCamId] = useState<string>("cam-phone");
+  const [selectedCamId, setSelectedCamId] = useState<string>("cam-poster");
   const [isPipActive, setIsPipActive] = useState<boolean>(false);
   const [isMuted, setIsMuted] = useState<boolean>(true);
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
 
-  // Fotos en vivo desde Cámara Sony α7 III + Nikon -> Router DIGI -> Servidor HP Roja (:2121 FTP / :3060 HTTP)
+  // Fotos en vivo en tiempo real
   const [tetherBaseUrl, setTetherBaseUrl] = useState<string>(HP_ROJA_TETHER_URL);
   const [sonyPhotos, setSonyPhotos] = useState<SonyTetherPhoto[]>([]);
   const [approvedPhotoIds, setApprovedPhotoIds] = useState<Record<string, boolean>>({});
   const [selectedSonyPhoto, setSelectedSonyPhoto] = useState<SonyTetherPhoto | null>(null);
   const [tetherOnline, setTetherOnline] = useState<boolean>(false);
-  const [tetherNodeLabel, setTetherNodeLabel] = useState<string>("HP Roja (192.168.2.12:2121)");
+  const [tetherNodeLabel, setTetherNodeLabel] = useState<string>("Cobertura en Cancha");
   const [simulatingShot, setSimulatingShot] = useState<boolean>(false);
-  const [operatorMode, setOperatorMode] = useState<boolean>(true);
+  const [operatorMode, setOperatorMode] = useState<boolean>(false);
   const [sedeProfileId, setSedeProfileId] = useState<string>("la_paz_tempisque_basket_gimnasio");
   const [calibratingSede, setCalibratingSede] = useState<boolean>(false);
   const [calibrationMsg, setCalibrationMsg] = useState<string>("");
+
+  // Control de Cámaras vs Afiche en Espera (Bloqueadas por defecto para que ninguna cámara aparezca caída)
+  const [camLiveEnabled, setCamLiveEnabled] = useState<Record<string, boolean>>({
+    "cam-gopro": false,
+    "cam-gopro2": false,
+    "cam-dji": false,
+    "cam-phone": false,
+  });
+  const [camPosterWithSound, setCamPosterWithSound] = useState<Record<string, boolean>>({
+    "cam-poster": true,
+    "cam-gopro": true,
+    "cam-gopro2": true,
+    "cam-dji": true,
+    "cam-phone": true,
+  });
+  const [hideAllCameraButtons, setHideAllCameraButtons] = useState<boolean>(false);
+  const [posterCleanImageOnly, setPosterCleanImageOnly] = useState<boolean>(false);
+  const [showPosterControls, setShowPosterControls] = useState<boolean>(false);
+  const [posterStatusText, setPosterStatusText] = useState<string>(
+    "⏳ PRONTO INICIARÁ EL PARTIDO • TRANSMISIÓN EN PROCESO"
+  );
+  const [customPosterBgUrl, setCustomPosterBgUrl] = useState<string>("/Hero_Basketball/1.jpg");
+  const posterBgInputRef = useRef<HTMLInputElement | null>(null);
 
   // Categoría editable en vivo + Música en Bucle
   const [editingCategoryLive, setEditingCategoryLive] = useState<boolean>(false);
@@ -477,6 +500,51 @@ export default function LiveStreamPage() {
     setEditingCategoryLive(false);
   };
 
+  const handleUploadPosterBg = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const blobUrl = URL.createObjectURL(file);
+    setCustomPosterBgUrl(blobUrl);
+  };
+
+  const toggleSingleCamLive = (camKey: string) => {
+    setCamLiveEnabled((prev) => ({
+      ...prev,
+      [camKey]: !prev[camKey],
+    }));
+  };
+
+  const toggleCamPosterSound = (camKey: string) => {
+    setCamPosterWithSound((prev) => {
+      const nextVal = !prev[camKey];
+      const el = bgAudioRef.current;
+      if (selectedCamId === camKey && el) {
+        if (!nextVal && isPlayingBgMusic) {
+          el.pause();
+          setIsPlayingBgMusic(false);
+        } else if (nextVal && !isPlayingBgMusic) {
+          el.volume = 0.55;
+          el.play().then(() => setIsPlayingBgMusic(true)).catch(() => {});
+        }
+      }
+      return {
+        ...prev,
+        [camKey]: nextVal,
+      };
+    });
+  };
+
+  const disableAllCamerasToPoster = () => {
+    setCamLiveEnabled({
+      "cam-gopro": false,
+      "cam-gopro2": false,
+      "cam-dji": false,
+      "cam-phone": false,
+    });
+    setHideAllCameraButtons(true);
+    setSelectedCamId("cam-poster");
+  };
+
   const handleCalibrateSede = async (targetSedeId: string) => {
     if (!tetherBaseUrl) return;
     setCalibratingSede(true);
@@ -720,8 +788,15 @@ export default function LiveStreamPage() {
         </div>
       </div>
 
-      {/* Banner Informativo de Arquitectura Multicámara (Router DIGI -> Servidor HP Roja) */}
+      {/* Banner Informativo Limpio de Arquitectura de Campo Activa (Cero IPs ni nombres internos) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <input
+          ref={posterBgInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleUploadPosterBg}
+          className="hidden"
+        />
         <div className="p-4 rounded-2xl bg-gradient-to-r from-golden-950/70 via-dark-900 to-golden-950/50 border border-golden-500/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-golden-500/20 border border-golden-500/50 flex items-center justify-center text-golden-400 shrink-0">
@@ -733,27 +808,147 @@ export default function LiveStreamPage() {
                   Arquitectura de Campo Activa
                 </span>
                 <span className="text-xs font-bold text-gray-200">
-                  Router DIGI EX50 (192.168.2.1) → HP Roja (192.168.2.12) • OBS 1.6 Mbps → CDN En Vivo
+                  Transmisión en Vivo y Fotografía Instantánea • Curiol Studio
                 </span>
               </div>
               <p className="text-xs text-gray-400 mt-0.5">
-                3 cámaras locales en 5 GHz (GoPro HERO13 Black, DJI Osmo Pocket 2 y Dron DJI Air 3S) → MediaMTX (:1935) + OBS Studio (1.600 kbps) + Sony α7 III en 2.4 GHz (FTP :2121).
+                Cobertura multicámara en alta definición, marcador en tiempo real y galería fotográfica instantánea desde el Gimnasio La Paz Community School Tempisque.
               </p>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-dark-950 text-golden-400 border border-golden-500/30">
-              📡 CDN En Vivo Activo
+            <span className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-dark-950 text-golden-400 border border-golden-500/30">
+              📡 Señal Oficial en Vivo
             </span>
-            <span className={`text-[11px] font-mono px-3 py-1.5 rounded-xl border ${
-              tetherOnline
-                ? "bg-emerald-950/80 text-emerald-400 border-emerald-500/40"
-                : "bg-dark-950 text-gray-400 border-gray-800"
-            }`}>
-              📸 {tetherOnline ? `${tetherNodeLabel} (${sonyPhotos.length} fotos)` : "Esperando Sony FTP :2121"}
-            </span>
+            <button
+              type="button"
+              onClick={() => setShowPosterControls((v) => !v)}
+              className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-dark-800 text-gray-300 border border-gray-700 transition-all"
+              title="Controlar qué cámaras están activas o dejar solo el Afiche + Sonido"
+            >
+              ⚙️ {showPosterControls ? "Ocultar Control de Pantalla" : "Control de Cámaras / Afiche"}
+            </button>
           </div>
         </div>
+
+        {/* Panel de Control de Cámaras y Afiche (Para activar/bloquear cámaras individualmente o dejar solo Afiche + Sonido) */}
+        {showPosterControls && (
+          <div className="mt-3 p-4 rounded-2xl bg-dark-900 border-2 border-golden-500/50 space-y-3 shadow-2xl">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2.5">
+              <div>
+                <h4 className="text-xs font-black uppercase text-golden-400">
+                  🎛️ Control de Pantalla Principal, Cámaras y Afiche con Sonido en Bucle
+                </h4>
+                <p className="text-[11px] text-gray-400">
+                  Si una cámara no está transmitiendo, déjala en <strong>«🛡️ En Afiche»</strong> (con o sin sonido). Si ninguna cámara está activa, pulsa <strong>«🚫 Desactivar Todas las Cámaras»</strong> para dejar únicamente tu imagen y el sonido en bucle.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (hideAllCameraButtons) {
+                      setHideAllCameraButtons(false);
+                    } else {
+                      disableAllCamerasToPoster();
+                    }
+                  }}
+                  className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition-all ${
+                    hideAllCameraButtons
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-dark-950"
+                      : "bg-amber-500 hover:bg-amber-400 text-dark-950"
+                  }`}
+                >
+                  {hideAllCameraButtons
+                    ? "📹 Volver a Mostrar Botones de Cámaras"
+                    : "🚫 Desactivar Todas las Cámaras (Solo Imagen + Sonido)"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => posterBgInputRef.current?.click()}
+                  className="px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-dark-800 border border-golden-500/50 text-golden-300 font-bold text-xs uppercase"
+                >
+                  🖼️ Elegir Imagen del Afiche
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPosterCleanImageOnly((v) => !v)}
+                  className="px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-dark-800 border border-gray-700 text-gray-200 font-bold text-xs uppercase"
+                >
+                  {posterCleanImageOnly ? "📊 Mostrar Pizarra sobre Imagen" : "🖼️ Mostrar Solo Mi Imagen + Sonido"}
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
+              {[
+                { id: "cam-gopro", label: "📹 Cámara 1 (Cancha)" },
+                { id: "cam-gopro2", label: "📹 Cámara 2 (Aro)" },
+                { id: "cam-dji", label: "🔥 Cámara 3 (Lateral)" },
+                { id: "cam-phone", label: "🚁 Cámara 4 (Aérea)" },
+              ].map((c) => {
+                const isOn = !!camLiveEnabled[c.id];
+                const hasSound = camPosterWithSound[c.id] !== false;
+                return (
+                  <div
+                    key={c.id}
+                    className={`p-2.5 rounded-xl border text-xs font-bold flex flex-col gap-2 transition-all ${
+                      isOn
+                        ? "bg-emerald-950/80 border-emerald-500 text-emerald-300"
+                        : "bg-dark-950 border-gray-800 text-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{c.label}</span>
+                      <button
+                        type="button"
+                        onClick={() => toggleSingleCamLive(c.id)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                          isOn ? "bg-emerald-500 text-dark-950" : "bg-amber-500/20 border border-amber-400/50 text-amber-300"
+                        }`}
+                      >
+                        {isOn ? "● Video Activo" : "🛡️ En Afiche"}
+                      </button>
+                    </div>
+                    {!isOn && (
+                      <button
+                        type="button"
+                        onClick={() => toggleCamPosterSound(c.id)}
+                        className={`w-full py-1 px-2 rounded-lg text-[10px] font-black uppercase border flex items-center justify-center gap-1 ${
+                          hasSound
+                            ? "bg-golden-500/20 border-golden-500/50 text-golden-300"
+                            : "bg-dark-900 border-gray-700 text-gray-400"
+                        }`}
+                      >
+                        <span>{hasSound ? "🔊 Afiche CON Sonido" : "🔇 Afiche SIN Sonido"}</span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              <select
+                value={posterStatusText}
+                onChange={(e) => setPosterStatusText(e.target.value)}
+                aria-label="Mensaje de estado del afiche"
+                className="p-2.5 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs font-bold outline-none"
+              >
+                <option value="⏳ PRONTO INICIARÁ EL PARTIDO • TRANSMISIÓN EN PROCESO">
+                  ⏳ Pronto iniciará el partido
+                </option>
+                <option value="🔴 PARTIDO EN DESARROLLO • EN VIVO">
+                  🔴 Partido en desarrollo
+                </option>
+                <option value="🏀 ENTRETIEMPO / PREPARANDO SIGUIENTE CATEGORÍA">
+                  🏀 Preparando siguiente categoría
+                </option>
+                <option value="✨ GRACIAS POR ACOMPAÑARNOS • FINAL DEL ENCUENTRO">
+                  ✨ Final del encuentro
+                </option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* PIZARRA OFICIAL EN VIVO SIMPLIFICADA: 1° La Paz Community School Tempisque (Local) vs. 2° Golden Sport Academy Santa Cruz (Visita) */}
@@ -931,197 +1126,208 @@ export default function LiveStreamPage() {
             ) : (
               /* IF MULTI-CAMERA VIDEO MODE */
               <>
-                {/* Selector Multicámara de 4 Entradas (GoPro HERO 3 + DJI Osmo Pocket 2 + Dron DJI Air 3S + Sony α7 III Fotos en Vivo) */}
+                {/* Selector de Vista: Afiche + Música en Bucle, Cámaras y Galería Fotográfica (Cero nombres internos) */}
                 <div className="p-3 sm:p-4 rounded-2xl bg-dark-900 border border-golden-500/30 shadow-xl space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-black uppercase text-golden-400 tracking-wider flex items-center gap-1.5">
                       <Camera className="w-4 h-4" />
-                      <span>Elige la Cámara o Cascada Fotográfica (Router DIGI → HP Roja):</span>
+                      <span>Elige la Vista del Partido o Galería Fotográfica en Vivo:</span>
                     </span>
                     <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-dark-950 border border-gray-800 text-[10px] text-gray-400">
+                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-dark-950 border border-gray-800 text-[10px] text-gray-300 font-bold">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>HD 1080p • MediaMTX + CDN</span>
+                        <span>Cobertura Oficial Curiol Studio</span>
                       </div>
-                      <a
-                        href={`${tetherBaseUrl}/tableta`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-2.5 py-0.5 rounded-lg bg-golden-500/20 hover:bg-golden-500/30 border border-golden-500/40 text-golden-300 text-[10px] font-bold flex items-center gap-1 transition-all"
-                      >
-                        <span>Visor Tableta HP Roja (:3060)</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5">
-                    {/* Mosaico 2x2: Las 4 Cámaras en Simultáneo */}
+                  <div className={`grid grid-cols-1 sm:grid-cols-2 ${hideAllCameraButtons ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-2.5`}>
+                    {/* Afiche Oficial + Música en Bucle (Activo por defecto mientras no hay cámaras) */}
                     <button
                       type="button"
                       onClick={() => {
-                        setSelectedCamId("cam-quad");
+                        setSelectedCamId("cam-poster");
                         setIsPipActive(false);
                       }}
                       className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        selectedCamId === "cam-quad"
+                        selectedCamId === "cam-poster"
                           ? "bg-gradient-to-r from-amber-400 via-golden-500 to-yellow-500 text-dark-950 border-golden-200 font-black shadow-lg shadow-golden-500/40 scale-[1.01]"
                           : "bg-dark-950 text-golden-300 hover:text-white hover:bg-dark-850 border-golden-500/40"
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
-                        <span className="text-xl">🎛️</span>
+                        <span className="text-xl">🎬</span>
                         <div>
                           <div className="text-xs font-black uppercase tracking-tight">
-                            Mosaico 4 Cámaras (2×2)
+                            Afiche + Sonido
                           </div>
-                          <div className={`text-[10px] ${selectedCamId === "cam-quad" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            4 Señales + Audio 1-Toque
+                          <div className={`text-[10px] ${selectedCamId === "cam-poster" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
+                            ▶ Música en Bucle
                           </div>
                         </div>
                       </div>
-                      {selectedCamId === "cam-quad" ? (
+                      {selectedCamId === "cam-poster" ? (
                         <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          ● 2×2
+                          ● ACTIVO
                         </span>
                       ) : (
-                        <span className="text-[10px] text-golden-400 font-bold uppercase">4× →</span>
+                        <span className="text-[10px] text-golden-400 font-bold uppercase">Ver →</span>
                       )}
                     </button>
 
-                    {/* Cámara 1: Cancha Completa (GoPro #1) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-gopro");
-                        setIsPipActive(false);
-                      }}
-                      className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        selectedCamId === "cam-gopro"
-                          ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
-                          : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">📹</span>
-                        <div>
-                          <div className="text-xs font-black uppercase tracking-tight">
-                            GoPro #1 (HERO13)
+                    {!hideAllCameraButtons && (
+                      <>
+                        {/* Cámara 1: Cancha Completa */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCamId("cam-gopro");
+                            setIsPipActive(false);
+                            if (camPosterWithSound["cam-gopro"] === false && isPlayingBgMusic && bgAudioRef.current) {
+                              bgAudioRef.current.pause();
+                              setIsPlayingBgMusic(false);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                            selectedCamId === "cam-gopro"
+                              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
+                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">📹</span>
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-tight">
+                                Cámara 1 (Cancha)
+                              </div>
+                              <div className={`text-[10px] ${selectedCamId === "cam-gopro" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
+                                {camLiveEnabled["cam-gopro"] ? "Vista Panorámica" : "⏳ Pronto iniciará"}
+                              </div>
+                            </div>
                           </div>
-                          <div className={`text-[10px] ${selectedCamId === "cam-gopro" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            Cancha Completa • /live/gopro
-                          </div>
-                        </div>
-                      </div>
-                      {selectedCamId === "cam-gopro" ? (
-                        <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          ● ACTIVA
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
-                      )}
-                    </button>
+                          {selectedCamId === "cam-gopro" ? (
+                            <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              ● VISTA
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
+                          )}
+                        </button>
 
-                    {/* Cámara 2: GoPro #2 (Aro / Alterna) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-gopro2");
-                        setIsPipActive(false);
-                      }}
-                      className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        selectedCamId === "cam-gopro2"
-                          ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
-                          : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">📹</span>
-                        <div>
-                          <div className="text-xs font-black uppercase tracking-tight">
-                            GoPro #2 (Aro)
+                        {/* Cámara 2: Bajo el Aro */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCamId("cam-gopro2");
+                            setIsPipActive(false);
+                            if (camPosterWithSound["cam-gopro2"] === false && isPlayingBgMusic && bgAudioRef.current) {
+                              bgAudioRef.current.pause();
+                              setIsPlayingBgMusic(false);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                            selectedCamId === "cam-gopro2"
+                              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
+                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">📹</span>
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-tight">
+                                Cámara 2 (Aro)
+                              </div>
+                              <div className={`text-[10px] ${selectedCamId === "cam-gopro2" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
+                                {camLiveEnabled["cam-gopro2"] ? "Ángulo Alterno" : "⏳ Pronto iniciará"}
+                              </div>
+                            </div>
                           </div>
-                          <div className={`text-[10px] ${selectedCamId === "cam-gopro2" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            Ángulo Alterno • /live/gopro2
-                          </div>
-                        </div>
-                      </div>
-                      {selectedCamId === "cam-gopro2" ? (
-                        <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          ● ACTIVA
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
-                      )}
-                    </button>
+                          {selectedCamId === "cam-gopro2" ? (
+                            <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              ● VISTA
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
+                          )}
+                        </button>
 
-                    {/* Cámara 2: Bajo el Aro (DJI Osmo Pocket 2) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-dji");
-                        setIsPipActive(false);
-                      }}
-                      className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-dji"
-                          ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
-                          : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">🔥</span>
-                        <div>
-                          <div className="text-xs font-black uppercase tracking-tight">
-                            DJI Osmo Pocket 2
+                        {/* Cámara 3: Seguimiento Lateral */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCamId("cam-dji");
+                            setIsPipActive(false);
+                            if (camPosterWithSound["cam-dji"] === false && isPlayingBgMusic && bgAudioRef.current) {
+                              bgAudioRef.current.pause();
+                              setIsPlayingBgMusic(false);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                            selectedCamId === "cam-dji"
+                              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
+                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">🔥</span>
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-tight">
+                                Cámara 3 (Lateral)
+                              </div>
+                              <div className={`text-[10px] ${selectedCamId === "cam-dji" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
+                                {camLiveEnabled["cam-dji"] ? "Bajo el Aro / Lateral" : "⏳ Pronto iniciará"}
+                              </div>
+                            </div>
                           </div>
-                          <div className={`text-[10px] ${selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-dji" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            Bajo el Aro / Lateral
-                          </div>
-                        </div>
-                      </div>
-                      {selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-dji" ? (
-                        <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          ● ACTIVA
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
-                      )}
-                    </button>
+                          {selectedCamId === "cam-dji" ? (
+                            <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              ● VISTA
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
+                          )}
+                        </button>
 
-                    {/* Cámara 3: Vista Aérea & Cenital (Dron DJI Air 3S) */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-phone");
-                        setIsPipActive(false);
-                      }}
-                      className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
-                        selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-phone"
-                          ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
-                          : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <span className="text-xl">🚁</span>
-                        <div>
-                          <div className="text-xs font-black uppercase tracking-tight">
-                            Dron DJI Air 3S
+                        {/* Cámara 4: Vista Aérea & Cenital */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCamId("cam-phone");
+                            setIsPipActive(false);
+                            if (camPosterWithSound["cam-phone"] === false && isPlayingBgMusic && bgAudioRef.current) {
+                              bgAudioRef.current.pause();
+                              setIsPlayingBgMusic(false);
+                            }
+                          }}
+                          className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
+                            selectedCamId === "cam-phone"
+                              ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
+                              : "bg-dark-950 text-gray-300 hover:text-white hover:bg-dark-850 border-gray-800"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="text-xl">🚁</span>
+                            <div>
+                              <div className="text-xs font-black uppercase tracking-tight">
+                                Cámara 4 (Aérea)
+                              </div>
+                              <div className={`text-[10px] ${selectedCamId === "cam-phone" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
+                                {camLiveEnabled["cam-phone"] ? "Vista Aérea / Cenital" : "⏳ Pronto iniciará"}
+                              </div>
+                            </div>
                           </div>
-                          <div className={`text-[10px] ${selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-phone" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            Vista Aérea / Cenital
-                          </div>
-                        </div>
-                      </div>
-                      {selectedCamId !== "cam-sony-photos" && currentCam?.id === "cam-phone" ? (
-                        <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          ● ACTIVA
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
-                      )}
-                    </button>
+                          {selectedCamId === "cam-phone" ? (
+                            <span className="px-2 py-0.5 rounded-lg bg-dark-950 text-golden-400 text-[9px] font-black uppercase tracking-wider animate-pulse">
+                              ● VISTA
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-gray-500 font-bold uppercase">Ver →</span>
+                          )}
+                        </button>
+                      </>
+                    )}
 
-                    {/* Cámara 4: Cascada Fotográfica Sony α7 III + Nikon -> Router DIGI -> HP Roja (:2121 / :3060) */}
+                    {/* Galería Fotográfica en Tiempo Real */}
                     <button
                       type="button"
                       onClick={() => {
@@ -1138,10 +1344,10 @@ export default function LiveStreamPage() {
                         <span className="text-xl">📸</span>
                         <div>
                           <div className="text-xs font-black uppercase tracking-tight">
-                            Sony α7 III + Nikon D7500
+                            Fotografías en Vivo
                           </div>
                           <div className={`text-[10px] ${selectedCamId === "cam-sony-photos" ? "text-dark-900 font-bold" : "text-emerald-400"}`}>
-                            Fotos IA en Vivo ({sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length} pub / {sonyPhotos.length} total)
+                            Galería Instantánea ({sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length})
                           </div>
                         </div>
                       </div>
@@ -1156,7 +1362,7 @@ export default function LiveStreamPage() {
                   </div>
                 </div>
 
-                {/* Si está activa la Cascada Fotográfica Sony α7 III + Nikon -> HP Roja (:3060) */}
+                {/* Si está activa la Galería Fotográfica en Tiempo Real */}
                 {selectedCamId === "cam-sony-photos" ? (
                   <div className="rounded-3xl bg-dark-900 border-2 border-emerald-500/40 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4">
                     <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-800 pb-3">
@@ -1164,71 +1370,14 @@ export default function LiveStreamPage() {
                         <div className="flex items-center gap-2">
                           <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
                           <h3 className="text-sm sm:text-base font-black uppercase text-white tracking-wide">
-                            Fotografía en Vivo IA • Sony α7 III + Nikon D7500 → {tetherNodeLabel}
+                            Galería Fotográfica en Tiempo Real • Curiol Studio
                           </h3>
                         </div>
                         <p className="text-xs text-gray-400 mt-0.5">
-                          Cada disparo `.JPG` pasa por el <strong>Selector + Editor IA (8-bit)</strong> en la HP Roja con el perfil <strong>«La Paz Tempisque Basket - Gimnasio»</strong> antes de publicarse.
+                          Las mejores fotografías capturadas en cancha durante el partido se publican aquí en tiempo real.
                         </p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setOperatorMode((v) => !v)}
-                          className={`px-3 py-2 rounded-xl font-black text-xs uppercase tracking-wider border transition-all ${
-                            operatorMode
-                              ? "bg-amber-500/20 text-amber-300 border-amber-400/50"
-                              : "bg-emerald-500/20 text-emerald-300 border-emerald-400/50"
-                          }`}
-                        >
-                          {operatorMode ? "🎛️ Vista Mesa de Control (David / Todas)" : "👁️ Vista Público (Solo Publicadas)"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleCalibrateSede(sedeProfileId)}
-                          disabled={calibratingSede}
-                          className="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-dark-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg"
-                          title="Analiza las primeras 3 a 5 fotos tomadas al llegar a La Paz Tempisque Basket - Gimnasio y ajusta automáticamente color, luz y enfoque"
-                        >
-                          {calibratingSede ? "Calibrando..." : "🎯 Calibrar Muestras: La Paz Tempisque Basket - Gimnasio"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleSimulateSonyShot}
-                          disabled={simulatingShot}
-                          className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-dark-950 font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-950/50"
-                        >
-                          {simulatingShot ? "Enviando..." : "⚡ Simular Disparo"}
-                        </button>
-                        <a
-                          href={`${tetherBaseUrl}/tableta`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-2 rounded-xl bg-dark-950 hover:bg-dark-800 border border-gray-700 text-gray-200 font-bold text-xs flex items-center gap-1.5"
-                          title="Abrir Consola Táctil Unificada de David (:3060/tableta)"
-                        >
-                          <span>📱 Tableta David :3060</span>
-                          <ExternalLink className="w-3.5 h-3.5 text-golden-400" />
-                        </a>
-                        <a
-                          href={`${tetherBaseUrl.replace(':3060', ':3050')}/?project=00_Ingesta_Tether_Live`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="px-3 py-2 rounded-xl bg-cyan-950/90 hover:bg-cyan-900 border border-cyan-500/50 text-cyan-200 font-bold text-xs flex items-center gap-1.5"
-                          title="Abrir Editor Fotográfico Completo (:3050) para recortar, enderezar o retocar fotos"
-                        >
-                          <span>🎨 Editor :3050</span>
-                          <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
-                        </a>
-                      </div>
                     </div>
-
-                    {calibrationMsg && (
-                      <div className="px-3.5 py-2 rounded-xl bg-cyan-950/80 border border-cyan-500/40 text-cyan-200 text-xs font-semibold flex items-center justify-between">
-                        <span>✨ {calibrationMsg}</span>
-                        <button type="button" onClick={() => setCalibrationMsg("")} className="text-cyan-400 hover:text-white font-bold">✕</button>
-                      </div>
-                    )}
 
                     {selectedSonyPhoto ? (
                       <div className="space-y-4">
@@ -1240,219 +1389,207 @@ export default function LiveStreamPage() {
                             alt={selectedSonyPhoto.filename}
                             className="w-full h-full object-contain"
                           />
-                          <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2 bg-dark-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-gray-800 text-xs">
-                            <span className="font-mono font-bold text-emerald-400">{selectedSonyPhoto.webp_filename || selectedSonyPhoto.filename}</span>
-                            <span className="text-gray-300 font-semibold">• {selectedSonyPhoto.exif?.camera || "Sony α7 III / Nikon D7500"}</span>
-                            <span className="text-gray-400">• {selectedSonyPhoto.timestamp}</span>
-                            {selectedSonyPhoto.selector_clasificacion && (
-                              <span className={`px-2 py-0.5 rounded font-black text-[10px] uppercase border ${
-                                selectedSonyPhoto.selector_clasificacion === "5_ESTRELLAS_CAMARA"
-                                  ? "bg-amber-500/20 text-amber-300 border-amber-400"
-                                  : selectedSonyPhoto.selector_clasificacion === "ELITE_DIRECTA"
-                                  ? "bg-emerald-500/20 text-emerald-300 border-emerald-400"
-                                  : selectedSonyPhoto.selector_clasificacion === "DESCARTE"
-                                  ? "bg-red-500/20 text-red-300 border-red-400"
-                                  : "bg-blue-500/20 text-blue-300 border-blue-400"
-                              }`} title={selectedSonyPhoto.selector_diagnostico || ""}>
-                                {selectedSonyPhoto.selector_clasificacion === "5_ESTRELLAS_CAMARA"
-                                  ? "⭐ 5★ Cámara"
-                                  : selectedSonyPhoto.selector_clasificacion === "ELITE_DIRECTA"
-                                  ? "🎯 Élite Nítida"
-                                  : selectedSonyPhoto.selector_clasificacion === "DESCARTE"
-                                  ? "🗑️ Descarte IA"
-                                  : "🔧 Rescate Óptico"}
-                              </span>
-                            )}
-                            {selectedSonyPhoto.ai_edited !== false && (
-                              <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold text-[10px]">
-                                ✨ WebP Editada IA ({selectedSonyPhoto.webp_size ? `${Math.round(selectedSonyPhoto.webp_size / 1024)} KB · ` : ""}La Paz Tempisque Basket - Gimnasio)
-                              </span>
-                            )}
-                            {selectedSonyPhoto.exif?.lens && (
-                              <span className="text-golden-400 font-mono">
-                                • {selectedSonyPhoto.exif.focal || ""} {selectedSonyPhoto.exif.aperture || ""} {selectedSonyPhoto.exif.shutter || ""} {selectedSonyPhoto.exif.iso || ""}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Botones de 1 Toque para David (Publicar en Vivo / Descargar JPG) */}
-                          <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                            <button
-                              type="button"
-                              onClick={() => toggleApprovePhoto(selectedSonyPhoto.base_id || selectedSonyPhoto.id || selectedSonyPhoto.filename)}
-                              className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all ${
-                                (selectedSonyPhoto.published_live || approvedPhotoIds[selectedSonyPhoto.base_id || selectedSonyPhoto.id || selectedSonyPhoto.filename])
-                                  ? "bg-emerald-500 text-dark-950 border border-emerald-300"
-                                  : "bg-dark-950/90 hover:bg-dark-900 text-white border border-golden-500/50"
-                              }`}
-                            >
-                              {(selectedSonyPhoto.published_live || approvedPhotoIds[selectedSonyPhoto.base_id || selectedSonyPhoto.id || selectedSonyPhoto.filename])
-                                ? "✓ Publicada en Vivo (David)"
-                                : "☆ Publicar Foto en Vivo (1 Toque)"}
-                            </button>
-                            <a
-                              href={`${tetherBaseUrl}${selectedSonyPhoto.full_url || selectedSonyPhoto.url}`}
-                              download={selectedSonyPhoto.filename}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-3.5 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider shadow-lg"
-                            >
-                              ⬇ JPG Editado IA
-                            </a>
-                          </div>
                         </div>
 
                         {/* Tira de Miniaturas en Tiempo Real */}
                         <div className="space-y-1.5">
                           <div className="flex items-center justify-between text-xs text-gray-400">
-                            <span>
-                              {operatorMode
-                                ? `Mesa de Control David — Todas las fotos recibidas en HP Roja (${sonyPhotos.length}):`
-                                : `Galería Pública del Partido — Fotos seleccionadas y editadas por IA (${sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length}):`}
-                            </span>
+                            <span>Fotografías del partido en directo:</span>
                             <span className="text-emerald-400 font-bold">
-                              Publicadas al Público: {sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length}
+                              Publicadas: {sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length}
                             </span>
                           </div>
                           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-1">
-                            {(operatorMode
-                              ? sonyPhotos
-                              : sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename])
-                            ).slice(0, 24).map((p) => {
-                              const pKey = p.base_id || p.id || p.filename;
-                              const activeKey = selectedSonyPhoto?.base_id || selectedSonyPhoto?.id || selectedSonyPhoto?.filename;
-                              return (
-                              <button
-                                key={pKey}
-                                type="button"
-                                onClick={() => setSelectedSonyPhoto(p)}
-                                className={`relative aspect-[3/2] rounded-xl overflow-hidden border-2 transition-all ${
-                                  activeKey === pKey
-                                    ? "border-emerald-400 scale-[1.02] shadow-lg"
-                                    : approvedPhotoIds[pKey]
-                                    ? "border-golden-400"
-                                    : "border-gray-800 opacity-80 hover:opacity-100"
-                                }`}
-                              >
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={(p as any).webp_data_url || `${tetherBaseUrl}${p.thumb_url || p.url}`}
-                                  alt={p.filename}
-                                  className="w-full h-full object-cover"
-                                  loading="lazy"
-                                />
-                                {approvedPhotoIds[pKey] && (
-                                  <span className="absolute top-1 right-1 px-1.5 py-0.5 rounded bg-emerald-500 text-dark-950 font-black text-[9px]">
-                                    ✓
-                                  </span>
-                                )}
-                                <span className="absolute bottom-0 inset-x-0 bg-dark-950/80 text-[9px] font-mono text-gray-200 truncate px-1 py-0.5">
-                                  {p.filename}
-                                </span>
-                              </button>
-                              );
-                            })}
+                            {sonyPhotos
+                              .filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename])
+                              .slice(0, 24)
+                              .map((p) => {
+                                const pKey = p.base_id || p.id || p.filename;
+                                const activeKey = selectedSonyPhoto?.base_id || selectedSonyPhoto?.id || selectedSonyPhoto?.filename;
+                                return (
+                                  <button
+                                    key={pKey}
+                                    type="button"
+                                    onClick={() => setSelectedSonyPhoto(p)}
+                                    className={`relative aspect-[3/2] rounded-xl overflow-hidden border-2 transition-all ${
+                                      activeKey === pKey
+                                        ? "border-emerald-400 scale-[1.02] shadow-lg"
+                                        : "border-gray-800 opacity-80 hover:opacity-100"
+                                    }`}
+                                  >
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={(p as any).webp_data_url || `${tetherBaseUrl}${p.thumb_url || p.url}`}
+                                      alt={p.filename}
+                                      className="w-full h-full object-cover"
+                                      loading="lazy"
+                                    />
+                                  </button>
+                                );
+                              })}
                           </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="py-12 text-center space-y-3">
+                      <div className="py-14 text-center space-y-3">
                         <div className="text-4xl">📸</div>
                         <h4 className="text-base font-black text-white uppercase">
-                          Listo para recibir disparos de la Sony α7 III en la HP Roja
+                          Pronto Iniciará la Galería Fotográfica en Vivo
                         </h4>
                         <p className="text-xs text-gray-400 max-w-md mx-auto">
-                          Dispara con la cámara Sony conectada al Router DIGI (FTP 192.168.0.12 / 192.168.2.50 puerto 2121) o pulsa el botón <strong>«⚡ Simular Disparo Sony»</strong> arriba para probar la cascada en vivo.
+                          En cuanto comience el encuentro en el Gimnasio La Paz Community School Tempisque, aquí aparecerán de forma instantánea las fotografías oficiales capturadas por Curiol Studio.
                         </p>
                       </div>
                     )}
                   </div>
                 ) : (
-                /* Video Player Container */
-                <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/30 shadow-2xl group">
+                /* Video Player Container (Si la cámara seleccionada no está activa, muestra siempre el Afiche Oficial + Música en Bucle, CERO pantallas caídas) */
+                <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/40 shadow-2xl group">
                   
-                  {/* Main Feed */}
-                  {config.isLive ? (
+                  {selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId] ? (
                     <div className="w-full h-full relative bg-dark-950 flex items-center justify-center">
-                      {selectedCamId === "cam-quad" ? (
-                        <div className="w-full h-full grid grid-cols-1 sm:grid-cols-2 grid-rows-2 gap-1.5 bg-dark-950 p-1.5 absolute inset-0">
-                          <iframe
-                            id="quad-cam-gopro"
-                            src={`${tetherBaseUrl}/cam_view/gopro`}
-                            className="w-full h-full border border-golden-500/40 rounded-xl"
-                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                            allowFullScreen
-                          />
-                          <iframe
-                            id="quad-cam-gopro2"
-                            src={`${tetherBaseUrl}/cam_view/gopro2`}
-                            className="w-full h-full border border-golden-500/40 rounded-xl"
-                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                            allowFullScreen
-                          />
-                          <iframe
-                            id="quad-cam-osmo"
-                            src={`${tetherBaseUrl}/cam_view/osmo`}
-                            className="w-full h-full border border-amber-500/40 rounded-xl"
-                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                            allowFullScreen
-                          />
-                          <iframe
-                            id="quad-cam-dron"
-                            src={`${tetherBaseUrl}/cam_view/dron`}
-                            className="w-full h-full border border-cyan-500/40 rounded-xl"
-                            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                            allowFullScreen
-                          />
-                        </div>
-                      ) : currentCam ? (
-                        <iframe
-                          src={`${tetherBaseUrl}/cam_view/${selectedCamId === "cam-gopro2" ? "gopro2" : selectedCamId === "cam-dji" ? "osmo" : selectedCamId === "cam-phone" ? "dron" : "gopro"}`}
-                          className="w-full h-full border-0 absolute inset-0"
-                          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <div className="w-full h-full relative bg-gradient-to-br from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-6 text-center space-y-4">
-                          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#eab308_1px,transparent_1px)] [background-size:16px_16px]" />
-                          
-                          <div className="relative z-10 space-y-3 max-w-md">
-                            <div className="w-16 h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-2 mx-auto flex items-center justify-center shadow-lg shadow-golden-500/30 animate-bounce">
-                              <Image src="/logo.png" alt="Golden" width={50} height={50} className="object-contain" />
+                      <iframe
+                        src={`${tetherBaseUrl}/cam_view/${selectedCamId === "cam-gopro2" ? "gopro2" : selectedCamId === "cam-dji" ? "osmo" : selectedCamId === "cam-phone" ? "dron" : "gopro"}`}
+                        className="w-full h-full border-0 absolute inset-0"
+                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    /* AFICHE OFICIAL EN VIVO + FLECHA DE SONIDO EN BUCLE EN PANTALLA PRINCIPAL */
+                    <div className="w-full h-full relative bg-dark-950 flex flex-col items-center justify-between p-4 sm:p-8 text-center overflow-hidden">
+                      {/* Imagen de Fondo del Afiche Personalizable */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={customPosterBgUrl}
+                        alt="Fondo Afiche Oficial"
+                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
+                          posterCleanImageOnly ? "opacity-95 scale-100" : "opacity-35 scale-105"
+                        }`}
+                      />
+                      {!posterCleanImageOnly && (
+                        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/80 to-dark-950/75" />
+                      )}
+
+                      {/* Parte Superior del Afiche: Mensaje "Pronto iniciará el partido" + Categoría */}
+                      <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 pt-1">
+                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-950/90 border border-amber-400/70 text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                          <span>
+                            {selectedCamId !== "cam-poster"
+                              ? "⏳ PRONTO INICIARÁ EL PARTIDO • SEÑAL DE CÁMARA EN PROCESO"
+                              : posterStatusText}
+                          </span>
+                        </span>
+
+                        <span className="px-3.5 py-1.5 rounded-full bg-golden-500 text-dark-950 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
+                          🏀 {config.category || "Niños Pequeños (Formativo)"}
+                        </span>
+                      </div>
+
+                      {/* Parte Central del Afiche: 1° La Paz Community School Tempisque vs 2° Golden Sport Academy Santa Cruz (Ocultable si elige "Solo Mi Imagen + Sonido") */}
+                      {!posterCleanImageOnly ? (
+                        <div className="relative z-10 w-full max-w-4xl my-auto py-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-7 items-center gap-3 sm:gap-5 bg-dark-950/85 backdrop-blur-md border-2 border-golden-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl">
+                            {/* 1° Local: La Paz Community School Tempisque */}
+                            <div className="sm:col-span-3 flex items-center justify-between sm:justify-center gap-3">
+                              <div className="w-24 h-14 sm:w-28 sm:h-16 rounded-2xl bg-[#FCFBF9] border-2 border-emerald-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
+                                <Image
+                                  src="/logo-la-paz-tempisque.png"
+                                  alt="La Paz Community School Tempisque"
+                                  width={110}
+                                  height={48}
+                                  className="object-contain max-h-12 w-auto"
+                                />
+                              </div>
+                              <div className="text-left">
+                                <span className="text-[10px] font-black uppercase text-emerald-400 block">
+                                  🏠 Equipo Local
+                                </span>
+                                <span className="text-xs sm:text-sm font-black text-white leading-tight block">
+                                  {config.scoreboard?.homeTeam || "La Paz Community School Tempisque"}
+                                </span>
+                                <span className="text-2xl sm:text-4xl font-black font-mono text-emerald-400 leading-none mt-1 block">
+                                  {config.scoreboard?.homeScore ?? 0}
+                                </span>
+                              </div>
                             </div>
-                            <h3 className="text-lg font-black text-white uppercase tracking-wide">
-                              Señal en Directo: La Paz Community School Tempisque vs. Golden Sport Academy
-                            </h3>
-                            <p className="text-xs text-gray-300">
-                              Transmitiendo desde el Gimnasio La Paz Community School Tempisque con tecnología Bunny Stream Live CDN.
-                            </p>
-                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/50 text-emerald-400 text-xs font-bold">
-                              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-                              <span>Latencia Ultra Baja • HLS Activo</span>
+
+                            {/* VS Central */}
+                            <div className="sm:col-span-1 flex flex-col items-center justify-center">
+                              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-golden-400 to-amber-600 text-dark-950 font-black text-sm flex items-center justify-center shadow-lg border border-golden-200">
+                                VS
+                              </div>
+                            </div>
+
+                            {/* 2° Visita: Golden Sport Academy Santa Cruz */}
+                            <div className="sm:col-span-3 flex flex-row-reverse sm:flex-row items-center justify-between sm:justify-center gap-3">
+                              <div className="text-right">
+                                <span className="text-[10px] font-black uppercase text-golden-400 block">
+                                  🚌 Equipo Visita
+                                </span>
+                                <span className="text-xs sm:text-sm font-black text-golden-400 leading-tight block">
+                                  {config.scoreboard?.awayTeam || "Golden Sport Academy Santa Cruz"}
+                                </span>
+                                <span className="text-2xl sm:text-4xl font-black font-mono text-golden-400 leading-none mt-1 block">
+                                  {config.scoreboard?.awayScore ?? 0}
+                                </span>
+                              </div>
+                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
+                                <Image
+                                  src="/logo.png"
+                                  alt="Golden Sport Academy Santa Cruz"
+                                  width={54}
+                                  height={54}
+                                  className="object-contain max-h-12 w-auto"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
+                      ) : (
+                        <div className="my-auto" />
                       )}
-                    </div>
-                  ) : (
-                    /* Offline / Standby Screen */
-                    <div className="w-full h-full bg-gradient-to-b from-dark-900 via-dark-950 to-dark-900 flex flex-col items-center justify-center p-8 text-center space-y-4">
-                      <div className="w-20 h-20 rounded-3xl bg-dark-900 border-2 border-golden-500/50 p-3 flex items-center justify-center shadow-2xl">
-                        <Image src="/logo.png" alt="Golden" width={64} height={64} className="object-contain" />
-                      </div>
-                      <div className="space-y-1 max-w-lg">
-                        <h3 className="text-xl font-black text-white uppercase">Próxima Transmisión en Vivo</h3>
-                        <p className="text-xs text-gray-400 leading-relaxed">
-                          La señal se activará automáticamente cuando comience el encuentro. ¡Acompaña a nuestros atletas desde cualquier lugar con cobertura multi-cámara HD!
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 pt-2">
-                        <Link
-                          href="/calendario"
-                          className="px-4 py-2 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase tracking-wider transition-colors"
-                        >
-                          Ver Calendario de Partidos
-                        </Link>
+
+                      {/* Parte Inferior del Afiche: FLECHA DE SONIDO EN BUCLE (▶ / ⏸) + Opción Con/Sin Sonido */}
+                      <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 pb-1">
+                        {camPosterWithSound[selectedCamId] !== false ? (
+                          <button
+                            type="button"
+                            onClick={toggleBgMusic}
+                            className={`px-6 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-3 border-2 shadow-2xl transition-all hover:scale-105 ${
+                              isPlayingBgMusic
+                                ? "bg-emerald-500 text-dark-950 border-emerald-200 shadow-emerald-500/40"
+                                : "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-200 shadow-golden-500/40"
+                            }`}
+                          >
+                            <span className="w-8 h-8 rounded-xl bg-dark-950 text-golden-400 flex items-center justify-center text-base font-black shadow-md">
+                              {isPlayingBgMusic ? "⏸" : "▶"}
+                            </span>
+                            <div className="text-left">
+                              <span className="block leading-tight">
+                                {isPlayingBgMusic
+                                  ? "🔊 SONIDO EN BUCLE ACTIVO (Toca para Pausar)"
+                                  : "▶ REPRODUCIR SONIDO EN BUCLE DEL PARTIDO"}
+                              </span>
+                              <span className="text-[10px] font-bold opacity-85 block">
+                                🔁 {customBgMusicName || "Canción Oficial La Paz vs. Golden (En Bucle)"}
+                              </span>
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="px-4 py-2 rounded-2xl bg-dark-950/90 border border-gray-700 text-gray-300 text-xs font-bold flex items-center gap-2">
+                            <VolumeX className="w-4 h-4 text-gray-400" />
+                            <span>🔇 Afiche en Modo Silencioso</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleCamPosterSound(selectedCamId)}
+                              className="ml-2 px-2.5 py-1 rounded-lg bg-golden-500 text-dark-950 font-black text-[10px] uppercase"
+                            >
+                              Activar Sonido ▶
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1470,8 +1607,8 @@ export default function LiveStreamPage() {
                     </div>
                   )}
 
-                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO (Simplificado: 1° La Paz Community School Tempisque vs 2° Golden Sport Academy Santa Cruz, sin cuartos) */}
-                  {(config.scoreboardVisible ?? true) && (
+                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO (Solo cuando hay cámara de video activa o modo imagen limpia, para no encimar el Afiche) */}
+                  {(config.scoreboardVisible ?? true) && ((selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId]) || posterCleanImageOnly) && (
                     <div className="absolute top-4 left-4 z-20 pointer-events-none">
                       <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex items-center gap-2.5 sm:gap-3 text-white">
                         
