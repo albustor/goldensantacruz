@@ -489,16 +489,16 @@ export default function AdminLiveStreamTab() {
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-gray-400 uppercase">Equipo Rival</label>
+                <label className="text-[11px] font-bold text-gray-400 uppercase">Equipo Local (1°)</label>
                 <input
                   type="text"
-                  value={config.opponentName}
+                  value={config.scoreboard.homeTeam || "La Paz Community School Tempisque"}
                   onChange={(e) => {
                     handleUpdateMatchInfo("opponentName", e.target.value);
-                    Store.updateScoreboard({ awayTeam: e.target.value });
+                    Store.updateScoreboard({ homeTeam: e.target.value });
                   }}
                   className="w-full px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs font-medium focus:border-golden-500 outline-none"
-                  placeholder="Ej: Parajeles / San Blas"
+                  placeholder="La Paz Community School Tempisque"
                 />
               </div>
 
@@ -509,66 +509,63 @@ export default function AdminLiveStreamTab() {
                   value={config.location}
                   onChange={(e) => handleUpdateMatchInfo("location", e.target.value)}
                   className="w-full px-3 py-2 rounded-xl bg-dark-950 border border-gray-700 text-white text-xs font-medium focus:border-golden-500 outline-none"
-                  placeholder="Ej: Gimnasio Santa Bárbara"
+                  placeholder="Gimnasio La Paz Community School Tempisque"
                 />
               </div>
             </div>
           </div>
 
-          {/* Interactive Mobile-Friendly Scoreboard Controller */}
+          {/* Interactive Mobile-Friendly Scoreboard Controller (Simplificado para Niños Pequeños: 1° La Paz Community School Tempisque vs 2° Golden Sport Academy Santa Cruz) */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             
-            {/* LOCAL: Golden Sport Academy Santa Cruz */}
-            <div className="p-6 rounded-3xl bg-gradient-to-b from-dark-900 to-dark-950 border-2 border-golden-500/50 space-y-5 shadow-2xl relative">
+            {/* 1° EQUIPO LOCAL: La Paz Community School Tempisque */}
+            <div className="p-6 rounded-3xl bg-gradient-to-b from-dark-900 to-dark-950 border-2 border-emerald-500/50 space-y-5 shadow-2xl relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-dark-800 border border-golden-500/40 p-1 flex items-center justify-center">
-                    <Image src="/logo.png" alt="Golden" width={32} height={32} className="object-contain" />
+                  <div className="w-24 h-12 rounded-xl bg-[#FCFBF9] border border-emerald-500/50 p-1.5 flex items-center justify-center">
+                    <Image src="/logo-la-paz-tempisque.png" alt="La Paz Community School Tempisque" width={92} height={36} className="object-contain max-h-9 w-auto" />
                   </div>
                   <div>
-                    <span className="text-xs font-black uppercase text-golden-400 tracking-wider block">EQUIPO LOCAL</span>
-                    <span className="text-base font-black text-white uppercase block">Golden Sport Academy</span>
+                    <span className="text-xs font-black uppercase text-emerald-400 tracking-wider block">1° EQUIPO LOCAL (CASA)</span>
+                    <span className="text-base font-black text-white uppercase block">
+                      {config.scoreboard.homeTeam || "La Paz Community School Tempisque"}
+                    </span>
                   </div>
                 </div>
-                {config.scoreboard.possession === "home" && (
-                  <span className="px-2.5 py-1 rounded-full bg-golden-500 text-dark-950 font-black text-[10px] uppercase tracking-wider animate-pulse">
-                    🏀 Posesión
-                  </span>
-                )}
               </div>
 
               {/* Big Score Display */}
-              <div className="text-center py-4 bg-dark-950 rounded-2xl border border-golden-500/30">
-                <span className="text-7xl font-black text-golden-400 tracking-tighter drop-shadow-[0_4px_16px_rgba(234,179,8,0.4)]">
+              <div className="text-center py-4 bg-dark-950 rounded-2xl border border-emerald-500/30">
+                <span className="text-7xl font-black text-emerald-400 font-mono tracking-tighter">
                   {config.scoreboard.homeScore || 0}
                 </span>
-                <span className="text-xs text-gray-400 uppercase font-bold block mt-1">Puntos Oficiales</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block mt-1">Puntos Local (La Paz)</span>
               </div>
 
               {/* Point Buttons */}
               <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => handleScoreChange("home", 1)}
-                  className="py-3.5 rounded-xl bg-golden-500/20 hover:bg-golden-500/30 border border-golden-500/40 text-golden-400 font-black text-base transition-transform active:scale-95 flex flex-col items-center"
+                  className="py-3.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 font-black text-base transition-transform active:scale-95 flex flex-col items-center"
                 >
                   <span>+1</span>
-                  <span className="text-[9px] uppercase font-bold text-gray-300">Tiro Libre</span>
+                  <span className="text-[9px] uppercase font-bold text-gray-300">Punto</span>
                 </button>
 
                 <button
                   onClick={() => handleScoreChange("home", 2)}
-                  className="py-3.5 rounded-xl bg-golden-500/30 hover:bg-golden-500/40 border border-golden-500/60 text-golden-300 font-black text-lg transition-transform active:scale-95 flex flex-col items-center"
+                  className="py-3.5 rounded-xl bg-emerald-500/30 hover:bg-emerald-500/40 border border-emerald-500/60 text-emerald-200 font-black text-lg transition-transform active:scale-95 flex flex-col items-center"
                 >
                   <span>+2</span>
-                  <span className="text-[9px] uppercase font-bold text-gray-300">Doble</span>
+                  <span className="text-[9px] uppercase font-bold text-gray-300">Canasta</span>
                 </button>
 
                 <button
                   onClick={() => handleScoreChange("home", 3)}
-                  className="py-3.5 rounded-xl bg-gradient-to-r from-golden-500 to-golden-600 hover:from-golden-400 hover:to-golden-500 text-dark-950 font-black text-xl transition-transform active:scale-95 flex flex-col items-center shadow-lg shadow-golden-500/20"
+                  className="py-3.5 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-500 hover:from-emerald-300 hover:to-teal-400 text-dark-950 font-black text-xl transition-transform active:scale-95 flex flex-col items-center shadow-lg shadow-emerald-500/20"
                 >
                   <span>+3</span>
-                  <span className="text-[9px] uppercase font-bold text-dark-900">Triple 🔥</span>
+                  <span className="text-[9px] uppercase font-bold text-dark-900">Triple</span>
                 </button>
 
                 <button
@@ -579,96 +576,56 @@ export default function AdminLiveStreamTab() {
                   <span className="text-[9px] uppercase font-bold text-gray-500">Corregir</span>
                 </button>
               </div>
-
-              {/* Fouls & Possession */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-800">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 font-bold uppercase">Faltas:</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-800/60 text-red-400 font-black text-xs">
-                    {config.scoreboard.homeFouls || 0}
-                  </span>
-                  <button
-                    onClick={() => handleFoulChange("home", 1)}
-                    className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-300 border border-gray-700"
-                    title="Añadir falta"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleFoulChange("home", -1)}
-                    className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-400 border border-gray-700"
-                    title="Quitar falta"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => handlePossessionChange(config.scoreboard.possession === "home" ? "none" : "home")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                    config.scoreboard.possession === "home"
-                      ? "bg-golden-500 text-dark-950 border-golden-500 font-black"
-                      : "bg-dark-800 text-gray-400 border-gray-700 hover:text-white"
-                  }`}
-                >
-                  Asignar Balón
-                </button>
-              </div>
             </div>
 
-            {/* VISITANTE: Equipo Rival */}
-            <div className="p-6 rounded-3xl bg-gradient-to-b from-dark-900 to-dark-950 border-2 border-gray-700 space-y-5 shadow-2xl relative">
+            {/* 2° EQUIPO VISITA: Golden Sport Academy Santa Cruz */}
+            <div className="p-6 rounded-3xl bg-gradient-to-b from-dark-900 to-dark-950 border-2 border-golden-500/50 space-y-5 shadow-2xl relative">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-dark-800 border border-gray-700 flex items-center justify-center text-gray-400 font-black text-sm">
-                    VS
+                  <div className="w-12 h-12 rounded-xl bg-dark-800 border border-golden-500/40 p-1 flex items-center justify-center">
+                    <Image src="/logo.png" alt="Golden Sport Academy Santa Cruz" width={40} height={40} className="object-contain" />
                   </div>
                   <div>
-                    <span className="text-xs font-black uppercase text-gray-400 tracking-wider block">EQUIPO VISITANTE</span>
+                    <span className="text-xs font-black uppercase text-golden-400 tracking-wider block">2° EQUIPO VISITA</span>
                     <span className="text-base font-black text-white uppercase block">
-                      {config.scoreboard.awayTeam || "Rival"}
+                      {config.scoreboard.awayTeam || "Golden Sport Academy Santa Cruz"}
                     </span>
                   </div>
                 </div>
-                {config.scoreboard.possession === "away" && (
-                  <span className="px-2.5 py-1 rounded-full bg-blue-500 text-white font-black text-[10px] uppercase tracking-wider animate-pulse">
-                    🏀 Posesión
-                  </span>
-                )}
               </div>
 
               {/* Big Score Display */}
-              <div className="text-center py-4 bg-dark-950 rounded-2xl border border-gray-800">
-                <span className="text-7xl font-black text-gray-200 tracking-tighter">
+              <div className="text-center py-4 bg-dark-950 rounded-2xl border border-golden-500/30">
+                <span className="text-7xl font-black text-golden-400 font-mono tracking-tighter drop-shadow-[0_4px_16px_rgba(234,179,8,0.4)]">
                   {config.scoreboard.awayScore || 0}
                 </span>
-                <span className="text-xs text-gray-400 uppercase font-bold block mt-1">Puntos Rival</span>
+                <span className="text-xs text-gray-400 uppercase font-bold block mt-1">Puntos Visita (Golden)</span>
               </div>
 
               {/* Point Buttons */}
               <div className="grid grid-cols-4 gap-2">
                 <button
                   onClick={() => handleScoreChange("away", 1)}
-                  className="py-3.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-gray-700 text-gray-200 font-black text-base transition-transform active:scale-95 flex flex-col items-center"
+                  className="py-3.5 rounded-xl bg-golden-500/20 hover:bg-golden-500/30 border border-golden-500/40 text-golden-400 font-black text-base transition-transform active:scale-95 flex flex-col items-center"
                 >
                   <span>+1</span>
-                  <span className="text-[9px] uppercase font-bold text-gray-400">Tiro Libre</span>
+                  <span className="text-[9px] uppercase font-bold text-gray-300">Punto</span>
                 </button>
 
                 <button
                   onClick={() => handleScoreChange("away", 2)}
-                  className="py-3.5 rounded-xl bg-dark-800 hover:bg-dark-700 border border-gray-600 text-gray-100 font-black text-lg transition-transform active:scale-95 flex flex-col items-center"
+                  className="py-3.5 rounded-xl bg-golden-500/30 hover:bg-golden-500/40 border border-golden-500/60 text-golden-300 font-black text-lg transition-transform active:scale-95 flex flex-col items-center"
                 >
                   <span>+2</span>
-                  <span className="text-[9px] uppercase font-bold text-gray-400">Doble</span>
+                  <span className="text-[9px] uppercase font-bold text-gray-300">Canasta</span>
                 </button>
 
                 <button
                   onClick={() => handleScoreChange("away", 3)}
-                  className="py-3.5 rounded-xl bg-blue-900/60 hover:bg-blue-800/80 border border-blue-600 text-blue-200 font-black text-xl transition-transform active:scale-95 flex flex-col items-center"
+                  className="py-3.5 rounded-xl bg-gradient-to-r from-golden-500 to-golden-600 hover:from-golden-400 hover:to-golden-500 text-dark-950 font-black text-xl transition-transform active:scale-95 flex flex-col items-center shadow-lg shadow-golden-500/20"
                 >
                   <span>+3</span>
-                  <span className="text-[9px] uppercase font-bold text-blue-300">Triple</span>
+                  <span className="text-[9px] uppercase font-bold text-dark-900">Triple 🔥</span>
                 </button>
 
                 <button
@@ -677,41 +634,6 @@ export default function AdminLiveStreamTab() {
                 >
                   <span>-1</span>
                   <span className="text-[9px] uppercase font-bold text-gray-500">Corregir</span>
-                </button>
-              </div>
-
-              {/* Fouls & Possession */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-800">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400 font-bold uppercase">Faltas:</span>
-                  <span className="px-2.5 py-1 rounded-lg bg-red-950/60 border border-red-800/60 text-red-400 font-black text-xs">
-                    {config.scoreboard.awayFouls || 0}
-                  </span>
-                  <button
-                    onClick={() => handleFoulChange("away", 1)}
-                    className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-300 border border-gray-700"
-                    title="Añadir falta"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                  <button
-                    onClick={() => handleFoulChange("away", -1)}
-                    className="p-1.5 rounded-lg bg-dark-800 hover:bg-dark-700 text-gray-400 border border-gray-700"
-                    title="Quitar falta"
-                  >
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-
-                <button
-                  onClick={() => handlePossessionChange(config.scoreboard.possession === "away" ? "none" : "away")}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider border transition-all ${
-                    config.scoreboard.possession === "away"
-                      ? "bg-blue-600 text-white border-blue-500 font-black"
-                      : "bg-dark-800 text-gray-400 border-gray-700 hover:text-white"
-                  }`}
-                >
-                  Asignar Balón
                 </button>
               </div>
             </div>

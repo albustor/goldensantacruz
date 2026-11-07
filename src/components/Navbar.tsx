@@ -32,7 +32,7 @@ export default function Navbar() {
 
   const navLinks: NavLinkItem[] = [
     { name: "Inicio", href: "/" },
-    { name: "En Vivo", href: "/en-vivo", isLiveLink: true, isPaused: true },
+    { name: "En Vivo", href: "/en-vivo", isLiveLink: true, isPaused: false },
     { name: "Información", href: "/informacion" },
     { name: "Calendario", href: "/calendario" },
     { name: "Fotografías", href: "/galeria" },

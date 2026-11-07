@@ -87,6 +87,7 @@ export default function AdminPage() {
     if (
       pinInput === currentPin ||
       pinInput === "20261829" ||
+      pinInput === "1726" ||
       pinInput.toLowerCase() === "golden2026" ||
       pinInput === "admin" ||
       pinInput === "62806989"

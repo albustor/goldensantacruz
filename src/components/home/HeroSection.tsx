@@ -60,6 +60,14 @@ export default function HeroSection() {
 
           {/* Botones de Acción Directa */}
           <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+            <Link
+              href="/en-vivo"
+              className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-red-600 via-red-500 to-amber-500 hover:from-red-500 hover:to-golden-400 text-white font-black text-xs uppercase tracking-wider shadow-xl shadow-red-600/40 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"
+            >
+              <span className="w-2 h-2 rounded-full bg-white animate-ping" />
+              <span>En Vivo: La Paz vs. Golden</span>
+            </Link>
+
             <a
               href="#inscripcion"
               className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-golden-400 via-golden-500 to-golden-600 hover:from-golden-300 hover:to-golden-500 text-dark-950 font-black text-xs uppercase tracking-wider shadow-xl shadow-golden-500/30 flex items-center gap-1.5 transition-all hover:scale-105 active:scale-95"

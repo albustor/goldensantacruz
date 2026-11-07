@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de Reikel (Reiky) · Cámara Nikon D7500 y Llavecita 🔑 · Curiol Studio</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 0mm;
+    }
+
+    :root {
+      --bg-main: #FCFBF9;
+      --bg-warm: #FAF6F0;
+      --pastel-arena: #F5EFE6;
+      --pastel-mantequilla: #FDF8E7;
+      --pastel-cielo: #F0F4FA;
+      --pastel-salvia: #ECFDF5;
+      --pastel-coral: #FFF1F2;
+      --zafiro: #28375E;
+      --bronce: #9A6B38;
+      --dorado: #D9C16C;
+      --texto: #1E293B;
+      --texto-suave: #475569;
+      --borde: #E6DEC8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-main);
+      color: var(--texto);
+      line-height: 1.45;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .top-bar {
+      background: var(--bg-warm);
+      border-bottom: 1px solid var(--borde);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bronce);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn.secondary {
+      background: var(--pastel-cielo);
+      color: var(--zafiro);
+      border: 1px solid #CBD5E1;
+    }
+
+    .page-container {
+      max-width: 920px;
+      margin: 16px auto;
+      padding: 22px;
+      background: #FFFFFF;
+      border: 1px solid var(--borde);
+      border-radius: 18px;
+    }
+
+    .header-box {
+      background: linear-gradient(135deg, var(--pastel-mantequilla) 0%, var(--pastel-arena) 100%);
+      border: 2px solid #F59E0B;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-box h1 {
+      font-size: 1.4rem;
+      color: var(--zafiro);
+      margin-bottom: 4px;
+    }
+
+    .header-box p {
+      font-size: 0.9rem;
+      color: var(--texto-suave);
+    }
+
+    .badge-nikon {
+      background: var(--zafiro);
+      color: #FACC15;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 800;
+      font-size: 0.85rem;
+    }
+
+    .golden-box {
+      background: #FEF9C3;
+      border: 2px solid #EAB308;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .key-badge {
+      width: 58px;
+      height: 58px;
+      background: var(--zafiro);
+      color: #FACC15;
+      border-radius: 14px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    .key-badge span {
+      font-size: 0.6rem;
+      color: #FFFFFF;
+    }
+
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .step {
+      background: var(--bg-warm);
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .step-num {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background: var(--zafiro);
+      color: #FFFFFF;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 24px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      margin-bottom: 6px;
+    }
+
+    .step h3 {
+      font-size: 0.94rem;
+      color: var(--zafiro);
+      margin-bottom: 4px;
+    }
+
+    .step p {
+      font-size: 0.83rem;
+      color: var(--texto-suave);
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .card {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--borde);
+    }
+
+    .card.green { background: var(--pastel-salvia); border-color: #A7F3D0; }
+    .card.blue { background: var(--pastel-cielo); border-color: #BFDBFE; }
+    .card.butter { background: var(--pastel-mantequilla); border-color: #FDE68A; }
+    .card.rose { background: var(--pastel-coral); border-color: #FECDD3; }
+
+    .card h4 {
+      font-size: 0.92rem;
+      color: var(--zafiro);
+      margin-bottom: 6px;
+    }
+
+    .card ul {
+      padding-left: 18px;
+      font-size: 0.83rem;
+    }
+
+    .card li {
+      margin-bottom: 4px;
+    }
+
+    .signals-bar {
+      background: var(--pastel-arena);
+      border: 1px solid var(--dorado);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    .signals-bar h4 {
+      font-size: 0.92rem;
+      color: var(--zafiro);
+      margin-bottom: 8px;
+    }
+
+    .signals-list {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+
+    .sig-item {
+      background: #FFFFFF;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--borde);
+      text-align: center;
+    }
+
+    @media (max-width: 760px) {
+      .steps-row, .grid-2, .signals-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #FFFFFF !important; font-size: 11px; }
+      .page-container {
+        margin: 0 !important;
+        padding: 10mm 12mm !important;
+        border: none !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar no-print">
+    <div>
+      <strong>📷 Guía individual de cancha para Reikel (Reiky)</strong> · Golden Academy Sports Santa Cruz
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a class="btn secondary" href="manual_reikel_y_david_sabado.html">⬅ Volver al manual completo</a>
+      <button class="btn" onclick="window.print()">🖨️ Imprimir en 1 página</button>
+    </div>
+  </header>
+
+  <main class="page-container">
+    <section class="header-box">
+      <div>
+        <h1>📷 Guía rápida de Reikel (Reiky) en cancha · Golden Sport Academy Santa Cruz</h1>
+        <p>Cámara asignada: <strong>Nikon D7500</strong> · Conectada por Wi-Fi a la computadora <strong>HP Roja</strong> y a la tableta de David.</p>
+      </div>
+      <div class="badge-nikon">Wi-Fi: D7500_9003265 → HP Roja</div>
+    </section>
+
+    <section class="grid-2" style="margin-bottom: 12px;">
+      <div class="card rose" style="border: 2px solid #F43F5E;">
+        <h4 style="color: #9F1239;">📵 Regla #1 desde el inicio: prohibido usar celulares y cero teléfonos en la red</h4>
+        <ul style="color: #881337;">
+          <li><strong>Prohibido conectar celulares al Wi-Fi <code>CuriolStudioDIGI</code>:</strong> los celulares quitan el ancho de banda y cortan la transmisión a YouTube.</li>
+          <li><strong>Totalmente prohibido usar el celular en horas de trabajo:</strong> guarda tu teléfono durante los partidos para estar concentrado al 100 % en las jugadas y el equipo.</li>
+        </ul>
+      </div>
+
+      <div class="card butter" style="border: 2px solid #EAB308;">
+        <h4 style="color: #854D0E;">🌐 Página donde transmitimos: Golden Academy Sports Santa Cruz + Power Banks</h4>
+        <ul>
+          <li><strong>Página principal:</strong> <a href="https://www.goldensantacruz.com/" target="_blank" style="color: #1D4ED8; font-weight: 700;">https://www.goldensantacruz.com/</a></li>
+          <li><strong>Transmisión en vivo (video YouTube + tus fotos 🔑):</strong> <a href="https://www.goldensantacruz.com/en-vivo" target="_blank" style="color: #B91C1C; font-weight: 800;">https://www.goldensantacruz.com/en-vivo</a></li>
+          <li><strong>🔋 Power Banks pegadas al trípode:</strong> listas en el trípode para conectar a las cámaras en cualquier momento si es necesario.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="golden-box">
+      <div class="key-badge">
+        🔑
+        <span>AE-L / AF-L</span>
+      </div>
+      <div>
+        <h3 style="font-size: 1rem; color: #92400E; margin-bottom: 3px;">Regla de oro: solo las fotos con llavecita (🔑) viajan en vivo</h3>
+        <p style="font-size: 0.86rem;">Para no trabar el Wi-Fi del gimnasio, tu cámara <strong>solo envía las fotos que tú elijas</strong>. Cuando tomes una foto muy buena, mírala en la pantalla y presiona el botón de la <strong>llavecita (🔑)</strong> (a la izquierda de la pantalla). En <strong>2 segundos</strong> llega a la computadora HP Roja con <strong>⭐ 5 estrellas</strong>, se mejora sola con IA y aparece en la tableta de David.</p>
+      </div>
+    </section>
+
+    <section class="steps-row">
+      <div class="step">
+        <span class="step-num">1</span>
+        <h3>Toma ráfagas cortas (2-3 fotos)</h3>
+        <p>Apunta el cuadrito de enfoque a la <strong>cara del jugador</strong> que lleva la bola o salta al aro. No dejes el botón pegado por 10 fotos seguidas.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">2</span>
+        <h3>Revisa en los tiempos muertos (▶️)</h3>
+        <p>En cada tiro libre, saque o falta, toca <strong>▶️ Reproducir</strong> y busca la foto donde el jugador se vea en el aire, celebrando o con el balón claro.</p>
+      </div>
+      <div class="step">
+        <span class="step-num">3</span>
+        <h3>Presiona la llavecita (🔑)</h3>
+        <p>Toca el botón <strong>🔑</strong>. Verás el icono de la llave arriba en la pantalla. ¡Listo! David la recibe al instante para publicarla en vivo.</p>
+      </div>
+    </section>
+
+    <section class="grid-2">
+      <div class="card green">
+        <h4>🏀 ¿Qué fotos buscar en cada cuarto? (4 a 6 por cuarto)</h4>
+        <ul>
+          <li><strong>Entradas al aro y saltos:</strong> jugadores suspendidos en el aire lanzando.</li>
+          <li><strong>Festejos y emoción:</strong> choques de manos, gritos de punto o abrazos de equipo.</li>
+          <li><strong>Banca y familias:</strong> entrenadores dando indicaciones y familias animando.</li>
+          <li><strong>Cuerpo completo:</strong> procura no cortar los tenis ni las manos arriba del aro.</li>
+        </ul>
+      </div>
+
+      <div class="card butter">
+        <h4>⚡ Trucos rápidos de tu Nikon D7500, baterías y Power Banks en trípodes</h4>
+        <ul>
+          <li><strong>Vigila las rayitas de batería en cada cuarto:</strong> el Wi-Fi gasta más energía. Si baja a <strong>1 sola rayita (~25 %)</strong>, cámbiala en el descanso por una llena y <strong>pon la gastada a cargar de una vez en la mesa</strong>.</li>
+          <li><strong>Power Banks pegadas a los trípodes:</strong> recuerda que llevamos las <strong>baterías portátiles (<em>power banks</em>) sujetas a los trípodes</strong> para dejar conectadas la <strong>GoPro HERO13 de David</strong> o la <strong>DJI de Alberto</strong> en cualquier momento.</li>
+          <li><strong>Mantén la cámara despierta y cuida los ángulos de video:</strong> toca suave el disparador cada par de minutos y no te pares frente al trípode de la GoPro.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="signals-bar">
+      <h4>🤝 Señas rápidas con David (mira hacia la mesa de control después de mandar una 🔑)</h4>
+      <div class="signals-list">
+        <div class="sig-item"><strong>👍 Pulgar arriba</strong><br/>¡Llegó nítida y ya está publicada en vivo!</div>
+        <div class="sig-item"><strong>🔄 Dedo en círculo</strong><br/>Salió borrosa o movida, repite en la otra jugada.</div>
+        <div class="sig-item"><strong>📐 Manos en cuadro</strong><br/>Aléjate un poquito para no cortar pies o cabeza.</div>
+        <div class="sig-item"><strong>📶 Tocar cámara</strong><br/>Despierta la Nikon (toca el disparador a la mitad).</div>
+      </div>
+    </section>
+
+    <section class="card blue">
+      <h4>✅ Tu lista de chequeo rápida y solución de fallas de hoy (fotos 🔑 + 2 GoPro + baterías)</h4>
+      <p style="font-size: 0.83rem;">
+        ☐ 1. Correa de la cámara siempre al cuello/muñeca y batería al 100 %. Hacer 1 foto de prueba con <strong>🔑</strong> y ver que David levante el pulgar 👍.<br/>
+        ☐ 2. <strong>¿Qué hacer si una foto con 🔑 no llega a la tableta de David?</strong> Toca el disparador a la mitad para despertar el Wi-Fi de la Nikon, confirma que la foto tenga el icono <strong>🔑</strong> arriba en pantalla y que David tenga activo el botón verde <strong>🏀 Modo Campo</strong>.<br/>
+        ☐ 3. <strong>Apoyo con las 2 GoPro en trípodes:</strong> cuidar que nadie tape las 2 GoPro ni las mueva, y verificar que sus <em>power banks</em> pegadas al trípode estén conectadas.<br/>
+        ☐ 4. Al terminar el partido, tomar foto grupal sonriendo, ponerle <strong>🔑</strong>, <strong>esperar 30 segundos antes de apagar la Nikon</strong> y conectar todas las baterías al cargador.
+      </p>
+    </section>
+  </main>
+</body>
+</html>

@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual de David · Tableta Xiaomi Redmi Pad 2 Pro (Curiol David) · Curiol Studio</title>
+  <style>
+    @page {
+      size: letter portrait;
+      margin: 0mm;
+    }
+
+    :root {
+      --bg-main: #FCFBF9;
+      --bg-warm: #FAF6F0;
+      --pastel-arena: #F5EFE6;
+      --pastel-mantequilla: #FDF8E7;
+      --pastel-cielo: #F0F4FA;
+      --pastel-salvia: #ECFDF5;
+      --pastel-lavanda: #F5F3FF;
+      --zafiro: #28375E;
+      --bronce: #9A6B38;
+      --dorado: #D9C16C;
+      --texto: #1E293B;
+      --texto-suave: #475569;
+      --borde: #E6DEC8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg-main);
+      color: var(--texto);
+      line-height: 1.44;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    .top-bar {
+      background: var(--bg-warm);
+      border-bottom: 1px solid var(--borde);
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .btn {
+      background: var(--bronce);
+      color: #FFFFFF;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn.secondary {
+      background: var(--pastel-cielo);
+      color: var(--zafiro);
+      border: 1px solid #CBD5E1;
+    }
+
+    .page-container {
+      max-width: 920px;
+      margin: 16px auto;
+      padding: 22px;
+      background: #FFFFFF;
+      border: 1px solid var(--borde);
+      border-radius: 18px;
+    }
+
+    .header-box {
+      background: linear-gradient(135deg, var(--pastel-cielo) 0%, var(--pastel-mantequilla) 100%);
+      border: 2px solid #60A5FA;
+      border-radius: 14px;
+      padding: 16px 20px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-box h1 {
+      font-size: 1.38rem;
+      color: var(--zafiro);
+      margin-bottom: 4px;
+    }
+
+    .header-box p {
+      font-size: 0.88rem;
+      color: var(--texto-suave);
+    }
+
+    .badge-tablet {
+      background: var(--zafiro);
+      color: #FFFFFF;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.82rem;
+    }
+
+    .main-module {
+      background: var(--pastel-cielo);
+      border: 2px solid #93C5FD;
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+
+    .main-module h2 {
+      font-size: 1.08rem;
+      color: var(--zafiro);
+      margin-bottom: 6px;
+    }
+
+    .touch-panel {
+      background: #FFFFFF;
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-top: 10px;
+    }
+
+    .touch-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .touch-line:last-child {
+      margin-bottom: 0;
+    }
+
+    .lbl {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--bronce);
+      min-width: 125px;
+    }
+
+    .btn-chip {
+      background: var(--bg-warm);
+      border: 1px solid #CBD5E1;
+      color: var(--zafiro);
+      padding: 4px 9px;
+      border-radius: 7px;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .btn-chip.ai {
+      background: var(--pastel-lavanda);
+      border-color: #C4B5FD;
+      color: #5B21B6;
+    }
+
+    .btn-chip.pub {
+      background: #059669;
+      border-color: #047857;
+      color: #FFFFFF;
+      padding: 5px 12px;
+    }
+
+    .tabs-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .tab-card {
+      background: var(--bg-warm);
+      border: 1px solid var(--borde);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .tab-card h3 {
+      font-size: 0.92rem;
+      color: var(--zafiro);
+      margin-bottom: 5px;
+    }
+
+    .tab-card p {
+      font-size: 0.81rem;
+      color: var(--texto-suave);
+    }
+
+    .bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .box {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--borde);
+    }
+
+    .box.butter { background: var(--pastel-mantequilla); border-color: #FDE68A; }
+    .box.green { background: var(--pastel-salvia); border-color: #A7F3D0; }
+
+    .box h4 {
+      font-size: 0.92rem;
+      color: var(--zafiro);
+      margin-bottom: 6px;
+    }
+
+    .box ul {
+      padding-left: 18px;
+      font-size: 0.82rem;
+    }
+
+    .box li {
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 760px) {
+      .tabs-grid, .bottom-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #FFFFFF !important; font-size: 11px; }
+      .page-container {
+        margin: 0 !important;
+        padding: 10mm 12mm !important;
+        border: none !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-bar no-print">
+    <div>
+      <strong>📱 Guía individual de mesa de control para David</strong> · Golden Academy Sports Santa Cruz
+    </div>
+    <div style="display: flex; gap: 8px;">
+      <a class="btn secondary" href="manual_reikel_y_david_sabado.html">⬅ Volver al manual completo</a>
+      <button class="btn" onclick="window.print()">🖨️ Imprimir en 1 página</button>
+    </div>
+  </header>
+
+  <main class="page-container">
+    <section class="header-box">
+      <div>
+        <h1>📱 Guía rápida de David: 2 tabletas, GoPro HERO13 y streaming a YouTube</h1>
+        <p>Tabletas: <strong>Xiaomi Redmi Pad 2 Pro (Control) + Xiaomi Pad 5 (Monitor)</strong> · Cámara de video a tu cargo: <strong>GoPro HERO13</strong></p>
+      </div>
+      <div class="badge-tablet">http://192.168.2.12:3060/tableta</div>
+    </section>
+
+    <section class="bottom-grid" style="margin-bottom: 12px;">
+      <div class="box" style="background: #FFF1F2; border: 2px solid #F43F5E;">
+        <h4 style="color: #9F1239;">📵 Regla #1 desde el inicio: prohibido usar celulares y cero teléfonos en la red</h4>
+        <ul style="color: #881337;">
+          <li><strong>Prohibido conectar teléfonos al Wi-Fi <code>CuriolStudioDIGI</code>:</strong> los celulares consumen el ancho de banda y cortan el streaming a YouTube.</li>
+          <li><strong>Totalmente prohibido usar el celular en horas de trabajo:</strong> el teléfono personal permanece guardado; atención 100 % en las 2 tabletas, la GoPro y las jugadas.</li>
+        </ul>
+      </div>
+
+      <div class="box" style="background: #FEF9C3; border: 2px solid #EAB308;">
+        <h4 style="color: #854D0E;">🌐 Página donde transmitimos: Golden Academy Sports Santa Cruz + Power Banks</h4>
+        <ul>
+          <li><strong>Página principal:</strong> <a href="https://www.goldensantacruz.com/" target="_blank" style="color: #1D4ED8; font-weight: 700;">https://www.goldensantacruz.com/</a></li>
+          <li><strong>Sesión en vivo (abrir en Tableta 2):</strong> <a href="https://www.goldensantacruz.com/en-vivo" target="_blank" style="color: #B91C1C; font-weight: 800;">https://www.goldensantacruz.com/en-vivo</a></li>
+          <li><strong>🔋 Power Banks pegadas al trípode:</strong> listas en el trípode para mantener conectada tu <strong>GoPro HERO13</strong> o cualquier cámara en todo momento.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="main-module">
+      <h2>📸 Pestaña 1 (tu pantalla principal): Fotos 5★ (🔑) y edición rápida de 1 toque</h2>
+      <p style="font-size: 0.85rem; margin-bottom: 6px;">
+        Cada vez que Alberto (Sony) o Reikel (Nikon) ponen la <strong>🔑 llavecita</strong> a una foto, aparece sola aquí en menos de 2 segundos. Sigue estos 3 pasos con cada foto:
+      </p>
+      <ol style="padding-left: 20px; font-size: 0.84rem;">
+        <li><strong>Mira la nitidez y el encuadre:</strong> si salió borrosa o cortada sin remedio, hazle la seña del dedo en círculo (🔄) a Reikel o Alberto para que la repitan.</li>
+        <li><strong>Ajusta con 1 toque si hace falta:</strong> usa los botones debajo de la foto para enderezar la cancha, subir la luz o darle más nitidez.</li>
+        <li><strong>Publica en vivo:</strong> toca el botón verde <strong>☆ Publicar en vivo (1 toque)</strong> para mandarla directo a <code>/en-vivo</code>.</li>
+      </ol>
+
+      <div class="touch-panel">
+        <div class="touch-line">
+          <span class="lbl">📐 Enderezar / girar:</span>
+          <span class="btn-chip">↺ -1°</span>
+          <span class="btn-chip">↺ -0.5°</span>
+          <span class="btn-chip">↻ +0.5°</span>
+          <span class="btn-chip">↻ +1°</span>
+          <span class="btn-chip">🔄 90°</span>
+        </div>
+        <div class="touch-line">
+          <span class="lbl">☀️ Luz y enfoque:</span>
+          <span class="btn-chip">🔉 -Luz</span>
+          <span class="btn-chip">☀️ +Luz</span>
+          <span class="btn-chip">🌗 +Sombras</span>
+          <span class="btn-chip ai">🎯 +Nitidez IA</span>
+          <span class="btn-chip">↩️ Original</span>
+        </div>
+        <div class="touch-line" style="margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--borde); justify-content: space-between;">
+          <span style="font-size: 0.78rem; color: var(--texto-suave);">Si te equivocas tocando varios botones, toca <strong>↩️ Original</strong> y listo.</span>
+          <span class="btn-chip pub">☆ Publicar en vivo (1 toque)</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="tabs-grid">
+      <div class="tab-card">
+        <h3>🎨 Pestaña 2: Editor completo (:3050)</h3>
+        <p>Si una foto está muy buena pero los jugadores se ven pequeños a lo lejos, abre esta pestaña para <strong>recortar con el dedo</strong> (<code>1:1</code>, <code>9:16</code> o libre), ajustar colores o poner marca de agua. Al guardar, actualiza en vivo automáticamente.</p>
+      </div>
+
+      <div class="tab-card">
+        <h3>🏀 Pestaña 3: Mosaico 2×2 (4 Cámaras) + Audio 1-Toque</h3>
+        <p>Aquí actualizas puntos en <code>/admin</code> (PIN: <strong>20261829</strong>), ves las <strong>4 cámaras a la vez</strong> (<code>GoPro #1 .168</code>, <code>GoPro #2 .199</code>, <code>DJI Osmo .214</code>, <code>Dron .193</code>) y tocas <strong>🔇 Activar Audio</strong> en la cámara que quieras escuchar (silencia las otras 3 sola).</p>
+      </div>
+
+      <div class="tab-card">
+        <h3>📡 Pestaña 4: Radar de cámaras y tabletas</h3>
+        <p>Revisa que los cuadritos de la <strong>Sony</strong>, la <strong>Nikon</strong>, las <strong>2 GoPro</strong>, la <strong>DJI</strong> y las <strong>2 Tabletas</strong> estén en verde (<strong>ONLINE</strong>). Si la Nikon pasa a gris, avísale a Reikel que despierte la cámara o cambie batería.</p>
+      </div>
+    </section>
+
+    <section class="bottom-grid" style="margin-bottom: 12px;">
+      <div class="box" style="background: #F5F3FF; border-color: #C4B5FD;">
+        <h4>🎥 Tus 2 cámaras GoPro (.168 y .199), DJI Osmo, Dron y Audio en Vivo</h4>
+        <ul>
+          <li><strong>Cómo encender las 2 GoPro sin que se apague la primera:</strong> enciende la primera GoPro en la app <em>GoPro Quik</em> hasta ver <code>LIVE</code> en rojo en la cámara. <strong>NO toques <code>X</code> en la app: apaga el Bluetooth del celular por 2 segundos</strong> (la GoPro sigue sola por Wi-Fi), vuelve a encender Bluetooth y activa la segunda GoPro con el mismo enlace (la HP Roja las separa sola en el puerto <code>1936</code>).</li>
+          <li><strong>Control de Audio (<code>🔇 Activar Audio</code> → <code>🔊 AUDIO ACTIVO</code>):</strong> toca el botón de audio abajo a la derecha en <strong>GoPro #1</strong> o en la <strong>DJI Osmo</strong>; silenciará las otras 3 cámaras automáticamente para evitar eco.</li>
+          <li><strong>Si en la tableta no se ven las cámaras:</strong> entra directo a <code>http://192.168.2.12:3060/multicam</code> (o <code>/tableta</code>), toca <strong>🎬 3. Mesa &amp; Multicámara</strong> y recarga con <code>↻</code>. Verifica que arriba diga <strong>🏀 Modo Campo</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="box" style="background: #EFF6FF; border-color: #93C5FD;">
+        <h4>📱📱🔋 Cómo usar las 2 tabletas Xiaomi, carga USB y Power Banks en trípodes</h4>
+        <ul>
+          <li><strong>Tableta 1 (Xiaomi Redmi Pad 2 Pro):</strong> tu pantalla principal con la app <strong>Curiol David</strong> para editar y publicar fotos 5★ y llevar el marcador.</li>
+          <li><strong>Tableta 2 (Xiaomi Pad 5):</strong> déjala a la par mostrando la página en vivo de <strong>Golden Sport Academy Santa Cruz</strong> (<code>https://www.goldensantacruz.com/en-vivo</code>) y YouTube Live.</li>
+          <li><strong>🔌 Carga de tu tableta Xiaomi (¡clave!):</strong> si baja la batería, <strong>conéctala por cable USB normal / USB-C directo a la computadora HP Roja</strong> (o adaptador HDMI/USB o cargador) para que nunca se apague.</li>
+          <li><strong>🔋 Power Banks pegadas al trípode:</strong> llevamos las <strong>baterías portátiles (<em>power banks</em>) pegadas al trípode</strong> para tener conectada tu <strong>GoPro HERO13</strong> (o la DJI) en cualquier momento del partido.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="bottom-grid">
+      <div class="box butter">
+        <h4>🤝 Tus señas hacia Reikel y Alberto en cancha</h4>
+        <ul>
+          <li><strong>👍 Pulgar arriba:</strong> «¡Llegó perfecta y ya la publiqué en vivo!».</li>
+          <li><strong>🔄 Dedo en círculo:</strong> «Salió fuera de foco o movida, repite en la siguiente jugada».</li>
+          <li><strong>📐 Manos en cuadro:</strong> «Abre más la toma para no cortar pies ni manos».</li>
+          <li><strong>📶 Tocar la muñeca:</strong> «Tu cámara se desconectó del radar, toca el disparador».</li>
+        </ul>
+      </div>
+
+      <div class="box green">
+        <h4>✅ Tu lista de chequeo en la mesa de control</h4>
+        <ul>
+          <li>☐ <strong>2 tabletas Xiaomi al 100 %</strong> en la red <strong>CuriolStudioDIGI</strong> y cable USB listo en la HP Roja para mantener cargada la Xiaomi.</li>
+          <li>☐ Confirmar que tu <strong>GoPro HERO13</strong> y la <strong>DJI de Alberto</strong> estén transmitiendo video en vivo hacia <strong>YouTube</strong>.</li>
+          <li>☐ Hacer prueba de 1 foto con <strong>🔑</strong> junto a Reikel antes del salto inicial y publicar solo fotos nítidas.</li>
+          <li>☐ Al cierre del partido, pasar el marcador a <strong>Finalizado</strong> y poner todas las baterías a cargar.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

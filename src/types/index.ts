@@ -164,8 +164,8 @@ export interface LiveCameraConfig {
   id: string; // 'cam-gopro' | 'cam-dji' | 'cam-phone' | 'cam-main' | 'cam-youtube'
   name: string;
   shortName: string;
-  deviceModel: "GoPro HERO 12 Black" | "DJI Osmo Pocket" | "Smartphone 4K / Móvil en Trípode" | "YouTube Live / Señal Externa" | "OBS / Señal Mezclada" | "Cámara Secundaria";
-  role: "Cancha Completa" | "Seguimiento Dinámico" | "Bajo el Aro / Lateral" | "Gradas / Afición" | "Banquillo / Reacciones" | "Mesa Técnica";
+  deviceModel: string;
+  role: string;
   streamType: "bunny_stream" | "hls_direct" | "youtube" | "iframe_custom";
   youtubeUrl?: string;
   youtubeVideoId?: string;

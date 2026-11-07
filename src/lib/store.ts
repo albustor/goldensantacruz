@@ -48,14 +48,14 @@ export interface DirectivaAudioNote {
 const STORAGE_KEYS = {
   PLAYERS: 'golden_players_v7',
   PAYMENTS: 'golden_payments_v7',
-  MATCHES: 'golden_matches_v6',
+  MATCHES: 'golden_matches_v8',
   ALBUMS: 'golden_albums_v13',
   GALLERY: 'golden_gallery_v8',
   SPONSORS: 'golden_sponsors_v5',
   SETTINGS: 'golden_settings_v5',
   AUDIO_NOTES: 'golden_audio_notes_v5',
   CATEGORIES: 'golden_categories_v5',
-  LIVE_STREAM: 'golden_live_stream_v1',
+  LIVE_STREAM: 'golden_live_stream_v3',
 };
 
 function getFromStorage<T>(key: string, fallback: T): T {
@@ -832,13 +832,28 @@ export const Store = {
     return updated;
   },
 
-  // LIVE STREAMING & SCOREBOARD MANAGEMENT (Bunny.net + GoPro 12 + DJI Osmo Pocket)
+  // LIVE STREAMING & SCOREBOARD MANAGEMENT (Bunny.net + GoPro + DJI Osmo Pocket + Firestore Sync)
   async getLiveStreamConfig(): Promise<LiveStreamConfig> {
-    return getFromStorage<LiveStreamConfig>(STORAGE_KEYS.LIVE_STREAM, INITIAL_LIVE_STREAM_CONFIG);
+    const localCfg = getFromStorage<LiveStreamConfig>(STORAGE_KEYS.LIVE_STREAM, INITIAL_LIVE_STREAM_CONFIG);
+    if (typeof window !== 'undefined') {
+      try {
+        const res = await fetch('/api/live-sync', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.config) {
+            saveToStorage(STORAGE_KEYS.LIVE_STREAM, data.config);
+            return data.config;
+          }
+        }
+      } catch {
+        // Fallback silencioso a localStorage si está en LAN sin internet
+      }
+    }
+    return localCfg;
   },
 
   async updateLiveStreamConfig(updates: Partial<LiveStreamConfig>): Promise<LiveStreamConfig> {
-    const current = await this.getLiveStreamConfig();
+    const current = getFromStorage<LiveStreamConfig>(STORAGE_KEYS.LIVE_STREAM, INITIAL_LIVE_STREAM_CONFIG);
     const updated: LiveStreamConfig = {
       ...current,
       ...updates,
@@ -847,6 +862,17 @@ export const Store = {
       sponsorWatermark: updates.sponsorWatermark ? { ...current.sponsorWatermark, ...updates.sponsorWatermark } : current.sponsorWatermark,
     };
     saveToStorage(STORAGE_KEYS.LIVE_STREAM, updated);
+    if (typeof window !== 'undefined') {
+      try {
+        await fetch('/api/live-sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'update_config', config: updated }),
+        });
+      } catch {
+        // Continúa localmente si no hay red
+      }
+    }
     return updated;
   },
 

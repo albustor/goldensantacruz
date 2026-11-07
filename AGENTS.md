@@ -77,3 +77,10 @@
   3. En `src/components/home/HeroSection.tsx` y `src/components/home/MatchBanner.tsx`, reincorporar el botón `<Link href="/en-vivo">` con el indicador luminoso de transmisión activa.
   4. En `src/app/admin/page.tsx`, actualizar la pestaña `transmision` a `Transmisión En Vivo 🔴` con `highlight: true`.
 
+---
+
+## 8. Principio de Simplicidad Radical y Usabilidad Móvil
+- **Objetivo Principal Actual**: Facilitar la captación de nuevos estudiantes y la retención mediante una experiencia ultra-rápida en smartphones.
+- **Frontend Sin Fricción**: Cero gráficos pesados 3D o bibliotecas superfluas. Todo componente debe cargar en <1.5s en conexiones 4G.
+- **Conversión Directa**: Botones de inscripción, calendario de partidos y consultas dirigidos a WhatsApp oficial.
+- **Rol Activo de Jim**: Guardián de la Simplicidad. Alertar ante cualquier sobre-diseño técnico que no responda directamente a las necesidades de los padres y entrenadores.
