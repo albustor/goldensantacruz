@@ -87,6 +87,18 @@ const HP_ROJA_WEBRTC_GOPRO = `${HP_ROJA_HTTPS_TUNNEL_URL}/cam_view/gopro`;
 const HP_ROJA_WEBRTC_OSMO = `${HP_ROJA_HTTPS_TUNNEL_URL}/cam_view/osmo`;
 const HP_ROJA_WEBRTC_DRON = `${HP_ROJA_HTTPS_TUNNEL_URL}/cam_view/dron`;
 
+const YOUTUBE_MUSIC_PLAYLIST_URL = "https://music.youtube.com/playlist?list=PLAJvhQ9QrBG4&si=aaRa3_FFSLdsAHmY";
+const PLAYLIST_TRACKS = [
+  { id: "01", title: "1. Bitter Sweet Symphony — The Verve", src: "/audio/playlist/01_bitter_sweet_symphony.mp3" },
+  { id: "02", title: "2. Here Comes The Sun — The Beatles", src: "/audio/playlist/02_here_comes_the_sun.mp3" },
+  { id: "03", title: "3. Last Kiss — Pearl Jam", src: "/audio/playlist/03_last_kiss.mp3" },
+  { id: "04", title: "4. Don't Dream It's Over — Crowded House", src: "/audio/playlist/04_dont_dream_its_over.mp3" },
+  { id: "05", title: "5. I Want to Know What Love Is — Foreigner", src: "/audio/playlist/05_i_want_to_know_what_love_is.mp3" },
+  { id: "06", title: "6. Shallow — Lady Gaga", src: "/audio/playlist/06_shallow.mp3" },
+  { id: "07", title: "7. Fields Of Gold — Sting", src: "/audio/playlist/07_fields_of_gold.mp3" },
+  { id: "08", title: "8. Save Your Tears — The Weeknd", src: "/audio/playlist/08_save_your_tears.mp3" },
+];
+
 export default function LiveStreamPage() {
   const [config, setConfig] = useState<LiveStreamConfig>(INITIAL_LIVE_STREAM_CONFIG);
   const [selectedCamId, setSelectedCamId] = useState<string>("cam-poster");
@@ -131,7 +143,7 @@ export default function LiveStreamPage() {
   const posterBgInputRef = useRef<HTMLInputElement | null>(null);
   const [activeTickerIdx, setActiveTickerIdx] = useState<number>(0);
 
-  // Categoría editable en vivo + Música en Bucle (Protegido con Clave de Administrador)
+  // Categoría editable en vivo + Control de Cámaras + Música (Protegido con Clave de Administrador)
   const [isAdminUnlocked, setIsAdminUnlocked] = useState<boolean>(false);
   const [showAdminPinPrompt, setShowAdminPinPrompt] = useState<boolean>(false);
   const [adminPinInput, setAdminPinInput] = useState<string>("");
@@ -140,10 +152,16 @@ export default function LiveStreamPage() {
   const [editingCategoryLive, setEditingCategoryLive] = useState<boolean>(false);
   const [categoryDraft, setCategoryDraft] = useState<string>("");
   const [isPlayingBgMusic, setIsPlayingBgMusic] = useState<boolean>(false);
+  const [playlistIdx, setPlaylistIdx] = useState<number>(0);
+  const [singleTrackLoop, setSingleTrackLoop] = useState<boolean>(false);
   const [customBgMusicUrl, setCustomBgMusicUrl] = useState<string | null>(null);
   const [customBgMusicName, setCustomBgMusicName] = useState<string>("");
   const bgAudioRef = useRef<HTMLAudioElement | null>(null);
   const bgFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Modo Pantalla Completa con Cambio de Cámara Integrado
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+  const playerContainerRef = useRef<HTMLDivElement | null>(null);
   
   // Chat input
   const [chatName, setChatName] = useState<string>("");
@@ -155,22 +173,88 @@ export default function LiveStreamPage() {
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("golden_admin_logged") === "true") {
-      setIsAdminUnlocked(true);
-    }
     const tickerTimer = setInterval(() => {
       setActiveTickerIdx((prev) => (prev + 1) % 4);
     }, 6500);
-    return () => clearInterval(tickerTimer);
+    const onFullscreenChange = () => {
+      const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      if (!fsEl) {
+        setIsFullscreen(false);
+      }
+    };
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        setIsFullscreen(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      clearInterval(tickerTimer);
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+      window.removeEventListener("keydown", onKeyDown);
+    };
   }, []);
 
+  const toggleFullscreenPlayer = async () => {
+    const container = playerContainerRef.current;
+    if (isFullscreen) {
+      setIsFullscreen(false);
+      const fsEl = document.fullscreenElement || (document as any).webkitFullscreenElement;
+      if (fsEl) {
+        try {
+          if (document.exitFullscreen) {
+            await document.exitFullscreen();
+          } else if ((document as any).webkitExitFullscreen) {
+            (document as any).webkitExitFullscreen();
+          }
+        } catch {}
+      }
+      return;
+    }
+
+    setIsFullscreen(true);
+    if (container) {
+      try {
+        if (container.requestFullscreen) {
+          await container.requestFullscreen();
+        } else if ((container as any).webkitRequestFullscreen) {
+          (container as any).webkitRequestFullscreen();
+        }
+      } catch {
+        // Fallback CSS fullscreen (fixed inset-0 z-[100]) remains active for iOS Safari WebKit
+      }
+    }
+  };
+
+  const handleSelectCameraView = (camId: string) => {
+    setSelectedCamId(camId);
+    setIsPipActive(false);
+    if (
+      camId !== "cam-poster" &&
+      camId !== "cam-sony-photos" &&
+      camPosterWithSound[camId] === false &&
+      isPlayingBgMusic &&
+      bgAudioRef.current
+    ) {
+      bgAudioRef.current.pause();
+      setIsPlayingBgMusic(false);
+    }
+  };
+
   const handleRequestAdminAction = (actionType: "category" | "poster_controls" | "upload_music") => {
-    if (isAdminUnlocked) {
+    if (actionType === "poster_controls" && showPosterControls) {
+      // Si ya está abierto, al cerrarlo vuelve a bloquearse para exigir clave la próxima vez
+      setShowPosterControls(false);
+      setIsAdminUnlocked(false);
+      return;
+    }
+    if (isAdminUnlocked && actionType !== "poster_controls") {
       if (actionType === "category") {
         setCategoryDraft(config.category || "Niños Pequeños (Formativo)");
         setEditingCategoryLive((v) => !v);
-      } else if (actionType === "poster_controls") {
-        setShowPosterControls((v) => !v);
       } else if (actionType === "upload_music") {
         bgFileInputRef.current?.click();
       }
@@ -196,9 +280,6 @@ export default function LiveStreamPage() {
       cleanPin === "admin"
     ) {
       setIsAdminUnlocked(true);
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("golden_admin_logged", "true");
-      }
       setShowAdminPinPrompt(false);
       setAdminPinError(false);
       if (pendingAdminAction === "category") {
@@ -534,10 +615,51 @@ export default function LiveStreamPage() {
       setIsPlayingBgMusic(false);
     } else {
       try {
-        el.volume = 0.55;
+        el.volume = 0.6;
         await el.play();
         setIsPlayingBgMusic(true);
       } catch {}
+    }
+  };
+
+  const handleSelectPlaylistTrack = async (newIdx: number) => {
+    const safeIdx = ((newIdx % PLAYLIST_TRACKS.length) + PLAYLIST_TRACKS.length) % PLAYLIST_TRACKS.length;
+    setCustomBgMusicUrl(null);
+    setCustomBgMusicName("");
+    setPlaylistIdx(safeIdx);
+    const el = bgAudioRef.current;
+    if (el) {
+      el.src = PLAYLIST_TRACKS[safeIdx].src;
+      el.volume = 0.6;
+      try {
+        await el.play();
+        setIsPlayingBgMusic(true);
+      } catch {}
+    }
+  };
+
+  const handleStepPlaylistTrack = (delta: number) => {
+    handleSelectPlaylistTrack(playlistIdx + delta);
+  };
+
+  const handleAudioEnded = () => {
+    if (singleTrackLoop || customBgMusicUrl) {
+      const el = bgAudioRef.current;
+      if (el) {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      }
+      return;
+    }
+    handleSelectPlaylistTrack(playlistIdx + 1);
+  };
+
+  const handleLockAdminSession = () => {
+    setIsAdminUnlocked(false);
+    setShowPosterControls(false);
+    setEditingCategoryLive(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("golden_admin_logged");
     }
   };
 
@@ -731,8 +853,8 @@ export default function LiveStreamPage() {
       <div className="bg-gradient-to-b from-dark-900 to-dark-950 border-b border-gray-800 pt-6 pb-4">
         <audio
           ref={bgAudioRef}
-          src={customBgMusicUrl || "/audio/golden_lapaz_loop.mp3"}
-          loop
+          src={customBgMusicUrl || PLAYLIST_TRACKS[playlistIdx].src}
+          onEnded={handleAudioEnded}
           preload="auto"
         />
         <input
@@ -785,7 +907,7 @@ export default function LiveStreamPage() {
                 </span>
               </div>
 
-              {showAdminPinPrompt && (
+              {showAdminPinPrompt && pendingAdminAction !== "poster_controls" && (
                 <form
                   onSubmit={handleVerifyAdminPin}
                   className="flex flex-wrap items-center gap-2 p-2.5 mt-2 rounded-2xl bg-dark-950 border-2 border-golden-500/60 shadow-xl max-w-xl"
@@ -862,20 +984,62 @@ export default function LiveStreamPage() {
               </h1>
             </div>
 
-            {/* Quick Music & Share Buttons */}
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={toggleBgMusic}
-                className={`px-3.5 py-2 rounded-xl font-black text-xs uppercase tracking-wider flex items-center gap-1.5 border transition-all ${
-                  isPlayingBgMusic
-                    ? "bg-emerald-500 text-dark-950 border-emerald-300 shadow-lg animate-pulse"
-                    : "bg-dark-900 hover:bg-dark-800 text-golden-300 border-golden-500/40"
-                }`}
-              >
-                {isPlayingBgMusic ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                <span>{isPlayingBgMusic ? `🔊 ${customBgMusicName ? customBgMusicName.slice(0, 14) : "En Bucle"}` : "🎵 Música en Bucle"}</span>
-              </button>
+            {/* Quick Playlist Music Controls & Share Buttons */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-dark-900 border border-golden-500/40">
+                <button
+                  type="button"
+                  onClick={() => handleStepPlaylistTrack(-1)}
+                  className="px-2 py-1.5 rounded-lg bg-dark-950 hover:bg-dark-800 text-golden-300 text-xs font-black"
+                  title="Canción anterior de la lista"
+                >
+                  ⏮
+                </button>
+                <button
+                  type="button"
+                  onClick={toggleBgMusic}
+                  className={`px-3 py-1.5 rounded-lg font-black text-xs uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                    isPlayingBgMusic
+                      ? "bg-emerald-500 text-dark-950 shadow-md animate-pulse"
+                      : "bg-golden-500 hover:bg-golden-400 text-dark-950"
+                  }`}
+                >
+                  {isPlayingBgMusic ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                  <span>{isPlayingBgMusic ? "🔊 Pausar" : "▶ Lista"}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleStepPlaylistTrack(1)}
+                  className="px-2 py-1.5 rounded-lg bg-dark-950 hover:bg-dark-800 text-golden-300 text-xs font-black"
+                  title="Siguiente canción de la lista"
+                >
+                  ⏭
+                </button>
+                <select
+                  value={playlistIdx}
+                  onChange={(e) => handleSelectPlaylistTrack(Number(e.target.value))}
+                  aria-label="Seleccionar canción de la lista de reproducción"
+                  className="px-2 py-1.5 rounded-lg bg-dark-950 border border-gray-800 text-[11px] font-bold text-golden-300 outline-none max-w-[165px] sm:max-w-[205px]"
+                >
+                  {PLAYLIST_TRACKS.map((t, i) => (
+                    <option key={t.id} value={i}>
+                      {t.title}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setSingleTrackLoop((v) => !v)}
+                  className={`px-2 py-1.5 rounded-lg text-[10px] font-black uppercase border ${
+                    singleTrackLoop
+                      ? "bg-amber-500/25 border-amber-400 text-amber-300"
+                      : "bg-dark-950 border-gray-800 text-gray-300"
+                  }`}
+                  title="Alternar entre repetir toda la lista en bucle o repetir la canción actual"
+                >
+                  {singleTrackLoop ? "🔂 1 Canción" : "🔁 Lista"}
+                </button>
+              </div>
 
               <button
                 type="button"
@@ -889,10 +1053,10 @@ export default function LiveStreamPage() {
 
               <button
                 onClick={handleShareWhatsApp}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 transition-all hover:scale-105"
+                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs uppercase tracking-wider flex items-center gap-1.5 shadow-lg shadow-emerald-950/50 transition-all hover:scale-105"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span>Compartir en WhatsApp</span>
+                <span>Compartir</span>
               </button>
             </div>
 
@@ -939,10 +1103,51 @@ export default function LiveStreamPage() {
                 className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-dark-800 text-gray-300 border border-gray-700 transition-all"
                 title="Controlar qué cámaras están activas o dejar solo el afiche + sonido (requiere clave de administrador)"
               >
-                ⚙️ {showPosterControls ? "Ocultar control de pantalla" : isAdminUnlocked ? "Control de cámaras / afiche" : "🔒 Control de cámaras / afiche"}
+                ⚙️ {showPosterControls && isAdminUnlocked ? "🔒 Ocultar y bloquear control" : "🔒 Control de cámaras / afiche"}
               </button>
             </div>
           </div>
+
+          {/* Formulario de Clave de Administrador justo debajo del botón de Control de Cámaras */}
+          {showAdminPinPrompt && pendingAdminAction === "poster_controls" && (
+            <form
+              onSubmit={handleVerifyAdminPin}
+              className="flex flex-wrap items-center gap-2 p-3 rounded-2xl bg-dark-950 border-2 border-golden-500/70 shadow-2xl"
+            >
+              <span className="text-xs font-black text-golden-400 uppercase flex items-center gap-1">
+                🔐 Clave de administrador para control de cámaras:
+              </span>
+              <input
+                type="password"
+                value={adminPinInput}
+                onChange={(e) => {
+                  setAdminPinInput(e.target.value);
+                  setAdminPinError(false);
+                }}
+                placeholder="Ingresa la clave de administrador..."
+                autoFocus
+                className="px-3 py-1.5 rounded-xl bg-dark-900 border border-gray-700 focus:border-golden-400 text-white text-xs font-bold outline-none"
+              />
+              <button
+                type="submit"
+                className="px-3.5 py-1.5 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 font-black text-xs uppercase"
+              >
+                Desbloquear control
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAdminPinPrompt(false)}
+                className="px-2.5 py-1.5 rounded-xl bg-dark-800 hover:bg-dark-700 text-gray-300 text-xs font-bold"
+              >
+                Cancelar
+              </button>
+              {adminPinError && (
+                <span className="text-[11px] font-bold text-red-400 w-full">
+                  ⚠️ Clave incorrecta. Solo el administrador puede modificar las cámaras.
+                </span>
+              )}
+            </form>
+          )}
 
           {/* Píldoras Interactivas de Experiencia en Vivo + Cintillo Dinámico del Convenio */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-2 pt-2 border-t border-gray-800/80">
@@ -1000,16 +1205,16 @@ export default function LiveStreamPage() {
           </div>
         </div>
 
-        {/* Panel de Control de Cámaras y Afiche (Para activar/bloquear cámaras individualmente o dejar solo Afiche + Sonido) */}
-        {showPosterControls && (
+        {/* Panel de Control de Cámaras y Afiche (Estrictamente protegido con Clave de Administrador) */}
+        {showPosterControls && isAdminUnlocked && (
           <div className="mt-3 p-4 rounded-2xl bg-dark-900 border-2 border-golden-500/50 space-y-3 shadow-2xl">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-800 pb-2.5">
               <div>
                 <h4 className="text-xs font-black uppercase text-golden-400">
-                  🎛️ Control de Pantalla Principal, Cámaras y Afiche con Sonido en Bucle
+                  🎛️ Control de pantalla principal, cámaras y afiche con lista en bucle (Modo administrador)
                 </h4>
                 <p className="text-[11px] text-gray-400">
-                  Si una cámara no está transmitiendo, déjala en <strong>«🛡️ En Afiche»</strong> (con o sin sonido). Si ninguna cámara está activa, pulsa <strong>«🚫 Desactivar Todas las Cámaras»</strong> para dejar únicamente tu imagen y el sonido en bucle.
+                  Si una cámara no está transmitiendo, déjala en <strong>«🛡️ En Afiche»</strong> (con o sin sonido). Si ninguna cámara está activa, pulsa <strong>«🚫 Desactivar Todas las Cámaras»</strong> para dejar únicamente tu imagen y la lista de reproducción.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2">
@@ -1045,6 +1250,13 @@ export default function LiveStreamPage() {
                   className="px-3 py-1.5 rounded-xl bg-dark-950 hover:bg-dark-800 border border-gray-700 text-gray-200 font-bold text-xs uppercase"
                 >
                   {posterCleanImageOnly ? "📊 Mostrar Pizarra sobre Imagen" : "🖼️ Mostrar Solo Mi Imagen + Sonido"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLockAdminSession}
+                  className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-500/50 text-red-300 font-black text-xs uppercase"
+                >
+                  🔒 Bloquear Control
                 </button>
               </div>
             </div>
@@ -1295,29 +1507,35 @@ export default function LiveStreamPage() {
             ) : (
               /* IF MULTI-CAMERA VIDEO MODE */
               <>
-                {/* Selector de Vista: Afiche + Música en Bucle, Cámaras y Galería Fotográfica (Cero nombres internos) */}
+                {/* Selector de Vista: Afiche + Lista en Bucle, Cámaras y Galería Fotográfica (Con botón de Pantalla Completa) */}
                 <div className="p-3 sm:p-4 rounded-2xl bg-dark-900 border border-golden-500/30 shadow-xl space-y-2.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="text-xs font-black uppercase text-golden-400 tracking-wider flex items-center gap-1.5">
                       <Camera className="w-4 h-4" />
-                      <span>Elige la Vista del Partido o Galería Fotográfica en Vivo:</span>
+                      <span>Elige la vista del partido o galería fotográfica en vivo:</span>
                     </span>
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-dark-950 border border-gray-800 text-[10px] text-gray-300 font-bold">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-dark-950 border border-gray-800 text-[10px] text-gray-300 font-bold">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                        <span>Cobertura Oficial Curiol Studio</span>
+                        <span>Cobertura oficial Curiol Studio</span>
                       </div>
+                      <button
+                        type="button"
+                        onClick={toggleFullscreenPlayer}
+                        className="px-3 py-1 rounded-xl bg-golden-500 hover:bg-golden-400 text-dark-950 text-[11px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md transition-all hover:scale-105"
+                        title="Abrir vista actual en pantalla completa con selector de cámaras"
+                      >
+                        <Maximize2 className="w-3.5 h-3.5" />
+                        <span>⛶ Pantalla completa</span>
+                      </button>
                     </div>
                   </div>
 
                   <div className={`grid grid-cols-1 sm:grid-cols-2 ${hideAllCameraButtons ? "lg:grid-cols-2" : "lg:grid-cols-3"} gap-2.5`}>
-                    {/* Afiche Oficial + Música en Bucle (Activo por defecto mientras no hay cámaras) */}
+                    {/* Afiche Oficial + Lista de Reproducción (Activo por defecto mientras no hay cámaras) */}
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-poster");
-                        setIsPipActive(false);
-                      }}
+                      onClick={() => handleSelectCameraView("cam-poster")}
                       className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                         selectedCamId === "cam-poster"
                           ? "bg-gradient-to-r from-amber-400 via-golden-500 to-yellow-500 text-dark-950 border-golden-200 font-black shadow-lg shadow-golden-500/40 scale-[1.01]"
@@ -1328,10 +1546,10 @@ export default function LiveStreamPage() {
                         <span className="text-xl">🎬</span>
                         <div>
                           <div className="text-xs font-black uppercase tracking-tight">
-                            Afiche + Sonido
+                            Afiche + Lista
                           </div>
                           <div className={`text-[10px] ${selectedCamId === "cam-poster" ? "text-dark-900 font-bold" : "text-gray-400"}`}>
-                            ▶ Música en Bucle
+                            ▶ Lista de reproducción
                           </div>
                         </div>
                       </div>
@@ -1349,14 +1567,7 @@ export default function LiveStreamPage() {
                         {/* Cámara 1: Cancha Completa */}
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedCamId("cam-gopro");
-                            setIsPipActive(false);
-                            if (camPosterWithSound["cam-gopro"] === false && isPlayingBgMusic && bgAudioRef.current) {
-                              bgAudioRef.current.pause();
-                              setIsPlayingBgMusic(false);
-                            }
-                          }}
+                          onClick={() => handleSelectCameraView("cam-gopro")}
                           className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                             selectedCamId === "cam-gopro"
                               ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
@@ -1386,14 +1597,7 @@ export default function LiveStreamPage() {
                         {/* Cámara 2: Bajo el Aro */}
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedCamId("cam-gopro2");
-                            setIsPipActive(false);
-                            if (camPosterWithSound["cam-gopro2"] === false && isPlayingBgMusic && bgAudioRef.current) {
-                              bgAudioRef.current.pause();
-                              setIsPlayingBgMusic(false);
-                            }
-                          }}
+                          onClick={() => handleSelectCameraView("cam-gopro2")}
                           className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                             selectedCamId === "cam-gopro2"
                               ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
@@ -1423,14 +1627,7 @@ export default function LiveStreamPage() {
                         {/* Cámara 3: Seguimiento Lateral */}
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedCamId("cam-dji");
-                            setIsPipActive(false);
-                            if (camPosterWithSound["cam-dji"] === false && isPlayingBgMusic && bgAudioRef.current) {
-                              bgAudioRef.current.pause();
-                              setIsPlayingBgMusic(false);
-                            }
-                          }}
+                          onClick={() => handleSelectCameraView("cam-dji")}
                           className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                             selectedCamId === "cam-dji"
                               ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
@@ -1460,14 +1657,7 @@ export default function LiveStreamPage() {
                         {/* Cámara 4: Vista Aérea & Cenital */}
                         <button
                           type="button"
-                          onClick={() => {
-                            setSelectedCamId("cam-phone");
-                            setIsPipActive(false);
-                            if (camPosterWithSound["cam-phone"] === false && isPlayingBgMusic && bgAudioRef.current) {
-                              bgAudioRef.current.pause();
-                              setIsPlayingBgMusic(false);
-                            }
-                          }}
+                          onClick={() => handleSelectCameraView("cam-phone")}
                           className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                             selectedCamId === "cam-phone"
                               ? "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-300 font-black shadow-lg shadow-golden-500/30 scale-[1.01]"
@@ -1499,10 +1689,7 @@ export default function LiveStreamPage() {
                     {/* Galería Fotográfica en Tiempo Real */}
                     <button
                       type="button"
-                      onClick={() => {
-                        setSelectedCamId("cam-sony-photos");
-                        setIsPipActive(false);
-                      }}
+                      onClick={() => handleSelectCameraView("cam-sony-photos")}
                       className={`flex items-center justify-between p-3 rounded-2xl border text-left transition-all ${
                         selectedCamId === "cam-sony-photos"
                           ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-teal-500 text-dark-950 border-emerald-300 font-black shadow-lg shadow-emerald-500/30 scale-[1.01]"
@@ -1531,312 +1718,436 @@ export default function LiveStreamPage() {
                   </div>
                 </div>
 
-                {/* Si está activa la Galería Fotográfica en Tiempo Real */}
-                {selectedCamId === "cam-sony-photos" ? (
-                  <div className="rounded-3xl bg-dark-900 border-2 border-emerald-500/40 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-800 pb-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-                          <h3 className="text-sm sm:text-base font-black uppercase text-white tracking-wide">
-                            Galería Fotográfica en Tiempo Real • Curiol Studio
-                          </h3>
-                        </div>
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          Las mejores fotografías capturadas en cancha durante el partido se publican aquí en tiempo real.
-                        </p>
-                      </div>
-                    </div>
-
-                    {selectedSonyPhoto ? (
-                      <div className="space-y-4">
-                        {/* Visor Principal de la Última Fotografía */}
-                        <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-dark-950 border border-gray-800 flex items-center justify-center">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={(selectedSonyPhoto as any).webp_data_url || `${tetherBaseUrl}${selectedSonyPhoto.preview_url || selectedSonyPhoto.url}`}
-                            alt={selectedSonyPhoto.filename}
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-
-                        {/* Tira de Miniaturas en Tiempo Real */}
-                        <div className="space-y-1.5">
-                          <div className="flex items-center justify-between text-xs text-gray-400">
-                            <span>Fotografías del partido en directo:</span>
-                            <span className="text-emerald-400 font-bold">
-                              Publicadas: {sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length}
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-1">
-                            {sonyPhotos
-                              .filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename])
-                              .slice(0, 24)
-                              .map((p) => {
-                                const pKey = p.base_id || p.id || p.filename;
-                                const activeKey = selectedSonyPhoto?.base_id || selectedSonyPhoto?.id || selectedSonyPhoto?.filename;
-                                return (
-                                  <button
-                                    key={pKey}
-                                    type="button"
-                                    onClick={() => setSelectedSonyPhoto(p)}
-                                    className={`relative aspect-[3/2] rounded-xl overflow-hidden border-2 transition-all ${
-                                      activeKey === pKey
-                                        ? "border-emerald-400 scale-[1.02] shadow-lg"
-                                        : "border-gray-800 opacity-80 hover:opacity-100"
-                                    }`}
-                                  >
-                                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                                    <img
-                                      src={(p as any).webp_data_url || `${tetherBaseUrl}${p.thumb_url || p.url}`}
-                                      alt={p.filename}
-                                      className="w-full h-full object-cover"
-                                      loading="lazy"
-                                    />
-                                  </button>
-                                );
-                              })}
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="py-14 text-center space-y-3">
-                        <div className="text-4xl">📸</div>
-                        <h4 className="text-base font-black text-white uppercase">
-                          Pronto Iniciará la Galería Fotográfica en Vivo
-                        </h4>
-                        <p className="text-xs text-gray-400 max-w-md mx-auto">
-                          En cuanto comience el encuentro en el Gimnasio La Paz Community School Tempisque, aquí aparecerán de forma instantánea las fotografías oficiales capturadas por Curiol Studio.
-                        </p>
-                      </div>
-                    )}
+                {/* CONTENEDOR UNIFICADO CON MODO PANTALLA COMPLETA Y SELECTOR DE CÁMARAS INTEGRADO */}
+                <div
+                  ref={playerContainerRef}
+                  className={
+                    isFullscreen
+                      ? "fixed inset-0 z-[100] w-screen h-screen bg-dark-950 flex flex-col justify-between p-2 sm:p-4 overflow-y-auto"
+                      : "relative w-full"
+                  }
+                >
+                  {/* Botón Flotante Superior Derecho: Entrar / Salir de Pantalla Completa */}
+                  <div className="absolute top-3 right-3 z-40 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={toggleFullscreenPlayer}
+                      className={`px-3.5 py-2 rounded-2xl font-black text-xs uppercase tracking-wider flex items-center gap-1.5 border shadow-2xl transition-all hover:scale-105 ${
+                        isFullscreen
+                          ? "bg-red-600 hover:bg-red-500 text-white border-red-300"
+                          : "bg-dark-950/90 hover:bg-golden-500 text-golden-300 hover:text-dark-950 border-golden-500/60 backdrop-blur-md"
+                      }`}
+                      title={isFullscreen ? "Salir de pantalla completa (ESC)" : "Ver cámara actual en pantalla completa"}
+                    >
+                      <Maximize2 className="w-3.5 h-3.5" />
+                      <span>{isFullscreen ? "✕ Salir de pantalla completa" : "⛶ Pantalla completa"}</span>
+                    </button>
                   </div>
-                ) : (
-                /* Video Player Container (Si la cámara seleccionada no está activa, muestra siempre el Afiche Oficial + Música en Bucle, CERO pantallas caídas) */
-                <div className="relative w-full aspect-video rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/40 shadow-2xl group">
-                  
-                  {selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId] ? (
-                    <div className="w-full h-full relative bg-dark-950 flex items-center justify-center">
-                      <iframe
-                        src={`${tetherBaseUrl}/cam_view/${selectedCamId === "cam-gopro2" ? "gopro2" : selectedCamId === "cam-dji" ? "osmo" : selectedCamId === "cam-phone" ? "dron" : "gopro"}`}
-                        className="w-full h-full border-0 absolute inset-0"
-                        allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    /* AFICHE OFICIAL EN VIVO + FLECHA DE SONIDO EN BUCLE EN PANTALLA PRINCIPAL */
-                    <div className="w-full h-full relative bg-dark-950 flex flex-col items-center justify-between p-4 sm:p-8 text-center overflow-hidden">
-                      {/* Imagen de Fondo del Afiche Personalizable */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={customPosterBgUrl}
-                        alt="Fondo Afiche Oficial"
-                        className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
-                          posterCleanImageOnly ? "opacity-95 scale-100" : "opacity-35 scale-105"
-                        }`}
-                      />
-                      {!posterCleanImageOnly && (
-                        <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/80 to-dark-950/75" />
-                      )}
 
-                      {/* Parte Superior del Afiche: Mensaje "Pronto iniciará el partido" + Categoría */}
-                      <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 pt-1">
-                        <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-950/90 border border-amber-400/70 text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
-                          <span>
-                            {selectedCamId !== "cam-poster"
-                              ? "⏳ PRONTO INICIARÁ EL PARTIDO • SEÑAL DE CÁMARA EN PROCESO"
-                              : posterStatusText}
-                          </span>
-                        </span>
-
-                        <span className="px-3.5 py-1.5 rounded-full bg-golden-500 text-dark-950 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
-                          🏀 {config.category || "Niños Pequeños (Formativo)"}
-                        </span>
+                  {/* Si está activa la Galería Fotográfica en Tiempo Real */}
+                  {selectedCamId === "cam-sony-photos" ? (
+                    <div className={`${isFullscreen ? "flex-1 flex flex-col justify-center" : ""} rounded-3xl bg-dark-900 border-2 border-emerald-500/40 shadow-2xl overflow-hidden p-4 sm:p-6 space-y-4`}>
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-gray-800 pb-3 pr-36">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                            <h3 className="text-sm sm:text-base font-black uppercase text-white tracking-wide">
+                              Galería Fotográfica en Tiempo Real • Curiol Studio
+                            </h3>
+                          </div>
+                          <p className="text-xs text-gray-400 mt-0.5">
+                            Las mejores fotografías capturadas en cancha durante el partido se publican aquí en tiempo real.
+                          </p>
+                        </div>
                       </div>
 
-                      {/* Parte Central del Afiche: 1° La Paz Community School Tempisque vs 2° Golden Sport Academy Santa Cruz (Ocultable si elige "Solo Mi Imagen + Sonido") */}
-                      {!posterCleanImageOnly ? (
-                        <div className="relative z-10 w-full max-w-4xl my-auto py-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-7 items-center gap-3 sm:gap-5 bg-dark-950/85 backdrop-blur-md border-2 border-golden-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl">
-                            {/* 1° Local: La Paz Community School Tempisque */}
-                            <div className="sm:col-span-3 flex items-center justify-between sm:justify-center gap-3">
-                              <div className="w-24 h-14 sm:w-28 sm:h-16 rounded-2xl bg-[#FCFBF9] border-2 border-emerald-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
-                                <Image
-                                  src="/logo-la-paz-tempisque.png"
-                                  alt="La Paz Community School Tempisque"
-                                  width={110}
-                                  height={48}
-                                  className="object-contain max-h-12 w-auto"
-                                />
-                              </div>
-                              <div className="text-left">
-                                <span className="text-[10px] font-black uppercase text-emerald-400 block">
-                                  🏠 Equipo Local
-                                </span>
-                                <span className="text-xs sm:text-sm font-black text-white leading-tight block">
-                                  {config.scoreboard?.homeTeam || "La Paz Community School Tempisque"}
-                                </span>
-                                <span className="text-2xl sm:text-4xl font-black font-mono text-emerald-400 leading-none mt-1 block">
-                                  {config.scoreboard?.homeScore ?? 0}
-                                </span>
-                              </div>
-                            </div>
+                      {selectedSonyPhoto ? (
+                        <div className="space-y-4">
+                          {/* Visor Principal de la Última Fotografía */}
+                          <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-dark-950 border border-gray-800 flex items-center justify-center">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={(selectedSonyPhoto as any).webp_data_url || `${tetherBaseUrl}${selectedSonyPhoto.preview_url || selectedSonyPhoto.url}`}
+                              alt={selectedSonyPhoto.filename}
+                              className="w-full h-full object-contain"
+                            />
+                          </div>
 
-                            {/* VS Central */}
-                            <div className="sm:col-span-1 flex flex-col items-center justify-center">
-                              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-golden-400 to-amber-600 text-dark-950 font-black text-sm flex items-center justify-center shadow-lg border border-golden-200">
-                                VS
-                              </div>
+                          {/* Tira de Miniaturas en Tiempo Real */}
+                          <div className="space-y-1.5">
+                            <div className="flex items-center justify-between text-xs text-gray-400">
+                              <span>Fotografías del partido en directo:</span>
+                              <span className="text-emerald-400 font-bold">
+                                Publicadas: {sonyPhotos.filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename]).length}
+                              </span>
                             </div>
-
-                            {/* 2° Visita: Golden Sport Academy Santa Cruz */}
-                            <div className="sm:col-span-3 flex flex-row-reverse sm:flex-row items-center justify-between sm:justify-center gap-3">
-                              <div className="text-right">
-                                <span className="text-[10px] font-black uppercase text-golden-400 block">
-                                  🚌 Equipo Visita
-                                </span>
-                                <span className="text-xs sm:text-sm font-black text-golden-400 leading-tight block">
-                                  {config.scoreboard?.awayTeam || "Golden Sport Academy Santa Cruz"}
-                                </span>
-                                <span className="text-2xl sm:text-4xl font-black font-mono text-golden-400 leading-none mt-1 block">
-                                  {config.scoreboard?.awayScore ?? 0}
-                                </span>
-                              </div>
-                              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
-                                <Image
-                                  src="/logo.png"
-                                  alt="Golden Sport Academy Santa Cruz"
-                                  width={54}
-                                  height={54}
-                                  className="object-contain max-h-12 w-auto"
-                                />
-                              </div>
+                            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 gap-2 max-h-48 overflow-y-auto pr-1">
+                              {sonyPhotos
+                                .filter((p) => p.published_live || approvedPhotoIds[p.base_id || p.id || p.filename])
+                                .slice(0, 24)
+                                .map((p) => {
+                                  const pKey = p.base_id || p.id || p.filename;
+                                  const activeKey = selectedSonyPhoto?.base_id || selectedSonyPhoto?.id || selectedSonyPhoto?.filename;
+                                  return (
+                                    <button
+                                      key={pKey}
+                                      type="button"
+                                      onClick={() => setSelectedSonyPhoto(p)}
+                                      className={`relative aspect-[3/2] rounded-xl overflow-hidden border-2 transition-all ${
+                                        activeKey === pKey
+                                          ? "border-emerald-400 scale-[1.02] shadow-lg"
+                                          : "border-gray-800 opacity-80 hover:opacity-100"
+                                      }`}
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={(p as any).webp_data_url || `${tetherBaseUrl}${p.thumb_url || p.url}`}
+                                        alt={p.filename}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
+                                      />
+                                    </button>
+                                  );
+                                })}
                             </div>
                           </div>
                         </div>
                       ) : (
-                        <div className="my-auto" />
+                        <div className="py-14 text-center space-y-3">
+                          <div className="text-4xl">📸</div>
+                          <h4 className="text-base font-black text-white uppercase">
+                            Pronto Iniciará la Galería Fotográfica en Vivo
+                          </h4>
+                          <p className="text-xs text-gray-400 max-w-md mx-auto">
+                            En cuanto comience el encuentro en el Gimnasio La Paz Community School Tempisque, aquí aparecerán de forma instantánea las fotografías oficiales capturadas por Curiol Studio.
+                          </p>
+                        </div>
                       )}
+                    </div>
+                  ) : (
+                  /* Video Player Container (Si la cámara seleccionada no está activa, muestra siempre el Afiche Oficial + Lista en Bucle, CERO pantallas caídas) */
+                  <div className={`relative w-full ${isFullscreen ? "flex-1 min-h-[70vh]" : "aspect-video"} rounded-3xl overflow-hidden bg-dark-950 border-2 border-golden-500/40 shadow-2xl group`}>
+                    
+                    {selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId] ? (
+                      <div className="w-full h-full relative bg-dark-950 flex items-center justify-center">
+                        <iframe
+                          src={`${tetherBaseUrl}/cam_view/${selectedCamId === "cam-gopro2" ? "gopro2" : selectedCamId === "cam-dji" ? "osmo" : selectedCamId === "cam-phone" ? "dron" : "gopro"}`}
+                          className="w-full h-full border-0 absolute inset-0"
+                          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                          allowFullScreen
+                        />
+                      </div>
+                    ) : (
+                      /* AFICHE OFICIAL EN VIVO + LISTA DE REPRODUCCIÓN EN BUCLE EN PANTALLA PRINCIPAL */
+                      <div className="w-full h-full relative bg-dark-950 flex flex-col items-center justify-between p-4 sm:p-8 text-center overflow-hidden">
+                        {/* Imagen de Fondo del Afiche Personalizable */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={customPosterBgUrl}
+                          alt="Fondo Afiche Oficial"
+                          className={`absolute inset-0 w-full h-full object-cover transition-transform duration-700 ${
+                            posterCleanImageOnly ? "opacity-95 scale-100" : "opacity-35 scale-105"
+                          }`}
+                        />
+                        {!posterCleanImageOnly && (
+                          <div className="absolute inset-0 bg-gradient-to-t from-dark-950 via-dark-950/80 to-dark-950/75" />
+                        )}
 
-                      {/* Parte Inferior del Afiche: FLECHA DE SONIDO EN BUCLE (▶ / ⏸) + Opción Con/Sin Sonido */}
-                      <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 pb-1">
-                        {camPosterWithSound[selectedCamId] !== false ? (
+                        {/* Parte Superior del Afiche: Mensaje "Pronto iniciará el partido" + Categoría */}
+                        <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 pt-1 pr-28 sm:pr-0">
+                          <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-dark-950/90 border border-amber-400/70 text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
+                            <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-ping" />
+                            <span>
+                              {selectedCamId !== "cam-poster"
+                                ? "⏳ PRONTO INICIARÁ EL PARTIDO • SEÑAL DE CÁMARA EN PROCESO"
+                                : posterStatusText}
+                            </span>
+                          </span>
+
+                          <span className="px-3.5 py-1.5 rounded-full bg-golden-500 text-dark-950 text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg">
+                            🏀 {config.category || "Niños Pequeños (Formativo)"}
+                          </span>
+                        </div>
+
+                        {/* Parte Central del Afiche: 1° La Paz Community School Tempisque vs 2° Golden Sport Academy Santa Cruz (Ocultable si elige "Solo Mi Imagen + Sonido") */}
+                        {!posterCleanImageOnly ? (
+                          <div className="relative z-10 w-full max-w-4xl my-auto py-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-7 items-center gap-3 sm:gap-5 bg-dark-950/85 backdrop-blur-md border-2 border-golden-500/50 rounded-3xl p-4 sm:p-6 shadow-2xl">
+                              {/* 1° Local: La Paz Community School Tempisque */}
+                              <div className="sm:col-span-3 flex items-center justify-between sm:justify-center gap-3">
+                                <div className="w-24 h-14 sm:w-28 sm:h-16 rounded-2xl bg-[#FCFBF9] border-2 border-emerald-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
+                                  <Image
+                                    src="/logo-la-paz-tempisque.png"
+                                    alt="La Paz Community School Tempisque"
+                                    width={110}
+                                    height={48}
+                                    className="object-contain max-h-12 w-auto"
+                                  />
+                                </div>
+                                <div className="text-left">
+                                  <span className="text-[10px] font-black uppercase text-emerald-400 block">
+                                    🏠 Equipo Local
+                                  </span>
+                                  <span className="text-xs sm:text-sm font-black text-white leading-tight block">
+                                    {config.scoreboard?.homeTeam || "La Paz Community School Tempisque"}
+                                  </span>
+                                  <span className="text-2xl sm:text-4xl font-black font-mono text-emerald-400 leading-none mt-1 block">
+                                    {config.scoreboard?.homeScore ?? 0}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* VS Central */}
+                              <div className="sm:col-span-1 flex flex-col items-center justify-center">
+                                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-golden-400 to-amber-600 text-dark-950 font-black text-sm flex items-center justify-center shadow-lg border border-golden-200">
+                                  VS
+                                </div>
+                              </div>
+
+                              {/* 2° Visita: Golden Sport Academy Santa Cruz */}
+                              <div className="sm:col-span-3 flex flex-row-reverse sm:flex-row items-center justify-between sm:justify-center gap-3">
+                                <div className="text-right">
+                                  <span className="text-[10px] font-black uppercase text-golden-400 block">
+                                    🚌 Equipo Visita
+                                  </span>
+                                  <span className="text-xs sm:text-sm font-black text-golden-400 leading-tight block">
+                                    {config.scoreboard?.awayTeam || "Golden Sport Academy Santa Cruz"}
+                                  </span>
+                                  <span className="text-2xl sm:text-4xl font-black font-mono text-golden-400 leading-none mt-1 block">
+                                    {config.scoreboard?.awayScore ?? 0}
+                                  </span>
+                                </div>
+                                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-dark-900 border-2 border-golden-500 p-1.5 flex items-center justify-center shadow-lg shrink-0">
+                                  <Image
+                                    src="/logo.png"
+                                    alt="Golden Sport Academy Santa Cruz"
+                                    width={54}
+                                    height={54}
+                                    className="object-contain max-h-12 w-auto"
+                                  />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="my-auto" />
+                        )}
+
+                        {/* Parte Inferior del Afiche: REPRODUCTOR DE LA LISTA DE REPRODUCCIÓN EN BUCLE */}
+                        <div className="relative z-10 flex flex-wrap items-center justify-center gap-2 pb-1">
+                          {camPosterWithSound[selectedCamId] !== false ? (
+                            <div className="flex flex-wrap items-center justify-center gap-2 p-2 rounded-2xl bg-dark-950/90 border border-golden-500/50 shadow-2xl">
+                              <button
+                                type="button"
+                                onClick={() => handleStepPlaylistTrack(-1)}
+                                className="px-3 py-2 rounded-xl bg-dark-900 hover:bg-dark-800 text-golden-300 text-xs font-black border border-gray-800"
+                                title="Canción anterior"
+                              >
+                                ⏮
+                              </button>
+                              <button
+                                type="button"
+                                onClick={toggleBgMusic}
+                                className={`px-4 py-2 rounded-xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-2.5 border transition-all hover:scale-105 ${
+                                  isPlayingBgMusic
+                                    ? "bg-emerald-500 text-dark-950 border-emerald-200 shadow-lg"
+                                    : "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-200 shadow-lg"
+                                }`}
+                              >
+                                <span className="w-7 h-7 rounded-lg bg-dark-950 text-golden-400 flex items-center justify-center text-sm font-black">
+                                  {isPlayingBgMusic ? "⏸" : "▶"}
+                                </span>
+                                <div className="text-left">
+                                  <span className="block leading-tight text-xs font-black">
+                                    {isPlayingBgMusic ? "🔊 PAUSAR MÚSICA" : "▶ REPRODUCIR LISTA EN BUCLE"}
+                                  </span>
+                                  <span className="text-[10px] font-bold opacity-85 block max-w-[180px] sm:max-w-[230px] truncate">
+                                    {customBgMusicName || PLAYLIST_TRACKS[playlistIdx].title}
+                                  </span>
+                                </div>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleStepPlaylistTrack(1)}
+                                className="px-3 py-2 rounded-xl bg-dark-900 hover:bg-dark-800 text-golden-300 text-xs font-black border border-gray-800"
+                                title="Siguiente canción"
+                              >
+                                ⏭
+                              </button>
+                              <select
+                                value={playlistIdx}
+                                onChange={(e) => handleSelectPlaylistTrack(Number(e.target.value))}
+                                aria-label="Elegir canción de la lista de reproducción"
+                                className="px-2.5 py-2 rounded-xl bg-dark-900 border border-gray-700 text-xs font-bold text-golden-300 outline-none max-w-[190px]"
+                              >
+                                {PLAYLIST_TRACKS.map((t, i) => (
+                                  <option key={t.id} value={i}>
+                                    {t.title}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          ) : (
+                            <div className="px-4 py-2 rounded-2xl bg-dark-950/90 border border-gray-700 text-gray-300 text-xs font-bold flex items-center gap-2">
+                              <VolumeX className="w-4 h-4 text-gray-400" />
+                              <span>🔇 Afiche en Modo Silencioso</span>
+                              <button
+                                type="button"
+                                onClick={() => toggleCamPosterSound(selectedCamId)}
+                                className="ml-2 px-2.5 py-1 rounded-lg bg-golden-500 text-dark-950 font-black text-[10px] uppercase"
+                              >
+                                Activar Sonido ▶
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* PiP Inset Window (Secondary Camera) */}
+                    {isPipActive && config.isLive && (
+                      <div className="absolute top-14 right-4 w-48 sm:w-60 aspect-video rounded-2xl overflow-hidden bg-dark-900 border-2 border-golden-400 shadow-2xl z-30 transition-all hover:scale-105 cursor-pointer">
+                        <div className="relative w-full h-full bg-dark-950 flex flex-col items-center justify-center p-2 text-center">
+                          <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-dark-950/90 text-golden-400 font-mono text-[9px] font-bold border border-golden-500/40">
+                            {secondaryCam?.shortName}
+                          </div>
+                          <span className="text-[10px] text-gray-300 font-bold uppercase">{secondaryCam?.deviceModel}</span>
+                          <span className="text-[9px] text-gray-500">Cámara Secundaria</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO (Solo cuando hay cámara de video activa o modo imagen limpia, para no encimar el Afiche) */}
+                    {(config.scoreboardVisible ?? true) && ((selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId]) || posterCleanImageOnly) && (
+                      <div className="absolute top-4 left-4 z-20 pointer-events-none">
+                        <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex items-center gap-2.5 sm:gap-3 text-white">
+                          
+                          {/* 1° Home Team: La Paz Community School Tempisque */}
+                          <div className="flex items-center gap-2">
+                            <div className="w-10 h-7 sm:w-12 sm:h-8 rounded-lg bg-[#FCFBF9] border border-emerald-500/50 p-0.5 flex items-center justify-center shrink-0">
+                              <Image src="/logo-la-paz-tempisque.png" alt="La Paz" width={40} height={24} className="object-contain max-h-6 w-auto" />
+                            </div>
+                            <div>
+                              <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-400 block leading-tight">
+                                LA PAZ
+                              </span>
+                              <span className="text-sm sm:text-lg font-black font-mono leading-none block">
+                                {config.scoreboard?.homeScore ?? 0}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Divider VS */}
+                          <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
+                            <span className="text-[10px] font-black text-golden-400 uppercase">
+                              VS
+                            </span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping mt-0.5" />
+                          </div>
+
+                          {/* 2° Away Team: Golden Sport Academy Santa Cruz */}
+                          <div className="flex items-center gap-2">
+                            <div className="text-right">
+                              <span className="text-[9px] sm:text-[10px] font-black uppercase text-golden-400 block leading-tight">
+                                GOLDEN
+                              </span>
+                              <span className="text-sm sm:text-lg font-black font-mono leading-none block">
+                                {config.scoreboard?.awayScore ?? 0}
+                              </span>
+                            </div>
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/50 p-0.5 flex items-center justify-center shrink-0">
+                              <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Watermark Sponsor Overlay (Condicional: sponsorsVisible) */}
+                    {(config.sponsorsVisible ?? true) && (
+                      <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
+                        <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
+                          <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
+                          <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
+                            CURIOL STUDIO
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                  )}
+
+                  {/* BARRA FLOTANTE DE CAMBIO DE CÁMARAS EN MODO PANTALLA COMPLETA */}
+                  {isFullscreen && (
+                    <div className="mt-3 p-3 rounded-2xl bg-dark-900/95 backdrop-blur-md border-2 border-golden-500/60 shadow-2xl z-40">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="text-[11px] font-black uppercase text-golden-400 mr-1">
+                            📹 Cambiar cámara en pantalla completa:
+                          </span>
+                          {[
+                            { id: "cam-poster", label: "🎬 Afiche + Lista", show: true },
+                            { id: "cam-gopro", label: "📹 Cámara 1 (Cancha)", show: !hideAllCameraButtons },
+                            { id: "cam-gopro2", label: "📹 Cámara 2 (Aro)", show: !hideAllCameraButtons },
+                            { id: "cam-dji", label: "🔥 Cámara 3 (Lateral)", show: !hideAllCameraButtons },
+                            { id: "cam-phone", label: "🚁 Cámara 4 (Aérea)", show: !hideAllCameraButtons },
+                            { id: "cam-sony-photos", label: "📸 Fotos en Vivo", show: true },
+                          ]
+                            .filter((item) => item.show)
+                            .map((item) => (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => handleSelectCameraView(item.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase transition-all ${
+                                  selectedCamId === item.id
+                                    ? "bg-golden-500 text-dark-950 shadow-lg scale-105"
+                                    : "bg-dark-950 hover:bg-dark-800 text-gray-200 border border-gray-700"
+                                }`}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleStepPlaylistTrack(-1)}
+                            className="px-2.5 py-1.5 rounded-xl bg-dark-950 text-golden-300 border border-gray-700 text-xs font-black"
+                            title="Canción anterior"
+                          >
+                            ⏮
+                          </button>
                           <button
                             type="button"
                             onClick={toggleBgMusic}
-                            className={`px-6 py-3 rounded-2xl font-black text-xs sm:text-sm uppercase tracking-wider flex items-center gap-3 border-2 shadow-2xl transition-all hover:scale-105 ${
-                              isPlayingBgMusic
-                                ? "bg-emerald-500 text-dark-950 border-emerald-200 shadow-emerald-500/40"
-                                : "bg-gradient-to-r from-golden-400 via-golden-500 to-amber-500 text-dark-950 border-golden-200 shadow-golden-500/40"
-                            }`}
+                            className="px-3 py-1.5 rounded-xl bg-emerald-500 text-dark-950 text-xs font-black uppercase"
                           >
-                            <span className="w-8 h-8 rounded-xl bg-dark-950 text-golden-400 flex items-center justify-center text-base font-black shadow-md">
-                              {isPlayingBgMusic ? "⏸" : "▶"}
-                            </span>
-                            <div className="text-left">
-                              <span className="block leading-tight">
-                                {isPlayingBgMusic
-                                  ? "🔊 SONIDO EN BUCLE ACTIVO (Toca para Pausar)"
-                                  : "▶ REPRODUCIR SONIDO EN BUCLE DEL PARTIDO"}
-                              </span>
-                              <span className="text-[10px] font-bold opacity-85 block">
-                                🔁 {customBgMusicName || "Canción Oficial La Paz vs. Golden (En Bucle)"}
-                              </span>
-                            </div>
+                            {isPlayingBgMusic ? "⏸ Pausar" : "▶ Música"}
                           </button>
-                        ) : (
-                          <div className="px-4 py-2 rounded-2xl bg-dark-950/90 border border-gray-700 text-gray-300 text-xs font-bold flex items-center gap-2">
-                            <VolumeX className="w-4 h-4 text-gray-400" />
-                            <span>🔇 Afiche en Modo Silencioso</span>
-                            <button
-                              type="button"
-                              onClick={() => toggleCamPosterSound(selectedCamId)}
-                              className="ml-2 px-2.5 py-1 rounded-lg bg-golden-500 text-dark-950 font-black text-[10px] uppercase"
-                            >
-                              Activar Sonido ▶
-                            </button>
-                          </div>
-                        )}
+                          <button
+                            type="button"
+                            onClick={() => handleStepPlaylistTrack(1)}
+                            className="px-2.5 py-1.5 rounded-xl bg-dark-950 text-golden-300 border border-gray-700 text-xs font-black"
+                            title="Siguiente canción"
+                          >
+                            ⏭
+                          </button>
+                          <button
+                            type="button"
+                            onClick={toggleFullscreenPlayer}
+                            className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white text-xs font-black uppercase"
+                          >
+                            ✕ Salir
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
-
-                  {/* PiP Inset Window (Secondary Camera) */}
-                  {isPipActive && config.isLive && (
-                    <div className="absolute top-4 right-4 w-48 sm:w-60 aspect-video rounded-2xl overflow-hidden bg-dark-900 border-2 border-golden-400 shadow-2xl z-30 transition-all hover:scale-105 cursor-pointer">
-                      <div className="relative w-full h-full bg-dark-950 flex flex-col items-center justify-center p-2 text-center">
-                        <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-dark-950/90 text-golden-400 font-mono text-[9px] font-bold border border-golden-500/40">
-                          {secondaryCam?.shortName}
-                        </div>
-                        <span className="text-[10px] text-gray-300 font-bold uppercase">{secondaryCam?.deviceModel}</span>
-                        <span className="text-[9px] text-gray-500">Cámara Secundaria</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* OFFICIAL SCOREBOARD OVERLAY ON VIDEO (Solo cuando hay cámara de video activa o modo imagen limpia, para no encimar el Afiche) */}
-                  {(config.scoreboardVisible ?? true) && ((selectedCamId !== "cam-poster" && camLiveEnabled[selectedCamId]) || posterCleanImageOnly) && (
-                    <div className="absolute top-4 left-4 z-20 pointer-events-none">
-                      <div className="bg-dark-950/90 backdrop-blur-md border border-golden-500/50 rounded-2xl p-2 sm:p-2.5 shadow-2xl flex items-center gap-2.5 sm:gap-3 text-white">
-                        
-                        {/* 1° Home Team: La Paz Community School Tempisque */}
-                        <div className="flex items-center gap-2">
-                          <div className="w-10 h-7 sm:w-12 sm:h-8 rounded-lg bg-[#FCFBF9] border border-emerald-500/50 p-0.5 flex items-center justify-center shrink-0">
-                            <Image src="/logo-la-paz-tempisque.png" alt="La Paz" width={40} height={24} className="object-contain max-h-6 w-auto" />
-                          </div>
-                          <div>
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase text-emerald-400 block leading-tight">
-                              LA PAZ
-                            </span>
-                            <span className="text-sm sm:text-lg font-black font-mono leading-none block">
-                              {config.scoreboard?.homeScore ?? 0}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Divider VS */}
-                        <div className="flex flex-col items-center justify-center px-2 border-x border-gray-700">
-                          <span className="text-[10px] font-black text-golden-400 uppercase">
-                            VS
-                          </span>
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping mt-0.5" />
-                        </div>
-
-                        {/* 2° Away Team: Golden Sport Academy Santa Cruz */}
-                        <div className="flex items-center gap-2">
-                          <div className="text-right">
-                            <span className="text-[9px] sm:text-[10px] font-black uppercase text-golden-400 block leading-tight">
-                              GOLDEN
-                            </span>
-                            <span className="text-sm sm:text-lg font-black font-mono leading-none block">
-                              {config.scoreboard?.awayScore ?? 0}
-                            </span>
-                          </div>
-                          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-dark-900 border border-golden-500/50 p-0.5 flex items-center justify-center shrink-0">
-                            <Image src="/logo.png" alt="Golden" width={24} height={24} className="object-contain" />
-                          </div>
-                        </div>
-
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Watermark Sponsor Overlay (Condicional: sponsorsVisible) */}
-                  {(config.sponsorsVisible ?? true) && (
-                    <div className="absolute bottom-3 right-4 z-20 pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
-                      <div className="flex items-center gap-2 bg-dark-950/80 backdrop-blur-sm px-2.5 py-1 rounded-xl border border-golden-500/30">
-                        <Image src="/curiol-studio-official.png" alt="Curiol Studio" width={22} height={22} className="object-contain" />
-                        <span className="text-[9px] font-black uppercase tracking-wider text-golden-400">
-                          CURIOL STUDIO
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
                 </div>
-                )}
               </>
             )}
 

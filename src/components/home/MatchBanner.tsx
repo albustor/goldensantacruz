@@ -31,10 +31,14 @@ const PRESET_CATEGORIES = [
 ];
 
 const AUDIO_TRACKS = [
-  { id: "himno_hoy", label: "🔥 Canción Oficial del Partido (Bucle)", src: "/audio/golden_lapaz_loop.mp3" },
-  { id: "cancha", label: "🏀 Modo Cancha (Bucle)", src: "/audio/modo_cancha.mp3" },
-  { id: "beat", label: "⚡ Ritmo Deportivo (Bucle)", src: "/audio/golden-court-loop.mp3" },
-  { id: "inst", label: "🎵 Instrumental Épico (Bucle)", src: "/audio/instrumental.mp3" },
+  { id: "01", label: "1. Bitter Sweet Symphony — The Verve", src: "/audio/playlist/01_bitter_sweet_symphony.mp3" },
+  { id: "02", label: "2. Here Comes The Sun — The Beatles", src: "/audio/playlist/02_here_comes_the_sun.mp3" },
+  { id: "03", label: "3. Last Kiss — Pearl Jam", src: "/audio/playlist/03_last_kiss.mp3" },
+  { id: "04", label: "4. Don't Dream It's Over — Crowded House", src: "/audio/playlist/04_dont_dream_its_over.mp3" },
+  { id: "05", label: "5. I Want to Know What Love Is — Foreigner", src: "/audio/playlist/05_i_want_to_know_what_love_is.mp3" },
+  { id: "06", label: "6. Shallow — Lady Gaga", src: "/audio/playlist/06_shallow.mp3" },
+  { id: "07", label: "7. Fields Of Gold — Sting", src: "/audio/playlist/07_fields_of_gold.mp3" },
+  { id: "08", label: "8. Save Your Tears — The Weeknd", src: "/audio/playlist/08_save_your_tears.mp3" },
 ];
 
 export default function MatchBanner() {
@@ -129,16 +133,30 @@ export default function MatchBanner() {
   };
 
   const handleTrackChange = async (idx: number) => {
+    const safeIdx = ((idx % AUDIO_TRACKS.length) + AUDIO_TRACKS.length) % AUDIO_TRACKS.length;
     setCustomAudioUrl(null);
-    setSelectedTrackIdx(idx);
+    setCustomAudioName("");
+    setSelectedTrackIdx(safeIdx);
     const el = audioRef.current;
     if (!el) return;
-    el.src = AUDIO_TRACKS[idx].src;
-    if (isPlayingMusic) {
-      try {
-        await el.play();
-      } catch {}
+    el.src = AUDIO_TRACKS[safeIdx].src;
+    el.volume = 0.55;
+    try {
+      await el.play();
+      setIsPlayingMusic(true);
+    } catch {}
+  };
+
+  const handleAudioEnded = () => {
+    if (customAudioUrl) {
+      const el = audioRef.current;
+      if (el) {
+        el.currentTime = 0;
+        el.play().catch(() => {});
+      }
+      return;
     }
+    handleTrackChange(selectedTrackIdx + 1);
   };
 
   const handleUploadCustomMusic = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -158,12 +176,6 @@ export default function MatchBanner() {
       } catch {}
     }
   };
-
-  useEffect(() => {
-    if (typeof window !== "undefined" && sessionStorage.getItem("golden_admin_logged") === "true") {
-      setIsAdminUnlocked(true);
-    }
-  }, []);
 
   const handleRequestAdminAction = (actionType: "category" | "score" | "music") => {
     if (isAdminUnlocked) {
@@ -197,9 +209,6 @@ export default function MatchBanner() {
       cleanPin === "admin"
     ) {
       setIsAdminUnlocked(true);
-      if (typeof window !== "undefined") {
-        sessionStorage.setItem("golden_admin_logged", "true");
-      }
       setShowAdminPinPrompt(false);
       setAdminPinError(false);
       if (pendingAdminAction === "category") {
@@ -242,11 +251,11 @@ export default function MatchBanner() {
 
   return (
     <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full z-20 relative">
-      {/* Reproductor de Audio Nativo en Bucle */}
+      {/* Reproductor de Audio Nativo de la Lista de Reproducción en Bucle */}
       <audio
         ref={audioRef}
         src={customAudioUrl || AUDIO_TRACKS[selectedTrackIdx].src}
-        loop
+        onEnded={handleAudioEnded}
         preload="auto"
       />
       <input
@@ -262,7 +271,7 @@ export default function MatchBanner() {
         <div className="pointer-events-none absolute -top-24 -left-24 w-64 h-64 rounded-full bg-emerald-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-24 -right-24 w-64 h-64 rounded-full bg-golden-500/15 blur-3xl" />
 
-        {/* Cabecera Superior: Estado En Vivo + Categoría Editable + Música en Bucle */}
+        {/* Cabecera Superior: Estado En Vivo + Categoría Editable + Lista de Reproducción en Bucle */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pb-4 mb-4 border-b border-gray-800/90">
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-red-600/20 border border-red-500/50 text-red-400 text-xs font-black uppercase tracking-wider">
@@ -288,24 +297,50 @@ export default function MatchBanner() {
             </div>
           </div>
 
-          {/* Controles de Música en Bucle + Ajuste Rápido de Pizarra */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={toggleMusic}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 border transition-all ${
-                isPlayingMusic
-                  ? "bg-emerald-500 text-dark-950 border-emerald-300 shadow-lg shadow-emerald-500/30 animate-pulse"
-                  : "bg-dark-900 hover:bg-dark-800 text-golden-300 border-golden-500/40"
-              }`}
-            >
-              {isPlayingMusic ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-              <span>
-                {isPlayingMusic
-                  ? `🔊 En Bucle: ${customAudioName ? customAudioName.slice(0, 16) : "ACTIVA"}`
-                  : "🎵 Activar Música en Bucle"}
-              </span>
-            </button>
+          {/* Controles de Lista de Reproducción en Bucle + Ajuste Rápido de Pizarra */}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <div className="inline-flex items-center gap-1 p-1 rounded-full bg-dark-900 border border-golden-500/40">
+              <button
+                type="button"
+                onClick={() => handleTrackChange(selectedTrackIdx - 1)}
+                className="px-2 py-1 rounded-full bg-dark-950 hover:bg-dark-800 text-golden-300 text-xs font-black"
+                title="Canción anterior"
+              >
+                ⏮
+              </button>
+              <button
+                type="button"
+                onClick={toggleMusic}
+                className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                  isPlayingMusic
+                    ? "bg-emerald-500 text-dark-950 shadow-lg animate-pulse"
+                    : "bg-golden-500 hover:bg-golden-400 text-dark-950"
+                }`}
+              >
+                {isPlayingMusic ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
+                <span>{isPlayingMusic ? "🔊 Pausar" : "▶ Lista"}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTrackChange(selectedTrackIdx + 1)}
+                className="px-2 py-1 rounded-full bg-dark-950 hover:bg-dark-800 text-golden-300 text-xs font-black"
+                title="Siguiente canción"
+              >
+                ⏭
+              </button>
+              <select
+                value={selectedTrackIdx}
+                onChange={(e) => handleTrackChange(Number(e.target.value))}
+                aria-label="Seleccionar canción de la lista de reproducción"
+                className="px-2 py-1 rounded-full bg-dark-950 border border-gray-800 text-[11px] font-bold text-golden-300 outline-none max-w-[175px]"
+              >
+                {AUDIO_TRACKS.map((t, i) => (
+                  <option key={t.id} value={i}>
+                    {t.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
             <button
               type="button"
